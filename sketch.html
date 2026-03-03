@@ -11,6 +11,12 @@
       rel="stylesheet"
     />
     <style>
+      :root{
+        --glass-bg: rgba(0,0,0,.30);
+        --glass-border: rgba(255,255,255,.14);
+        --glass-border-hover: rgba(255,255,255,.28);
+        --glass-focus: rgba(238,0,184,.45);
+      }
       html, body { height: 100%; }
       body {
         margin: 0;
@@ -39,30 +45,34 @@
       .nav a {
         text-decoration: none;
         color: #ffffff;
-        background: rgba(0,0,0,.30);
-        border: 1px solid rgba(255,255,255,.14);
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
         padding: 10px 12px;
         border-radius: 12px;
         font-weight: 800;
         letter-spacing: .01em;
         backdrop-filter: blur(8px);
       }
-      .nav a:hover { border-color: rgba(255,255,255,.28); }
-      .nav a:focus-visible { outline: 3px solid rgba(238,0,184,.45); outline-offset: 2px; }
+      .nav a:hover { border-color: var(--glass-border-hover); }
+      .nav a:focus-visible { outline: 3px solid var(--glass-focus); outline-offset: 2px; }
       .rules {
         position: fixed;
         right: 12px;
         bottom: 12px;
         max-width: 260px;
-        background: rgba(0, 14, 81, 0.82);
+        background: var(--glass-bg);
         border-radius: 14px;
-        border: 1px solid rgba(255,255,255,.18);
+        border: 1px solid var(--glass-border);
         padding: 10px 12px 9px;
         font-size: 11px;
         line-height: 1.4;
         color:#e9ebff;
         backdrop-filter: blur(14px);
         z-index: 9999;
+        touch-action: none;
+      }
+      .rules:hover{
+        border-color: var(--glass-border-hover);
       }
       .rules h2{
         margin:0 0 4px;
@@ -70,6 +80,11 @@
         text-transform:uppercase;
         letter-spacing:.18em;
         opacity:.8;
+        cursor: grab;
+        user-select: none;
+      }
+      .rules.is-dragging h2{
+        cursor: grabbing;
       }
       .rules ul{
         margin:0;
@@ -128,6 +143,80 @@
         } else {
           enableSoftNav();
         }
+      })();
+
+      (function(){
+        const panel = document.querySelector('.rules');
+        if (!panel) return;
+        const KEY = 'intro_controls_panel_pos_v1';
+
+        function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+        function getPanelSize(){
+          const r = panel.getBoundingClientRect();
+          return { w: r.width, h: r.height };
+        }
+        function applyPos(x, y){
+          panel.style.left = x + 'px';
+          panel.style.top = y + 'px';
+          panel.style.right = 'auto';
+          panel.style.bottom = 'auto';
+        }
+
+        try{
+          const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+          if (saved && typeof saved.x === 'number' && typeof saved.y === 'number'){
+            const { w, h } = getPanelSize();
+            const x = clamp(saved.x, 8, window.innerWidth - w - 8);
+            const y = clamp(saved.y, 8, window.innerHeight - h - 8);
+            applyPos(x, y);
+          }
+        } catch {}
+
+        let drag = null;
+        panel.addEventListener('pointerdown', (e)=>{
+          // Only drag when starting on the title area.
+          const h2 = e.target && e.target.closest && e.target.closest('.rules h2');
+          if (!h2) return;
+
+          const rect = panel.getBoundingClientRect();
+          panel.setPointerCapture(e.pointerId);
+          panel.classList.add('is-dragging');
+          drag = {
+            pointerId: e.pointerId,
+            offX: e.clientX - rect.left,
+            offY: e.clientY - rect.top
+          };
+          e.preventDefault();
+        });
+
+        panel.addEventListener('pointermove', (e)=>{
+          if (!drag || e.pointerId !== drag.pointerId) return;
+          const { w, h } = getPanelSize();
+          const x = clamp(e.clientX - drag.offX, 8, window.innerWidth - w - 8);
+          const y = clamp(e.clientY - drag.offY, 8, window.innerHeight - h - 8);
+          applyPos(x, y);
+        });
+
+        function endDrag(e){
+          if (!drag || (e.pointerId != null && e.pointerId !== drag.pointerId)) return;
+          panel.classList.remove('is-dragging');
+          const rect = panel.getBoundingClientRect();
+          try{
+            localStorage.setItem(KEY, JSON.stringify({ x: rect.left, y: rect.top }));
+          } catch {}
+          drag = null;
+        }
+
+        panel.addEventListener('pointerup', endDrag);
+        panel.addEventListener('pointercancel', endDrag);
+
+        window.addEventListener('resize', ()=>{
+          const rect = panel.getBoundingClientRect();
+          const { w, h } = getPanelSize();
+          const x = clamp(rect.left, 8, window.innerWidth - w - 8);
+          const y = clamp(rect.top, 8, window.innerHeight - h - 8);
+          applyPos(x, y);
+        });
       })();
     </script>
   </body>

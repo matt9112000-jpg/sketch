@@ -822,11 +822,14 @@ async function openCharmPreview3D(){
   threeWrap.id('threeWrap');
   threeWrap.style('position','absolute')
     .style('left','50%').style('top','13%')
-    .style('transform','translate(-95%,-50%)')
+    .style('transform','translate(-95%,-50%) translateX(-80px) scale(0.55)')
     .style('width', canvasW+'px')
     .style('height', Math.floor(canvasW*(8/6))+'px')
     .style('z-index','10055')
-    .style('pointer-events','auto');
+    .style('pointer-events','auto')
+    .style('opacity','0')
+    .style('will-change','transform, opacity')
+    .style('transition','transform 520ms cubic-bezier(0.2, 0.9, 0.2, 1), opacity 260ms ease-out');
 
   const footer = createDiv('');
   footer.parent(ov);
@@ -867,6 +870,14 @@ async function openCharmPreview3D(){
     () => charm3D.texFront.elt,
     GLB_URL
   );
+
+  // Slide-in + scale-up intro (small → big) after click
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      threeWrap.style('opacity','1');
+      threeWrap.style('transform','translate(-95%,-50%) scale(1)');
+    });
+  });
 
   window.addEventListener('keydown', escToCloseFS);
 }
