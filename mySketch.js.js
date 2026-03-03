@@ -696,7 +696,7 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, glbPath){
   renderer.setSize(w, h, false);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.25;
+  renderer.toneMappingExposure = 1.38;
   containerEl.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
@@ -707,23 +707,27 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, glbPath){
   controls.enableDamping = true; controls.enablePan = false;
   controls.minDistance = 0.2;    controls.maxDistance = 5;
 
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x667788, 1.25));
-  scene.add(new THREE.AmbientLight(0xffffff, 0.55));
-  const keyLight = new THREE.DirectionalLight(0xffffff, 1.05);
-  keyLight.position.set(-1.0, 1.1, 0.8);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x8a97aa, 1.35));
+  scene.add(new THREE.AmbientLight(0xffffff, 0.72));
+  const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
+  keyLight.position.set(-1.2, 1.5, 1.4);
   scene.add(keyLight);
-  const fillLight = new THREE.DirectionalLight(0xdde7ff, 0.65);
-  fillLight.position.set(1.2, 0.4, 1.1);
+  const fillLight = new THREE.DirectionalLight(0xe8f0ff, 0.9);
+  fillLight.position.set(1.5, 0.8, 1.6);
   scene.add(fillLight);
+  const rimLight = new THREE.DirectionalLight(0xffffff, 0.55);
+  rimLight.position.set(0.0, 1.0, -1.5);
+  scene.add(rimLight);
 
   // 材質
-  const FRAME_COLOR = '#e6eaf2'; // brighter silver tone
+  const FRAME_COLOR = '#f1f4fb'; // polished silver tone
   const metalMat = new THREE.MeshPhysicalMaterial({
     color: FRAME_COLOR,
-    metalness: 0.38,
-    roughness: 0.22,
-    clearcoat: 0.62,
-    clearcoatRoughness: 0.2
+    metalness: 0.92,
+    roughness: 0.12,
+    clearcoat: 0.9,
+    clearcoatRoughness: 0.08,
+    envMapIntensity: 1.35
   });
 
   const USE_SNAPSHOT_PANEL = false; // force all-silver look

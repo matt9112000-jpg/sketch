@@ -105,6 +105,7 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script>
       (function(){
+        document.body.classList.add('is-ready');
         const mount = document.getElementById('box-viewer');
         if (!mount || !window.THREE || !THREE.GLTFLoader || !THREE.OrbitControls) return;
 
@@ -117,17 +118,20 @@
         renderer.setSize(mount.clientWidth, mount.clientHeight);
         renderer.outputColorSpace = THREE.SRGBColorSpace;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1.2;
+        renderer.toneMappingExposure = 1.35;
         mount.appendChild(renderer.domElement);
 
-        scene.add(new THREE.HemisphereLight(0xffffff, 0x667788, 1.2));
-        scene.add(new THREE.AmbientLight(0xffffff, 0.45));
-        const key = new THREE.DirectionalLight(0xffffff, 0.95);
-        key.position.set(-1, 1.2, 0.8);
+        scene.add(new THREE.HemisphereLight(0xffffff, 0x8a97aa, 1.3));
+        scene.add(new THREE.AmbientLight(0xffffff, 0.68));
+        const key = new THREE.DirectionalLight(0xffffff, 1.12);
+        key.position.set(-1.2, 1.4, 1.3);
         scene.add(key);
-        const fill = new THREE.DirectionalLight(0xdde7ff, 0.55);
-        fill.position.set(1.3, 0.4, 1.2);
+        const fill = new THREE.DirectionalLight(0xe8f0ff, 0.82);
+        fill.position.set(1.4, 0.7, 1.5);
         scene.add(fill);
+        const rim = new THREE.DirectionalLight(0xffffff, 0.48);
+        rim.position.set(0, 1.0, -1.4);
+        scene.add(rim);
 
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
@@ -138,11 +142,12 @@
         controls.maxDistance = 3.2;
 
         const silverMat = new THREE.MeshPhysicalMaterial({
-          color: '#e6eaf2',
-          metalness: 0.38,
-          roughness: 0.22,
-          clearcoat: 0.62,
-          clearcoatRoughness: 0.2
+          color: '#f1f4fb',
+          metalness: 0.92,
+          roughness: 0.12,
+          clearcoat: 0.9,
+          clearcoatRoughness: 0.08,
+          envMapIntensity: 1.35
         });
 
         const loader = new THREE.GLTFLoader();
@@ -160,6 +165,8 @@
           root.position.sub(center);
 
           scene.add(root);
+        }, undefined, ()=>{
+          mount.innerHTML = '<div style="display:flex;height:100%;align-items:center;justify-content:center;color:#73738a;font-size:12px;">Unable to load box.glb</div>';
         });
 
         function tick(){
