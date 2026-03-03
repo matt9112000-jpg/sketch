@@ -707,17 +707,26 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, glbPath){
   controls.enableDamping = true; controls.enablePan = false;
   controls.minDistance = 0.2;    controls.maxDistance = 5;
 
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x8a97aa, 1.35));
-  scene.add(new THREE.AmbientLight(0xffffff, 0.72));
-  const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
-  keyLight.position.set(-1.2, 1.5, 1.4);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x97a3b5, 1.5));
+  scene.add(new THREE.AmbientLight(0xffffff, 0.82));
+  const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
+  keyLight.position.set(-1.1, 1.4, 1.35);
   scene.add(keyLight);
-  const fillLight = new THREE.DirectionalLight(0xe8f0ff, 0.9);
-  fillLight.position.set(1.5, 0.8, 1.6);
+  const fillLight = new THREE.DirectionalLight(0xecf3ff, 0.78);
+  fillLight.position.set(1.4, 0.85, 1.5);
   scene.add(fillLight);
-  const rimLight = new THREE.DirectionalLight(0xffffff, 0.55);
-  rimLight.position.set(0.0, 1.0, -1.5);
+  const rimLight = new THREE.DirectionalLight(0xffffff, 0.42);
+  rimLight.position.set(0.0, 1.0, -1.6);
   scene.add(rimLight);
+  const leftFill = new THREE.DirectionalLight(0xf6f9ff, 0.35);
+  leftFill.position.set(-1.8, 0.35, 0.6);
+  scene.add(leftFill);
+  const rightFill = new THREE.DirectionalLight(0xf6f9ff, 0.35);
+  rightFill.position.set(1.8, 0.35, 0.6);
+  scene.add(rightFill);
+  const topSoft = new THREE.PointLight(0xffffff, 0.25, 6);
+  topSoft.position.set(0, 1.8, 0.9);
+  scene.add(topSoft);
 
   // 材質
   const FRAME_COLOR = '#f1f4fb'; // polished silver tone
