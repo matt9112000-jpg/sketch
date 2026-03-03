@@ -57,6 +57,31 @@
         font-size:14px;
         line-height:1.5;
       }
+      .product{
+        margin-top:16px;
+        border:1px solid var(--border);
+        border-radius:14px;
+        overflow:hidden;
+        background:#fafbff;
+      }
+      .viewer{
+        width:100%;
+        height:260px;
+        background: linear-gradient(180deg, #fdfdff, #f2f4ff);
+      }
+      .product-body{
+        padding:12px 12px 14px;
+      }
+      .product-title{
+        margin:0;
+        font-size:15px;
+        font-weight:800;
+      }
+      .product-meta{
+        margin-top:6px;
+        font-size:12px;
+        color:var(--muted);
+      }
     </style>
   </head>
   <body>
@@ -64,9 +89,94 @@
       <section class="card">
         <h1>Shop</h1>
         <p>
-          This is a clear placeholder page. No links, no buttons, no payments yet.
+          Product preview.
         </p>
+        <article class="product" aria-label="Product: box.glb">
+          <div id="box-viewer" class="viewer"></div>
+          <div class="product-body">
+            <h2 class="product-title">001 — Box Charm</h2>
+            <p class="product-meta">Model file: <code>box.glb</code></p>
+          </div>
+        </article>
       </section>
     </main>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script>
+      (function(){
+        const mount = document.getElementById('box-viewer');
+        if (!mount || !window.THREE || !THREE.GLTFLoader || !THREE.OrbitControls) return;
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(35, mount.clientWidth / mount.clientHeight, 0.01, 100);
+        camera.position.set(1.2, 0.8, 1.7);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        renderer.setSize(mount.clientWidth, mount.clientHeight);
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.2;
+        mount.appendChild(renderer.domElement);
+
+        scene.add(new THREE.HemisphereLight(0xffffff, 0x667788, 1.2));
+        scene.add(new THREE.AmbientLight(0xffffff, 0.45));
+        const key = new THREE.DirectionalLight(0xffffff, 0.95);
+        key.position.set(-1, 1.2, 0.8);
+        scene.add(key);
+        const fill = new THREE.DirectionalLight(0xdde7ff, 0.55);
+        fill.position.set(1.3, 0.4, 1.2);
+        scene.add(fill);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.enablePan = false;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 0.8;
+        controls.minDistance = 0.9;
+        controls.maxDistance = 3.2;
+
+        const silverMat = new THREE.MeshPhysicalMaterial({
+          color: '#e6eaf2',
+          metalness: 0.38,
+          roughness: 0.22,
+          clearcoat: 0.62,
+          clearcoatRoughness: 0.2
+        });
+
+        const loader = new THREE.GLTFLoader();
+        loader.load('./box.glb', (gltf)=>{
+          const root = gltf.scene;
+          root.traverse((o)=>{ if (o.isMesh) o.material = silverMat; });
+
+          const box = new THREE.Box3().setFromObject(root);
+          const size = box.getSize(new THREE.Vector3());
+          const maxDim = Math.max(size.x, size.y, size.z) || 1;
+          root.scale.setScalar(1 / maxDim);
+          root.updateWorldMatrix(true, true);
+          const centered = new THREE.Box3().setFromObject(root);
+          const center = centered.getCenter(new THREE.Vector3());
+          root.position.sub(center);
+
+          scene.add(root);
+        });
+
+        function tick(){
+          controls.update();
+          renderer.render(scene, camera);
+          requestAnimationFrame(tick);
+        }
+        tick();
+
+        window.addEventListener('resize', ()=>{
+          const w = mount.clientWidth;
+          const h = mount.clientHeight;
+          renderer.setSize(w, h);
+          camera.aspect = w / h;
+          camera.updateProjectionMatrix();
+        });
+      })();
+    </script>
   </body>
 </html>
