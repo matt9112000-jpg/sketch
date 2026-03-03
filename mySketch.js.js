@@ -122,11 +122,12 @@ function incPlayed(){ playedCount++; localStorage.setItem(PLAYED_KEY, String(pla
 
 /***** ====== 小工具 ====== *****/
 function stylePill(btn, base="#FF5722", hover="#FF784E"){
-  btn.style('background', base).style('color','#fff').style('border','0')
-     .style('border-radius','999px').style('padding','10px 16px')
-     .style('font-weight','800').style('cursor','pointer');
-  btn.mouseOver(()=>btn.style('background',hover));
-  btn.mouseOut(()=>btn.style('background',base));
+  btn.style('background','rgba(0,0,0,.30)').style('color','#ffffff')
+     .style('border','1px solid rgba(255,255,255,.14)').style('border-radius','12px')
+     .style('padding','10px 16px').style('font-weight','800').style('cursor','pointer')
+     .style('backdrop-filter','blur(8px)').style('-webkit-backdrop-filter','blur(8px)');
+  btn.mouseOver(()=>{ btn.style('border-color','rgba(255,255,255,.28)'); });
+  btn.mouseOut(()=>{ btn.style('border-color','rgba(255,255,255,.14)'); });
 }
 function createBoard(){ return Array.from({ length: rows }, () => Array(cols).fill(null)); }
 function isValid(p, dx, dy, mat = p.matrix) {
@@ -332,8 +333,7 @@ function setup(){
 function windowResized(){ calculateLayout(); if(!inputComplete) centerInput(); positionMarquees(); clearButtons(); }
 function centerInput(){
   const w = innerW + BORDER_THICK, h = innerH + BORDER_THICK;
-  const offX = (windowWidth - w)/2, offY = (windowHeight - h)/2 + 30;
-  nameInput.position(offX + (w - 220)/2, offY + (h - 28)/2);
+  nameInput.position(canvasX + w + 16, canvasY + (h - 28)/2);
 }
 function applyResponsiveUI(){
   IS_MOBILE =
@@ -598,14 +598,15 @@ function createStyledButton(id,label,x,y,onClick){
   const old=select('#'+id); if(old) old.remove();
   const btn=createButton(label); btn.id(id);
   btn.style('position','absolute').style('z-index','9999').style('pointer-events','auto').position(x,y);
-  const base=PALETTE[2],hover=PALETTE[3];
-  btn.style('background',base).style('color','#ffffff').style('border','2px solid #ffffff').style('border-radius','4px').style('cursor','pointer')
-     .style('font-weight','700').style('font-family', "Montserrat, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', Arial, sans-serif");
+  btn.style('background','rgba(0,0,0,.30)').style('color','#ffffff')
+     .style('border','1px solid rgba(255,255,255,.14)').style('border-radius','12px').style('cursor','pointer')
+     .style('font-weight','800').style('font-family', "Montserrat, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', Arial, sans-serif")
+     .style('backdrop-filter','blur(8px)').style('-webkit-backdrop-filter','blur(8px)');
   const smallIDs=['nextPromptBtn','nextBtn','clearBtn','saveBtn','makeCharmBtn','makeCharmBtnLB'];
   const pad=smallIDs.includes(id)?BTN_PAD_SMALL:BTN_PAD_LARGE; const fz=smallIDs.includes(id)?BTN_FZ_SMALL:BTN_FZ_LARGE;
   btn.style('padding', pad).style('font-size', fz);
-  btn.mouseOver(()=>btn.style('background',hover));
-  btn.mouseOut(()=>btn.style('background',base));
+  btn.mouseOver(()=>btn.style('border-color','rgba(255,255,255,.28)'));
+  btn.mouseOut(()=>btn.style('border-color','rgba(255,255,255,.14)'));
   btn.mousePressed(onClick);
   return btn;
 }
