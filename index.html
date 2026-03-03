@@ -87,11 +87,14 @@
       }
       .row{
         display:grid;
-        grid-template-columns: 54px minmax(0,1fr) 96px;
+        grid-template-columns: 120px 54px minmax(0,1fr) 96px;
         align-items:center;
         gap:10px;
         padding: 11px 0;
         border-bottom:1px solid var(--border);
+      }
+      .row:hover{
+        background:#ffffff;
       }
       .row-index{
         font-size:11px;
@@ -137,6 +140,19 @@
       .row-wrap{
         position:relative;
       }
+      .thumb3d{
+        width:120px;
+        height:80px;
+        border-radius:12px;
+        border:1px solid var(--border);
+        background:#ffffff;
+        overflow:hidden;
+      }
+      .thumb3d canvas{
+        width:100%;
+        height:100%;
+        display:block;
+      }
     </style>
   </head>
   <body>
@@ -157,8 +173,9 @@
       </section>
 
       <section class="list" aria-label="Projects">
-        <div class="row row-wrap">
+        <div class="row row-wrap" data-project-row>
           <div class="row">
+            <div class="thumb3d" data-project-3d></div>
             <div class="row-index">001</div>
             <div class="row-main">
               <div class="row-title">Insufficient Space</div>
@@ -174,6 +191,7 @@
       </section>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
     <script>
       (function(){
         function enableSoftNav(){
@@ -194,6 +212,101 @@
           document.addEventListener('DOMContentLoaded', enableSoftNav);
         } else {
           enableSoftNav();
+        }
+      })();
+
+      (function(){
+        if (!window.THREE) return;
+        const previews = [];
+
+        function createPreview(el){
+          const width = el.clientWidth || 120;
+          const height = el.clientHeight || 80;
+          const scene = new THREE.Scene();
+          scene.background = new THREE.Color(0xffffff);
+
+          const camera = new THREE.PerspectiveCamera(35, width/height, 0.1, 100);
+          camera.position.set(2.2, 2.0, 3.5);
+          camera.lookAt(0,0,0);
+
+          const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:false });
+          renderer.setSize(width, height);
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+          el.innerHTML = '';
+          el.appendChild(renderer.domElement);
+
+          const light1 = new THREE.DirectionalLight(0xffffff, 0.9);
+          light1.position.set(3,4,5);
+          scene.add(light1);
+          const light2 = new THREE.DirectionalLight(0xffffff, 0.5);
+          light2.position.set(-2,-3,-4);
+          scene.add(light2);
+          scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+
+          const group = new THREE.Group();
+          const colors = [0xFCC730,0x1A26FF,0xFF4622,0xFF3BDA,0x6DFF69,0xFF99B1];
+          const shape = [
+            [0,0],[1,0],[0,1],[1,1]
+          ];
+          const geo = new THREE.BoxGeometry(0.7,0.35,0.7);
+          shape.forEach(([x,y], idx)=>{
+            const mat = new THREE.MeshStandardMaterial({ color: colors[idx % colors.length] });
+            const m = new THREE.Mesh(geo, mat);
+            m.position.set((x-0.5)*0.9, (y-0.5)*0.9, 0);
+            group.add(m);
+          });
+          scene.add(group);
+
+          const preview = {
+            el,
+            scene,
+            camera,
+            renderer,
+            group,
+            t: Math.random()*10,
+            hover:false
+          };
+          previews.push(preview);
+
+          const row = el.closest('[data-project-row]');
+          if (row){
+            row.addEventListener('mouseenter', ()=>{ preview.hover = true; });
+            row.addEventListener('mouseleave', ()=>{ preview.hover = false; });
+          }
+        }
+
+        function animate(){
+          requestAnimationFrame(animate);
+          previews.forEach(p=>{
+            p.t += p.hover ? 0.08 : 0.03;
+            const baseRot = p.hover ? 0.9 : 0.4;
+            p.group.rotation.x = p.t * baseRot * 0.6;
+            p.group.rotation.y = p.t * baseRot;
+            p.group.position.y = Math.sin(p.t*1.4)*0.25;
+            p.renderer.render(p.scene, p.camera);
+          });
+        }
+
+        function init(){
+          document.querySelectorAll('[data-project-3d]').forEach(el=>createPreview(el));
+          if (previews.length){
+            animate();
+            window.addEventListener('resize', ()=>{
+              previews.forEach(p=>{
+                const w = p.el.clientWidth || 120;
+                const h = p.el.clientHeight || 80;
+                p.camera.aspect = w/h;
+                p.camera.updateProjectionMatrix();
+                p.renderer.setSize(w,h);
+              });
+            });
+          }
+        }
+
+        if (document.readyState === 'loading'){
+          document.addEventListener('DOMContentLoaded', init);
+        } else {
+          init();
         }
       })();
     </script>
