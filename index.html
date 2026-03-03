@@ -87,7 +87,7 @@
       }
       .row{
         display:grid;
-        grid-template-columns: 120px 54px minmax(0,1fr) 96px;
+        grid-template-columns: 120px 54px minmax(0,1fr) auto;
         align-items:center;
         gap:10px;
         padding: 11px 0;
@@ -116,6 +116,7 @@
         color:var(--muted);
       }
       .row-cta{
+        justify-self:end;
         text-align:right;
       }
       .pill{
@@ -179,7 +180,6 @@
             <div class="row-index">001</div>
             <div class="row-main">
               <div class="row-title">INTRODUCTION</div>
-              <div class="row-meta">A tetris-ish arcade experiment with 3D blocks &amp; leaderboard.</div>
             </div>
             <div class="row-cta">
               <span class="pill pill-live">Live</span>

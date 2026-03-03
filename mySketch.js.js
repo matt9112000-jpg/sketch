@@ -333,7 +333,7 @@ function setup(){
 function windowResized(){ calculateLayout(); if(!inputComplete) centerInput(); positionMarquees(); clearButtons(); }
 function centerInput(){
   const w = innerW + BORDER_THICK, h = innerH + BORDER_THICK;
-  nameInput.position(canvasX + w + 16, canvasY + (h - 28)/2);
+  nameInput.position(canvasX + (w - 220)/2, canvasY + (h - 28)/2);
 }
 function applyResponsiveUI(){
   IS_MOBILE =
@@ -720,6 +720,7 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, glbPath){
     clearcoatRoughness: 0.25
   });
 
+  const USE_SNAPSHOT_PANEL = false; // force all-silver look
   const cvs = getSnapshotCanvas();
   const snapTex = new THREE.CanvasTexture(cvs);
   snapTex.flipY = false; snapTex.colorSpace = THREE.SRGBColorSpace; snapTex.anisotropy = 8;
@@ -762,10 +763,14 @@ loader.load(GLB_URL, (gltf) => {
   const idx = Math.min(Math.max(1, FORCE_PANEL_INDEX), meshes.length) - 1;
   const target = meshes[idx];
 
-  // --- 套材質：選中的那個用 panelMat，其餘用 metalMat ---
-  meshes.forEach(m => { m.material = (m === target) ? panelMat : metalMat; });
-
-  console.log(`✅ Snapshot applied to ${target.name} (index ${idx+1})`);
+  // --- 套材質：預設全銀色；需要時再啟用 panel snapshot ---
+  if (USE_SNAPSHOT_PANEL) {
+    meshes.forEach(m => { m.material = (m === target) ? panelMat : metalMat; });
+    console.log(`✅ Snapshot applied to ${target.name} (index ${idx+1})`);
+  } else {
+    meshes.forEach(m => { m.material = metalMat; });
+    console.log('✅ Silver material applied to all meshes');
+  }
 
   scene.add(root);
   frameObject(root, camera, controls);
