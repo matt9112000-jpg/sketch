@@ -1,0 +1,876 @@
+/***** ===== 基本常數 ===== *****/
+const ASPECT_W = 4, ASPECT_H = 5;
+const BORDER_THICK = 12, BORDER_HALF = BORDER_THICK/2;
+
+let cols = 6, rows = 8;
+let blockSize, innerW, innerH;
+let board, currentPiece;
+let dropCounter = 0, dropInterval = 800, lastTime = 0;
+
+let canvasX = 0, canvasY = 0;
+let mainCanvas = null;
+
+/***** 玩家 / 狀態 *****/
+let playerName = '';
+let inputComplete = false;
+let nameInput;
+
+let endBlocks = 0;
+let gameState = 'input'; // 'input','playing','endedWait','gameover','leaderboard'
+
+/***** 本地備援排行榜 *****/
+const STORAGE_KEY = 'tetris_scores';
+const CLOUD_CACHE_KEY = 'tetris_scores_cache';
+const GLB_URL = 'https://cdn.jsdelivr.net/gh/matt9112000-jpg/insufficient-space-assets@22a8ceb/box.glb';
+/***** Three.js（非 ESM 版） *****/
+const THREE_CDNS = [
+  'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js',
+];
+const GLTF_CDNS = [
+  'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js',
+];
+const ORBIT_CDNS = [
+  'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js',
+];
+
+function loadScript(url){
+  return new Promise((resolve, reject)=>{
+    const s = document.createElement('script');
+    s.src = url; s.async = true; s.crossOrigin = 'anonymous';
+    s.onload = ()=>resolve(url);
+    s.onerror = ()=>reject(new Error('load fail: '+url));
+    document.head.appendChild(s);
+  });
+}
+async function loadOneFrom(list){
+  let lastErr;
+  for (const url of list){
+    try { return await loadScript(url); }
+    catch(e){ lastErr = e; console.warn(e.message); }
+  }
+  throw lastErr;
+}
+async function ensureThreeScripts(){
+  if (!window.THREE) { await loadOneFrom(THREE_CDNS); }
+  if (!THREE.GLTFLoader) { await loadOneFrom(GLTF_CDNS); }
+  if (!THREE.OrbitControls) { await loadOneFrom(ORBIT_CDNS); }
+  if (!window.THREE || !THREE.GLTFLoader || !THREE.OrbitControls){
+    throw new Error('Three.js / GLTFLoader / OrbitControls not available');
+  }
+}
+
+/***** 形狀 / 顏色 *****/
+const SHAPES = {
+  single: [[1]],
+  line2: [[1,1]],
+  line3: [[1,1,1]],
+  square2: [[1,1],[1,1]],
+  L3: [[1,0],[1,0],[1,1]],
+  T3: [[1,1,1],[0,1,0]],
+  S3: [[0,1,1],[1,1,0]]
+};
+const PALETTE = ['#FCC730','#1A26FF','#FF4622','#FF3BDA','#6DFF69','#FF99B1','#4C4C4C'];
+const BG_BLUE = '#000E51';
+const PINK = '#EE00B8';
+
+/***** 字型 *****/
+let FONT_FAMILY = 'Montserrat';
+let FONT_READY = false;
+
+/***** Firestore（雲端排行榜） *****/
+let FIREBASE_ENABLED = true;
+let db = null;
+let topScores = [];
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDwhrpuRxLdo3_nq_W7TKn4JKItyX7WyCQ",
+  authDomain: "insufficientintro.firebaseapp.com",
+  projectId: "insufficientintro",
+};
+
+/***** 手機提示按鈕 *****/
+const BTN_MARGIN = 8;
+const BTN_SIZE_MULT = 0.8;
+let UI_BTN = { left:{x:0,y:0,s:0}, down:{x:0,y:0,s:0}, right:{x:0,y:0,s:0}, rotate:{x:0,y:0,s:0} };
+
+/***** Leaderboard 視覺 *****/
+const SHOW_CLEAR = true;
+let LB_THUMB_RATIO = 0.30;
+let LB_SIZES = [28,20,20];
+let BOUNCE_OFFSET = 16;
+let SCALE_HOVER = 1.15;
+let lbHover = -1, lbActive = -1, lbActiveUntil = 0, lbRects = [];
+
+/***** RWD *****/
+let IS_MOBILE = false;
+let BTN_PAD_SMALL='8px 12px', BTN_PAD_LARGE='10px 18px', BTN_FZ_SMALL='14px', BTN_FZ_LARGE='18px';
+
+/***** 最近一局快照（儲存 PNG 用） *****/
+let lastSnapshot = null, lastName = '', lastBlocks = 0;
+
+/***** input 背景掉落動畫 *****/
+let introPieces = [];
+let introLastTime = 0, introSpawnTimer = 0, introSpawnEvery = 650;
+
+/***** 跑馬燈（行動版） *****/
+let mqTop = null, mqBottom = null;
+
+/***** 遊玩次數（右下角顯示） *****/
+const PLAYED_KEY = 'tetris_played_count';
+let playedCount = 0;
+function loadPlayed(){ playedCount = parseInt(localStorage.getItem(PLAYED_KEY) || '0'); }
+function incPlayed(){ playedCount++; localStorage.setItem(PLAYED_KEY, String(playedCount)); }
+
+/***** ====== 小工具 ====== *****/
+function stylePill(btn, base="#FF5722", hover="#FF784E"){
+  btn.style('background', base).style('color','#fff').style('border','0')
+     .style('border-radius','999px').style('padding','10px 16px')
+     .style('font-weight','800').style('cursor','pointer');
+  btn.mouseOver(()=>btn.style('background',hover));
+  btn.mouseOut(()=>btn.style('background',base));
+}
+function createBoard(){ return Array.from({ length: rows }, () => Array(cols).fill(null)); }
+function isValid(p, dx, dy, mat = p.matrix) {
+  if (!p || !mat) return false;
+  for (let y=0; y<mat.length; y++){
+    for (let x=0; x<mat[y].length; x++){
+      if (mat[y][x]){
+        const nx = p.x + x + dx, ny = p.y + y + dy;
+        if (nx < 0 || nx >= cols || ny < 0 || ny >= rows) return false;
+        if (board[ny][nx] !== null) return false;
+      }
+    }
+  }
+  return true;
+}
+function rotateMatrix(mat){ return mat[0].map((_,i)=>mat.map(r=>r[i])).reverse(); }
+function colFromIndex(i){ return color(PALETTE[i]); }
+function drawCell(px, py, size, fillCol, strokeCol=255){
+  noStroke(); fill(fillCol); rect(px, py, size, size);
+  stroke(strokeCol); strokeWeight(1); noFill(); rect(px, py, size, size);
+}
+function nameKeyFrom(name){
+  const k = (name||'').trim().toLowerCase().replace(/[^a-z0-9_]/g,'_').slice(0,20);
+  return k || 'player';
+}
+function encodeBoardSnapshot(){
+  let out=''; for(let y=0;y<rows;y++){ for(let x=0;x<cols;x++){ const v=board[y][x]; out += (v===null?'8':String(v)); } }
+  return out;
+}
+function drawSnapshot(snapshot, x, y, cell){
+  if(!snapshot || snapshot.length !== cols*rows) return;
+  push(); noStroke();
+  for(let i=0;i<snapshot.length;i++){
+    const ch=snapshot[i]; if(ch!=='8'){
+      const idx = ch.charCodeAt(0)-48, cx=i%cols, cy=Math.floor(i/cols);
+      fill(colFromIndex(idx)); rect(x+cx*cell,y+cy*cell,cell,cell);
+      noFill(); stroke(255); strokeWeight(1); rect(x+cx*cell,y+cy*cell,cell,cell); noStroke();
+    }
+  }
+  pop();
+}
+function drawSnapshotToGraphics(g, snapshot, x, y, cell){
+  if(!snapshot || snapshot.length !== cols*rows) return;
+  g.push(); g.noStroke();
+  for(let i=0;i<snapshot.length;i++){
+    const ch=snapshot[i]; if(ch!=='8'){
+      const idx = ch.charCodeAt(0)-48, cx=i%cols, cy=Math.floor(i/cols);
+      g.fill(colFromIndex(idx)); g.rect(x+cx*cell,y+cy*cell,cell,cell);
+      g.noFill(); g.stroke(255); g.strokeWeight(1); g.rect(x+cx*cell,y+cy*cell,cell,cell); g.noStroke();
+    }
+  }
+  g.pop();
+}
+function saveLastGamePng(){
+  const snap = lastSnapshot || encodeBoardSnapshot();
+  const nm = (lastName || playerName || 'player').replace(/ /g,'_');
+  const pg = createGraphics(width, height);
+  pg.textFont('Montserrat'); pg.textStyle(BOLD);
+  pg.background('#ffffff');
+  pg.noStroke(); pg.fill(BG_BLUE); pg.rect(BORDER_HALF, BORDER_HALF, innerW, innerH);
+  pg.stroke(PINK); pg.strokeWeight(BORDER_THICK); pg.noFill(); pg.rect(0,0,width,height);
+  pg.noStroke(); pg.fill('#FF3BDA'); pg.textAlign(pg.LEFT, pg.TOP);
+  pg.textSize(Math.max(14, blockSize*0.35)); pg.text(nm, BORDER_HALF+6, BORDER_HALF+4);
+  drawSnapshotToGraphics(pg, snap, BORDER_HALF, BORDER_HALF, blockSize);
+  saveCanvas(pg.canvas, `${nm}_${lastBlocks}`, 'png');
+}
+function lockPiece(){
+  const m=currentPiece.matrix;
+  for (let y=0;y<m.length;y++){ for (let x=0;x<m[y].length;x++){ if (m[y][x]) board[currentPiece.y+y][currentPiece.x+x]=currentPiece.cidx; } } }
+
+/***** 本地備援排行榜（同名只留最佳） *****/
+function updateLocalTopScores(name, score, snapshot) {
+  let list = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
+  const k = nameKeyFrom(name);
+  const i = list.findIndex(r=> (r.name && nameKeyFrom(r.name)===k) || r.nameKey===k );
+  if (i>=0) { if (score < list[i].score) { list[i].score = score; list[i].snapshot = snapshot||null; } }
+  else { list.push({name, nameKey:k, score, snapshot:snapshot||null}); }
+  list.sort((a,b)=>a.score-b.score); list=list.slice(0,3);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  if (!db) topScores = list;
+}
+async function saveScore(name, score, snapshot) {
+  lastSnapshot = snapshot; lastName = name; lastBlocks = score;
+  updateLocalTopScores(name, score, snapshot);
+  if (!FIREBASE_ENABLED || !db) return;
+  try{
+    const ref = db.collection('scores').doc(nameKeyFrom(name));
+    await ref.set({ name: name.slice(0,20), nameKey: nameKeyFrom(name), score, snapshot: snapshot||null,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp() }, {merge:true});
+  }catch(e){ console.log('cloud save failed', e); }
+}
+function getTopScoresLocal(){
+  let list = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  list.sort((a,b)=>a.score-b.score); return list.slice(0,3);
+}
+
+/***** Firebase 啟動 & 訂閱 *****/
+function initFirebase(){
+  try{
+    if (!FIREBASE_ENABLED) return;
+    if (typeof firebase === 'undefined') { FIREBASE_ENABLED=false; return; }
+    if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    db = firebase.firestore(); firebase.firestore().enablePersistence().catch(()=>{});
+    subscribeLeaderboard();
+  }catch(e){ FIREBASE_ENABLED=false; console.warn('Firebase init failed:', e); }
+}
+function subscribeLeaderboard(){
+  if (!db) return;
+  db.collection('scores').orderBy('score','asc').orderBy('createdAt','asc').limit(50)
+    .onSnapshot(snap=>{
+      const arr=[]; snap.forEach(d=>arr.push(d.data()));
+      const best=new Map();
+      for (const r of arr){
+        const k=r.nameKey||nameKeyFrom(r.name||'');
+        if(!best.has(k) || r.score < best.get(k).score) best.set(k, r);
+      }
+      topScores = [...best.values()].sort((a,b)=>a.score-b.score).slice(0,3);
+      saveCloudCache(topScores);
+    }, err=>console.log('onSnapshot error', err));
+}
+
+/***** 清除排行榜（local + cloud） *****/
+async function clearCloudScores(){
+  if (!db) return; const snap = await db.collection('scores').get();
+  const batch = db.batch(); snap.forEach(doc=>batch.delete(doc.ref)); await batch.commit();
+}
+function clearLocalScores(){
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(CLOUD_CACHE_KEY);
+}
+async function clearScores(){
+  const want = confirm('Clear leaderboard?\n（本地與雲端都會嘗試清除）');
+  if (!want) return;
+  try{ await clearCloudScores(); }catch(e){ console.warn('清雲端失敗（可能是權限）', e); }
+  try{ clearLocalScores(); }catch(e){}
+  topScores = []; renderLeaderboard();
+}
+
+/***** 雲端榜單快取 & Durable Storage *****/
+async function ensureDurableStorage(){
+  if (navigator.storage && navigator.storage.persist) {
+    try {
+      const ok = await navigator.storage.persist();
+      console.log('Durable storage:', ok ? 'granted' : 'not granted');
+    } catch(e){ console.warn('persist() failed', e); }
+  }
+}
+function saveCloudCache(list){
+  try { localStorage.setItem(CLOUD_CACHE_KEY, JSON.stringify(list || [])); } catch(e){}
+}
+function getCloudCache(){
+  try { return JSON.parse(localStorage.getItem(CLOUD_CACHE_KEY) || '[]'); } catch(e){ return []; }
+}
+function hydrateScoresEarly(){
+  const cache = getCloudCache();
+  topScores = (cache && cache.length) ? cache : getTopScoresLocal();
+}
+
+/***** p5 lifecycle *****/
+function setup(){
+  ensureDurableStorage();
+  hydrateScoresEarly();
+
+  if (!select('#mqStyle')){
+    const css = `
+      @keyframes scrollX { from { transform: translate3d(0,0,0); } to { transform: translate3d(-50%,0,0);} }
+      .mq { position:absolute; left:0; width:100vw; overflow:hidden; pointer-events:none; z-index:2; color:${PINK}; background:#fff;
+        font-weight:800; font-family: Montserrat, system-ui, -apple-system, Roboto, Arial, sans-serif; }
+      .mq .track { display:inline-flex; will-change: transform; animation: scrollX 35s linear infinite; backface-visibility:hidden; transform: translateZ(0); }
+      .mq.bottom .track { animation-direction: reverse; }
+      .mq .content { display:inline-block; white-space:nowrap; padding-right: 40px; }
+    `;
+    const st = createElement('style', css); st.id('mqStyle'); st.parent(document.head);
+  }
+
+  const gf = createElement('link');
+  gf.attribute('rel','stylesheet');
+  gf.attribute('href','https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&display=swap');
+  gf.parent(document.head);
+  if (document.fonts && document.fonts.load) {
+    document.fonts.load('800 24px ' + FONT_FAMILY).then(()=>{ FONT_READY = true; textFont(FONT_FAMILY); });
+  } else { textFont(FONT_FAMILY); }
+
+  calculateLayout(); frameRate(60); initFirebase();
+  board = createBoard(); loadPlayed();
+
+  nameInput = createInput();
+  nameInput.attribute('placeholder','Enter your IG')
+           .attribute('inputmode','text').attribute('autocomplete','off')
+           .attribute('autocorrect','off').attribute('autocapitalize','off');
+  nameInput.style('position','absolute').style('z-index','10010').style('pointer-events','auto')
+           .style('font-weight','600')
+           .style('font-family', "Montserrat, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', Arial, sans-serif")
+           .size(220,28);
+  centerInput(); nameInput.elt.focus();
+  nameInput.elt.addEventListener('keydown', e=>{
+    if (e.key === 'Enter' && nameInput.value().trim()){
+      playerName = nameInput.value().trim().slice(0,20);
+      inputComplete = true; gameState = 'playing'; nameInput.hide(); spawnPiece();
+    }
+  });
+}
+function windowResized(){ calculateLayout(); if(!inputComplete) centerInput(); positionMarquees(); clearButtons(); }
+function centerInput(){
+  const w = innerW + BORDER_THICK, h = innerH + BORDER_THICK;
+  const offX = (windowWidth - w)/2, offY = (windowHeight - h)/2 + 30;
+  nameInput.position(offX + (w - 220)/2, offY + (h - 28)/2);
+}
+function applyResponsiveUI(){
+  IS_MOBILE =
+    (windowWidth <= 700) ||
+    (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
+
+  if (IS_MOBILE){
+    // 行動版
+    LB_THUMB_RATIO = 0.25;
+    LB_SIZES = [24, 18, 18];
+
+    BTN_PAD_SMALL = '6px 10px';
+    BTN_PAD_LARGE = '8px 14px';
+    BTN_FZ_SMALL  = '12px';
+    BTN_FZ_LARGE  = '15px';
+  } else {
+    // 桌面版
+    LB_THUMB_RATIO = 0.30;
+    LB_SIZES = [28, 20, 20];
+
+    BTN_PAD_SMALL = '8px 12px';
+    BTN_PAD_LARGE = '10px 18px';
+    BTN_FZ_SMALL  = '14px';
+    BTN_FZ_LARGE  = '18px';
+  }
+}
+
+function calculateLayout(){
+  let cw = windowWidth - BORDER_THICK, ch = windowHeight - BORDER_THICK;
+  if (cw * ASPECT_H > ch * ASPECT_W) cw = ch * ASPECT_W / ASPECT_H; else ch = cw * ASPECT_H / ASPECT_W;
+  blockSize = floor(min(cw/cols, ch/rows)); innerW = cols * blockSize; innerH = rows * blockSize;
+  const w = innerW + BORDER_THICK, h = innerH + BORDER_THICK;
+  mainCanvas = createCanvas(w, h);
+  mainCanvas.style('z-index','1');
+  canvasX = (windowWidth - w) / 2; canvasY = (windowHeight - h) / 2;
+  mainCanvas.position(canvasX, canvasY);
+
+  const s = min(blockSize * BTN_SIZE_MULT, innerW/6); const yPos = BORDER_HALF + innerH - s - BTN_MARGIN;
+  UI_BTN.left   = { x: BORDER_HALF + BTN_MARGIN,              y: yPos,                  s: s };
+  UI_BTN.down   = { x: BORDER_HALF + innerW/2 - s/2,          y: yPos,                  s: s };
+  UI_BTN.right  = { x: BORDER_HALF + innerW - s - BTN_MARGIN, y: yPos,                  s: s };
+  UI_BTN.rotate = { x: BORDER_HALF + innerW/2 - s/2,          y: yPos - s - BTN_MARGIN, s: s };
+
+  select('body').style('background','#ffffff'); applyResponsiveUI();
+  ensureMarquees(); positionMarquees();
+  introPieces = []; introLastTime = 0; introSpawnTimer = 0;
+}
+function draw(){
+  background('#ffffff');
+  noStroke(); fill(BG_BLUE); rect(BORDER_HALF, BORDER_HALF, innerW, innerH);
+  stroke(PINK); strokeWeight(BORDER_THICK); noFill(); rect(0,0,width,height);
+
+  noStroke(); fill('#FF3BDA'); textAlign(RIGHT, BOTTOM); textStyle(BOLD); textSize(14);
+  text(`played: ${playedCount}`, width - BORDER_HALF - 6, BORDER_HALF + innerH - 6);
+
+  if (gameState === 'input'){
+    push(); translate(BORDER_HALF, BORDER_HALF); updateIntroPieces(); drawIntroPieces(); pop();
+    noStroke(); fill('#FF3BDA'); textAlign(CENTER,CENTER); textSize(14); textStyle(BOLD);
+    text('Enter your IG and press Enter', width/2, height/2);
+    nameInput.show(); nameInput.elt.focus();
+    return;
+  }
+  if (gameState === 'playing'){
+    noStroke(); fill('#FF3BDA'); textSize(max(14, blockSize*0.35)); textAlign(LEFT,TOP); textStyle(BOLD);
+    text(playerName, BORDER_HALF+6, BORDER_HALF+4);
+    handleDrop();
+    push(); translate(BORDER_HALF, BORDER_HALF); drawBoard(); drawPiece(); pop();
+    drawHintSquares();
+    return;
+  }
+  if (gameState === 'endedWait'){
+    push(); translate(BORDER_HALF, BORDER_HALF); drawBoard(); drawPiece(); pop();
+    if (!select('#nextPromptBtn')){
+      clearButtons();
+      createStyledButton('nextPromptBtn','Next', canvasX + width/2 - 50, canvasY + height/2 - 14,
+        () => { gameState = 'gameover'; clearButtons(); });
+    }
+    return;
+  }
+  if (gameState === 'gameover'){
+    endBlocks = board.flat().filter(c=>c===null).length;
+    if (!select('#savedFlag')){
+      const snap = encodeBoardSnapshot();
+      lastSnapshot = snap; lastName = playerName; lastBlocks = endBlocks;
+      saveScore(playerName, endBlocks, snap); incPlayed();
+      const flag = createDiv(''); flag.id('savedFlag'); flag.style('display','none');
+    }
+    noStroke(); fill('#FF3BDA'); textAlign(CENTER,CENTER); textStyle(BOLD);
+    textSize(28); text('Game Over!', width/2, height/2 - 26);
+    textSize(22); text(`Empty Blocks: ${endBlocks}`, width/2, height/2 + 6);
+    if (!select('#nextBtn')){
+      clearButtons();
+      createStyledButton('nextBtn','Next',
+        canvasX + width/2 - 50, canvasY + height/2 + 40,
+        () => { gameState = 'leaderboard'; clearButtons(); removeSavedFlag(); });
+    }
+    return;
+  }
+  if (gameState === 'leaderboard'){
+    renderLeaderboard(); return;
+  }
+}
+
+/***** 遊戲流程 *****/
+function handleDrop(){ const now=millis(), d=now-lastTime; lastTime=now; dropCounter+=d; if (dropCounter>dropInterval){ moveDown(); dropCounter=0; } }
+function moveDown(){
+  if (!currentPiece) return;
+  if (isValid(currentPiece,0,1)) { currentPiece.y++; return; }
+  lockPiece(); if (currentPiece.y===0){ endGame(); return; } spawnPiece();
+}
+function endGame(){ gameState='endedWait'; }
+function spawnPiece(){
+  const keys = Object.keys(SHAPES); const k = random(keys);
+  currentPiece = { matrix: SHAPES[k].map(r=>r.slice()), x: floor(cols/2)-floor(SHAPES[k][0].length/2), y:0, cidx: floor(random(PALETTE.length)) };
+  if (!isValid(currentPiece,0,0)) endGame();
+}
+
+/***** 輸入 *****/
+let touchStartTime = 0;
+function pointInRect(px, py, r){ return px >= r.x && px <= r.x + r.s && py >= r.y && py <= r.y + r.s; }
+function touchStarted(){
+  if (gameState === 'input') return true;
+  if (gameState === 'leaderboard'){
+    if (touches.length){ const t=touches[0]; updateLbHover(t.x,t.y); if (lbHover>=0){ lbActive=lbHover; lbActiveUntil=millis()+250; } }
+    touchStartTime = millis(); return true;
+  }
+  if (gameState === 'playing'){
+    if (touches.length){
+      const t=touches[0];
+      if (pointInRect(t.x,t.y,UI_BTN.left))   { if (isValid(currentPiece,-1,0)) currentPiece.x--; return false; }
+      if (pointInRect(t.x,t.y,UI_BTN.down))   { moveDown(); return false; }
+      if (pointInRect(t.x,t.y,UI_BTN.right))  { if (isValid(currentPiece, 1,0)) currentPiece.x++; return false; }
+      if (pointInRect(t.x,t.y,UI_BTN.rotate)) { const r=rotateMatrix(currentPiece.matrix); if (isValid(currentPiece,0,0,r)) currentPiece.matrix=r; return false; }
+    }
+    return true;
+  }
+  touchStartTime = millis(); return true;
+}
+function touchEnded(){ return true; }
+function keyPressed(){
+  if (gameState === 'leaderboard') return;
+  if (!inputComplete || gameState!=='playing') return;
+  if (keyCode===LEFT_ARROW && isValid(currentPiece,-1,0)) currentPiece.x--;
+  else if (keyCode===RIGHT_ARROW && isValid(currentPiece,1,0)) currentPiece.x++;
+  else if (keyCode===DOWN_ARROW) moveDown();
+  else if (keyCode===UP_ARROW){ const r=rotateMatrix(currentPiece.matrix); if (isValid(currentPiece,0,0,r)) currentPiece.matrix=r; }
+}
+
+/***** 繪製 *****/
+function drawBoard(){
+  for (let y=0;y<rows;y++){ for(let x=0;x<cols;x++){ const v=board[y][x]; if (v!==null){ const px=x*blockSize, py=y*blockSize; drawCell(px,py,blockSize,colFromIndex(v),255); } } }
+}
+function drawPiece(){
+  if (!currentPiece) return;
+  const m=currentPiece.matrix;
+  for (let y=0;y<m.length;y++){ for(let x=0;x<m[y].length;x++){ if(m[y][x]){ const px=(currentPiece.x+x)*blockSize, py=(currentPiece.y+y)*blockSize; drawCell(px,py,blockSize,colFromIndex(currentPiece.cidx),255); } } }
+}
+function drawHintSquares(){
+  const btns=[UI_BTN.left,UI_BTN.down,UI_BTN.right,UI_BTN.rotate];
+  const base=color('#4C4C4C'); base.setAlpha(90); const border=color('#FF99B1'); border.setAlpha(140);
+  for(const b of btns){ fill(base); stroke(border); strokeWeight(2); rect(b.x,b.y,b.s,b.s,6); }
+}
+
+/***** Intro 背景掉落 *****/
+function spawnIntroPiece(){
+  const keys=Object.keys(SHAPES), k=random(keys), mat=SHAPES[k], w=mat[0].length, h=mat.length;
+  const x=floor(random(0,max(1,cols-w+1))), cidx=floor(random(PALETTE.length)), speed=random(0.8,1.7);
+  introPieces.push({ matrix:mat, x, y:-h, cidx, speed });
+}
+function updateIntroPieces(){
+  const now=millis(); if (introLastTime===0) introLastTime=now;
+  const dt=(now-introLastTime)/1000; introLastTime=now;
+  introSpawnTimer += dt*1000; if (introSpawnTimer >= introSpawnEvery){ introSpawnTimer = 0; spawnIntroPiece(); }
+  for (const p of introPieces){ p.y += p.speed * dt; }
+  introPieces = introPieces.filter(p => p.y < rows + 1);
+}
+function drawIntroPieces(){
+  for (const p of introPieces){
+    const m=p.matrix;
+    for (let y=0;y<m.length;y++){
+      for (let x=0;x<m[y].length;x++){
+        if (m[y][x]){ const px=(p.x+x)*blockSize, py=(p.y+y)*blockSize; const fillCol=colFromIndex(p.cidx); fillCol.setAlpha(150); drawCell(px,py,blockSize,fillCol,255); }
+      }
+    }
+  }
+}
+
+/***** Leaderboard *****/
+function renderLeaderboard(){
+  background('#ffffff');
+  noStroke(); fill(BG_BLUE); rect(BORDER_HALF, BORDER_HALF, innerW, innerH);
+  stroke(PINK); strokeWeight(BORDER_THICK); noFill(); rect(0,0,width,height);
+
+  if (SHOW_CLEAR && !select('#clearBtn')) createStyledButton('clearBtn','Clear', canvasX + 20, canvasY + 20, clearScores);
+  if (!select('#saveBtn')) createStyledButton('saveBtn','Save', canvasX + 20, canvasY + 60, saveLastGamePng);
+  if (!select('#makeCharmBtnLB')) createStyledButton('makeCharmBtnLB','★ Make a Charm', canvasX + 20, canvasY + 100, () => { openCharmPreview3D(); });
+
+  let source = [];
+  if (topScores && topScores.length) source = topScores;
+  else {
+    const cache = getCloudCache();
+    source = (cache && cache.length) ? cache : getTopScoresLocal();
+  }
+
+  lbRects = [];
+  const gap=max(28, innerW*0.10), vGap=max(24, innerH*0.10);
+  const maxWPerItem=(innerW-gap)/2, maxCellByWidth=floor(maxWPerItem/cols), maxCellByHeight=floor((innerH*0.40)/rows);
+  const cellBottom=max(3, min(maxCellByWidth, maxCellByHeight, floor((innerW*LB_THUMB_RATIO)/cols)));
+  const thumbW=cellBottom*cols, thumbH=cellBottom*rows;
+  const cellTop=floor(cellBottom*1.28), thumbW1=cellTop*cols, thumbH1=cellTop*rows;
+
+  const totalH=thumbH1+vGap+thumbH, startY=BORDER_HALF+(innerH-totalH)/2, cx=BORDER_HALF+innerW/2;
+
+  const tx1=cx-thumbW1/2, ty1=startY, title1=max(26,LB_SIZES[0]*1.2), lineY1=ty1 - title1 - 10;
+  lbRects.push({x:tx1, y:lineY1 - title1*0.6, w:thumbW1, h:title1 + 10 + thumbH1});
+
+  const tx2=cx-gap/2-thumbW, ty2=startY+thumbH1+vGap, title2=max(18,LB_SIZES[1]), lineY2=ty2 - title2 - 8;
+  lbRects.push({x:tx2, y:lineY2 - title2*0.6, w:thumbW, h:title2 + 8 + thumbH});
+
+  const tx3=cx+gap/2, ty3=ty2, title3=max(18,LB_SIZES[2]), lineY3=ty3 - title3 - 8;
+  lbRects.push({x:tx3, y:lineY3 - title3*0.6, w:thumbW, h:title3 + 8 + thumbH});
+
+  const items=[];
+  if (source[0]) items.push({rec:source[0], i:0, titleSize:title1, tx:tx1, ty:ty1, lineY:lineY1, cell:cellTop,    thumbW:thumbW1, thumbH:thumbH1, bx:tx1, by:lineY1 - title1*0.6, bw:thumbW1, bh:title1 + 10 + thumbH1});
+  if (source[1]) items.push({rec:source[1], i:1, titleSize:title2, tx:tx2, ty:ty2, lineY:lineY2, cell:cellBottom, thumbW:thumbW,  thumbH:thumbH,  bx:tx2, by:lineY2 - title2*0.6, bw:thumbW,  bh:title2 + 8 + thumbH});
+  if (source[2]) items.push({rec:source[2], i:2, titleSize:title3, tx:tx3, ty:ty3, lineY:lineY3, cell:cellBottom, thumbW:thumbW,  thumbH:thumbH,  bx:tx3, by:lineY3 - title3*0.6, bw:thumbW,  bh:title3 + 8 + thumbH});
+
+  updateLbHover(mouseX, mouseY);
+  let hi=-1; if (lbActive>=0 && millis()<lbActiveUntil) hi=lbActive; else if (lbHover>=0) hi=lbHover;
+
+  function drawLbItem(it, lifted){
+    const {rec,i,titleSize,lineY,cell,thumbW,thumbH,tx,ty,bx,by,bw,bh}=it;
+    push();
+      if (lifted){
+        translate(bx+bw/2, by+bh/2-BOUNCE_OFFSET); scale(SCALE_HOVER); translate(-(bx+bw/2), -(by+bh/2));
+        noStroke(); fill(0,60); rect(bx-10, by-10, bw+20, bh+20, 10);
+      }
+      noStroke(); fill('#FF3BDA'); textSize(titleSize); textAlign(CENTER,TOP); textStyle(BOLD);
+      text(`${i+1}. ${rec.name}  ${rec.score}`, bx + bw/2, lineY);
+      if (rec.snapshot) drawSnapshot(rec.snapshot, tx, ty, cell);
+      else { noFill(); stroke('#FF99B1'); strokeWeight(2); rect(tx,ty,thumbW,thumbH,6); }
+    pop();
+  }
+
+  for (const it of items){ if (it.i !== hi) drawLbItem(it, false); }
+  if (hi >= 0){ const it = items.find(o=>o.i===hi); if (it) drawLbItem(it, true); }
+}
+function updateLbHover(mx,my){
+  lbHover = -1;
+  for (let i=0;i<lbRects.length;i++){
+    const r = lbRects[i]; if (!r) continue;
+    if (mx>=r.x && mx<=r.x+r.w && my>=r.y && my<=r.y+r.h){ lbHover = i; break; }
+  }
+}
+
+/***** Buttons *****/
+function clearButtons(){
+  ['#nextPromptBtn','#nextBtn','#savedFlag','#clearBtn','#saveBtn','#makeCharmBtn','#makeCharmBtnLB'].forEach(id=>{ const el=select(id); if(el) el.remove(); });
+}
+function removeSavedFlag(){ const flag=select('#savedFlag'); if(flag) flag.remove(); }
+function createStyledButton(id,label,x,y,onClick){
+  const old=select('#'+id); if(old) old.remove();
+  const btn=createButton(label); btn.id(id);
+  btn.style('position','absolute').style('z-index','9999').style('pointer-events','auto').position(x,y);
+  const base=PALETTE[2],hover=PALETTE[3];
+  btn.style('background',base).style('color','#ffffff').style('border','2px solid #ffffff').style('border-radius','4px').style('cursor','pointer')
+     .style('font-weight','700').style('font-family', "Montserrat, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', Arial, sans-serif");
+  const smallIDs=['nextPromptBtn','nextBtn','clearBtn','saveBtn','makeCharmBtn','makeCharmBtnLB'];
+  const pad=smallIDs.includes(id)?BTN_PAD_SMALL:BTN_PAD_LARGE; const fz=smallIDs.includes(id)?BTN_FZ_SMALL:BTN_FZ_LARGE;
+  btn.style('padding', pad).style('font-size', fz);
+  btn.mouseOver(()=>btn.style('background',hover));
+  btn.mouseOut(()=>btn.style('background',base));
+  btn.mousePressed(onClick);
+  return btn;
+}
+function removeIfExists(ref){
+  if (ref && typeof ref.remove === 'function') {
+    try { ref.remove(); } catch(_) {}
+  }
+  return null;
+}
+
+/***** 跑馬燈 *****/
+function ensureMarquees(){
+  if (IS_MOBILE){
+    const phrase = 'INSUFFICIENT SPACE\u00A0';
+    const longMsg = phrase.repeat(12);
+    const html = `<div class="track"><span class="content">${longMsg}</span><span class="content">${longMsg}</span></div>`;
+    if (!mqTop){ mqTop = createDiv(html); mqTop.addClass('mq'); mqTop.addClass('top'); }
+    if (!mqBottom){ mqBottom = createDiv(html); mqBottom.addClass('mq'); mqBottom.addClass('bottom'); }
+  } else {
+    mqTop    = removeIfExists(mqTop);
+    mqBottom = removeIfExists(mqBottom);
+  }
+}
+function positionMarquees(){
+  if (!IS_MOBILE || !mqTop || !mqBottom) return;
+  const barH=max(18, floor(blockSize*0.7)), fontSize=max(12, floor(barH*0.7));
+  mqTop.position(0, max(0, canvasY - barH - 6)); mqTop.size(windowWidth, barH); mqTop.style('font-size', fontSize+'px');
+  mqBottom.position(0, canvasY + height + 6);     mqBottom.size(windowWidth, barH); mqBottom.style('font-size', fontSize+'px');
+}
+
+/***** ========= Fullscreen 3D Preview（Three.js） ========= *****/
+let charmFS = { overlay:null, footer:null, closeBtn:null };
+let charm3D = { texFront:null };
+let threeCtx = null;
+
+// 依當前盤面生成貼圖
+function buildCharmTexture(w, h){
+  const cell = floor(min(w/cols, h/rows));
+  const texW = cell*cols, texH = cell*rows;
+  const g = createGraphics(texW, texH);
+  g.background(BG_BLUE);
+  drawSnapshotToGraphics(g, (lastSnapshot || encodeBoardSnapshot()), 0, 0, cell);
+  g.noFill(); g.stroke(PINK); g.strokeWeight(12);
+  g.rect(6, 6, texW-8, texH-8);
+  return g;
+}
+
+
+function frameObject(object, camera, controls){
+  const box = new THREE.Box3().setFromObject(object);
+  const sphere = box.getBoundingSphere(new THREE.Sphere());
+  const center = sphere.center;
+  const radius = Math.max(sphere.radius, 1e-6);
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 0.6;
+
+  controls.target.copy(center);
+
+  const fov = camera.fov * (Math.PI / 180);
+  let dist = radius / Math.sin(fov / 2);
+  dist *= 2;
+  dist = Math.max(dist, 1.5);
+
+  const viewDir = new THREE.Vector3()
+    .subVectors(camera.position, controls.target)
+    .normalize();
+  if (!isFinite(viewDir.lengthSq()) || viewDir.lengthSq() < 1e-6) viewDir.set(0,0,1);
+  camera.position.copy(viewDir.multiplyScalar(dist).add(controls.target));
+
+  camera.near = Math.max(dist / 100, 0.001);
+  camera.far  = dist * 100;
+  camera.updateProjectionMatrix();
+
+  controls.minDistance = dist * 0.25;
+  controls.maxDistance = dist * 4.0;
+  controls.update();
+}
+
+async function initThreeViewer(containerEl, getSnapshotCanvas, glbPath){
+  if (!window.THREE || !THREE.GLTFLoader || !THREE.OrbitControls) {
+    alert('Three.js 尚未載好'); return;
+  }
+
+  const w = containerEl.clientWidth, h = containerEl.clientHeight;
+  const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setSize(w, h, false);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  containerEl.appendChild(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(35, w/h, 0.01, 100);
+  camera.position.set(0.6, 0.35, 0.9);
+
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true; controls.enablePan = false;
+  controls.minDistance = 0.2;    controls.maxDistance = 5;
+
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 1));
+  const dl = new THREE.DirectionalLight(0xffffff, 0.7);
+  dl.position.set(-1, 0.8, 0.6);
+  scene.add(dl);
+
+  // 材質
+  const FRAME_COLOR = '#FF3ADA';
+  const metalMat = new THREE.MeshPhysicalMaterial({
+    color: FRAME_COLOR, metalness: 0.05, roughness: 0.45, clearcoat: 0.08, clearcoatRoughness: 0.25
+  });
+
+  const cvs = getSnapshotCanvas();
+  const snapTex = new THREE.CanvasTexture(cvs);
+  snapTex.flipY = false; snapTex.colorSpace = THREE.SRGBColorSpace; snapTex.anisotropy = 8;
+  const panelMat = new THREE.MeshPhysicalMaterial({
+    map: snapTex, metalness: 0.05, roughness: 0.08, clearcoat: 0.08, clearcoatRoughness: 0.25, side: THREE.FrontSide
+  });
+
+  // 載入 GLB
+  const loader = new THREE.GLTFLoader();
+  loader.setCrossOrigin('anonymous');
+  // === 參數：用第幾個 Node（從 1 開始數）來當面板 ===
+const FORCE_PANEL_INDEX = 5;   // 先試 Node1；要改就改 1→2→3…
+
+loader.load(GLB_URL, (gltf) => {
+  const root = gltf.scene;
+
+  // --- 列出所有 mesh 並照 Node1..Node5 排序 ---
+  const meshes = [];
+  root.traverse(o => { if (o.isMesh) meshes.push(o); });
+
+  // 讓 "Node2" 會排在 "Node10" 前面（用 numeric 排序）
+  meshes.sort((a,b)=> a.name.localeCompare(b.name, undefined, {numeric:true}));
+
+  console.log('--- Loaded Meshes ---');
+  meshes.forEach((m,i)=> console.log(`${i+1}. ${m.name}`));
+
+  // --- 尺寸、置中（跟你原本一樣） ---
+  const preBox = new THREE.Box3().setFromObject(root);
+  const preSize = preBox.getSize(new THREE.Vector3());
+  const maxDim = Math.max(preSize.x, preSize.y, preSize.z);
+  const TARGET_MAX = 1.0;
+  const scale = maxDim > 0 ? TARGET_MAX / maxDim : 1.0;
+  root.scale.setScalar(scale);
+  root.updateWorldMatrix(true, true);
+  const postBox = new THREE.Box3().setFromObject(root);
+  const postCenter = postBox.getCenter(new THREE.Vector3());
+  root.position.sub(postCenter);
+
+  // --- 直接用索引選目標 mesh（超出範圍就夾回 1..N）---
+  const idx = Math.min(Math.max(1, FORCE_PANEL_INDEX), meshes.length) - 1;
+  const target = meshes[idx];
+
+  // --- 套材質：選中的那個用 panelMat，其餘用 metalMat ---
+  meshes.forEach(m => { m.material = (m === target) ? panelMat : metalMat; });
+
+  console.log(`✅ Snapshot applied to ${target.name} (index ${idx+1})`);
+
+  scene.add(root);
+  frameObject(root, camera, controls);
+});
+
+  // render loop
+  function tick(){
+    controls.update();
+    renderer.render(scene, camera);
+    threeCtx && (threeCtx.rafId = requestAnimationFrame(tick));
+  }
+  threeCtx = { renderer, scene, camera, controls, containerEl, rafId:null, onResize:null };
+  tick();
+
+  // resize
+  function onResize(){
+    const ww = containerEl.clientWidth, hh = containerEl.clientHeight;
+    renderer.setSize(ww, hh, false);
+    camera.aspect = ww / hh;
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', onResize);
+  threeCtx.onResize = onResize;
+}
+
+function disposeThreeViewer(){
+  if (!threeCtx) return;
+  if (threeCtx.rafId) cancelAnimationFrame(threeCtx.rafId);
+  if (threeCtx.onResize) window.removeEventListener('resize', threeCtx.onResize);
+  if (threeCtx.renderer) threeCtx.renderer.dispose();
+  if (threeCtx.containerEl && threeCtx.containerEl.firstChild){
+    threeCtx.containerEl.removeChild(threeCtx.containerEl.firstChild);
+  }
+  threeCtx = null;
+}
+
+async function openCharmPreview3D(){
+  closeCharmPreview3D();
+
+  const ov = createDiv('');
+  ov.id('charmFSOverlay');
+  ov.style('position','fixed').style('inset','0')
+    .style('z-index','10050')
+    .style('background','rgba(1,1,1,0.12)')
+    .style('backdrop-filter','blur(8px) saturate(1.15)')
+    .style('-webkit-backdrop-filter','blur(8px) saturate(1.15)');
+  ov.mousePressed((e)=>{ if(e.target===ov.elt) closeCharmPreview3D(); });
+  charmFS.overlay = ov;
+
+  charm3D.texFront = buildCharmTexture(420*0.82, Math.floor(420*(8/6))*0.82);
+
+  const canvasW = Math.min(420, Math.floor((windowWidth-120)*0.9));
+  const threeWrap = createDiv('');
+  threeWrap.parent(ov);
+  threeWrap.id('threeWrap');
+  threeWrap.style('position','absolute')
+    .style('left','50%').style('top','13%')
+    .style('transform','translate(-95%,-50%)')
+    .style('width', canvasW+'px')
+    .style('height', Math.floor(canvasW*(8/6))+'px')
+    .style('z-index','10055')
+    .style('pointer-events','auto');
+
+  const footer = createDiv('');
+  footer.parent(ov);
+  footer.style('position','absolute').style('left','50%')
+        .style('top','calc(42% + 230px)')
+        .style('transform','translateX(-50%)')
+        .style('display','flex').style('gap','10px')
+        .style('z-index','10060').style('pointer-events','auto');
+  charmFS.footer = footer;
+
+  const reserve = createButton('Reserve');
+  stylePill(reserve, PALETTE[2], PALETTE[3]);
+  reserve.parent(footer);
+  reserve.mousePressed(()=> {
+    window.open('https://docs.google.com/forms/d/e/1FAIpQLSc0DjE-GiOGggB6dNLWPGMjIxLlhDZUpVJs-JjiY58JEKUbtQ/viewform?usp=header', '_blank');
+  });
+
+  const closeBtn = createButton('Close');
+  stylePill(closeBtn, '#4C4C4C', '#6A6A6A');
+  closeBtn.parent(footer);
+  closeBtn.mousePressed(closeCharmPreview3D);
+  charmFS.closeBtn = closeBtn;
+
+  const tip = createDiv('Make your own charm');
+  tip.parent(ov);
+  tip.style('position','absolute')
+     .style('left','50%')
+     .style('top','calc(50% - 260px)')
+     .style('transform','translateX(-50%)')
+     .style('font-family',"Montserrat, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', Arial, sans-serif")
+     .style('font-size','16px').style('font-weight','800')
+     .style('letter-spacing','2px').style('color', PINK)
+     .style('z-index','10060');
+
+  await ensureThreeScripts();
+  await initThreeViewer(
+    threeWrap.elt,
+    () => charm3D.texFront.elt,
+    GLB_URL
+  );
+
+  window.addEventListener('keydown', escToCloseFS);
+}
+function escToCloseFS(e){ if(e.key==='Escape') closeCharmPreview3D(); }
+function closeCharmPreview3D(){
+  window.removeEventListener('keydown', escToCloseFS);
+  if (threeCtx) disposeThreeViewer();
+  if (charmFS.closeBtn){ charmFS.closeBtn.remove(); charmFS.closeBtn=null; }
+  if (charmFS.footer){ charmFS.footer.remove(); charmFS.footer=null; }
+  if (charmFS.overlay){ charmFS.overlay.remove(); charmFS.overlay=null; }
+}

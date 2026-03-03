@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Home</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root{
+        --bg0:#05071a;
+        --bg1:#0a1359;
+        --card:#0b1031cc;
+        --text:#e9ebff;
+        --muted:#b6bbff;
+        --accent:#ee00b8;
+        --accent2:#1a26ff;
+        --ring: rgba(238,0,184,.35);
+      }
+      *{ box-sizing:border-box; }
+      html, body{ height:100%; }
+      body{
+        margin:0;
+        font-family: Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(1200px 700px at 15% 15%, rgba(238,0,184,.25), transparent 60%),
+          radial-gradient(900px 600px at 85% 25%, rgba(26,38,255,.25), transparent 55%),
+          linear-gradient(180deg, var(--bg0), var(--bg1));
+      }
+      .wrap{
+        min-height:100%;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        padding: 48px 18px;
+      }
+      .card{
+        width:min(920px, 100%);
+        background: var(--card);
+        border: 1px solid rgba(255,255,255,.10);
+        border-radius: 18px;
+        padding: 28px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 18px 60px rgba(0,0,0,.35);
+      }
+      .top{
+        display:flex;
+        gap:18px;
+        align-items:flex-start;
+        justify-content:space-between;
+        flex-wrap:wrap;
+      }
+      h1{
+        margin:0;
+        font-size: clamp(34px, 4.6vw, 54px);
+        line-height:1.05;
+        letter-spacing:-0.03em;
+      }
+      .subtitle{
+        margin: 10px 0 0 0;
+        color: var(--muted);
+        max-width: 60ch;
+        line-height: 1.5;
+      }
+      .actions{
+        display:flex;
+        gap: 10px;
+        align-items:center;
+        padding-top: 6px;
+      }
+      a.button{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        gap:10px;
+        padding: 12px 16px;
+        border-radius: 12px;
+        text-decoration:none;
+        font-weight: 800;
+        letter-spacing:.01em;
+        color: white;
+        border: 1px solid rgba(255,255,255,.16);
+        background: linear-gradient(135deg, var(--accent), #ff3bda 50%, #ff4622);
+        box-shadow: 0 14px 40px rgba(238,0,184,.22);
+        outline: none;
+      }
+      a.button:focus-visible{
+        box-shadow: 0 0 0 4px var(--ring), 0 14px 40px rgba(238,0,184,.22);
+      }
+      a.secondary{
+        background: transparent;
+        color: var(--text);
+        font-weight: 600;
+        border: 1px solid rgba(255,255,255,.14);
+      }
+      a.secondary:hover{
+        border-color: rgba(255,255,255,.28);
+      }
+      .grid{
+        margin-top: 22px;
+        display:grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+      .panel{
+        background: rgba(0,0,0,.20);
+        border: 1px solid rgba(255,255,255,.10);
+        border-radius: 14px;
+        padding: 16px 16px;
+      }
+      .panel h2{
+        margin: 0 0 10px 0;
+        font-size: 14px;
+        color: var(--muted);
+        letter-spacing:.14em;
+        text-transform:uppercase;
+      }
+      ul{ margin: 0; padding-left: 18px; }
+      li{ margin: 8px 0; color: var(--text); line-height:1.45; }
+      code{
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: .95em;
+        color: #fff;
+        background: rgba(255,255,255,.10);
+        padding: 2px 6px;
+        border-radius: 8px;
+      }
+      .foot{
+        margin-top: 14px;
+        color: rgba(233,235,255,.75);
+        font-size: 13px;
+        line-height: 1.5;
+      }
+      @media (min-width: 860px){
+        .grid{ grid-template-columns: 1fr 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <section class="card">
+        <div class="top">
+          <div>
+            <h1>Home</h1>
+            <p class="subtitle">
+              Launch the sketch and start playing. Your score can be saved to the leaderboard.
+            </p>
+          </div>
+          <div class="actions">
+            <a class="button" href="./sketch.html">Play</a>
+            <a class="button secondary" href="./sketch.html#leaderboard">Leaderboard</a>
+          </div>
+        </div>
+
+        <div class="grid" role="list">
+          <div class="panel" role="listitem">
+            <h2>Controls</h2>
+            <ul>
+              <li><code>←</code> / <code>→</code>: move</li>
+              <li><code>↓</code>: soft drop</li>
+              <li><code>↑</code>: rotate</li>
+              <li>On mobile: use the on-screen buttons</li>
+            </ul>
+          </div>
+          <div class="panel" role="listitem">
+            <h2>Tips</h2>
+            <ul>
+              <li>Use rotate to fit tight gaps.</li>
+              <li>If loading looks stuck, refresh once (some assets load from CDNs).</li>
+              <li>Try fullscreen on mobile for more space.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="foot">
+          This homepage is separate from the sketch. The sketch itself runs on <code>sketch.html</code>.
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
