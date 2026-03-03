@@ -18,6 +18,14 @@
         color: #e9ebff;
         font-family: Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
         overflow: hidden;
+        opacity:0;
+        transition: opacity 260ms ease-out;
+      }
+      body.is-ready{
+        opacity:1;
+      }
+      body.is-exiting{
+        opacity:0;
       }
       .nav {
         position: fixed;
@@ -45,7 +53,7 @@
   </head>
   <body>
     <nav class="nav" aria-label="Primary">
-      <a href="./index.html">Home</a>
+      <a href="./index.html" data-soft-nav>Home</a>
     </nav>
 
     <!-- Libraries first, then the sketch -->
@@ -53,5 +61,28 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-app-compat.js" type="text/javascript"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore-compat.js" type="text/javascript"></script>
     <script src="./mySketch.js.js" type="text/javascript"></script>
+    <script>
+      (function(){
+        function enableSoftNav(){
+          document.body.classList.add('is-ready');
+          const links = document.querySelectorAll('a[data-soft-nav]');
+          links.forEach(link=>{
+            link.addEventListener('click', (ev)=>{
+              const href = link.getAttribute('href');
+              const target = link.getAttribute('target');
+              if (!href || href.startsWith('#') || target === '_blank') return;
+              ev.preventDefault();
+              document.body.classList.add('is-exiting');
+              setTimeout(()=>{ window.location.href = href; }, 240);
+            });
+          });
+        }
+        if (document.readyState === 'loading'){
+          document.addEventListener('DOMContentLoaded', enableSoftNav);
+        } else {
+          enableSoftNav();
+        }
+      })();
+    </script>
   </body>
 </html>

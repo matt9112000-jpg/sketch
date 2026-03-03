@@ -27,10 +27,16 @@
         margin:0;
         font-family: Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
         color: var(--text);
-        background: radial-gradient(1200px 700px at 15% 15%, rgba(238,0,184,.25), transparent 60%),
-                    radial-gradient(900px 600px at 85% 25%, rgba(26,38,255,.25), transparent 55%),
-                    linear-gradient(180deg, var(--bg0), var(--bg1));
+        background:#000e51;
         overflow:hidden;
+        opacity:0;
+        transition: opacity 260ms ease-out;
+      }
+      body.is-ready{
+        opacity:1;
+      }
+      body.is-exiting{
+        opacity:0;
       }
       .scene{
         position:fixed;
@@ -167,8 +173,8 @@
             </p>
           </div>
           <div class="actions">
-            <a class="button" href="./sketch.html">Play</a>
-            <a class="button secondary" href="./sketch.html#leaderboard">Leaderboard</a>
+            <a class="button" href="./sketch.html" data-soft-nav>Play</a>
+            <a class="button secondary" href="./sketch.html#leaderboard" data-soft-nav>Leaderboard</a>
           </div>
         </div>
 
@@ -293,6 +299,28 @@
         resize();
         window.addEventListener('resize', resize);
         requestAnimationFrame(loop);
+      })();
+
+      (function(){
+        function enableSoftNav(){
+          document.body.classList.add('is-ready');
+          const links = document.querySelectorAll('a[data-soft-nav]');
+          links.forEach(link=>{
+            link.addEventListener('click', (ev)=>{
+              const href = link.getAttribute('href');
+              const target = link.getAttribute('target');
+              if (!href || href.startsWith('#') || target === '_blank') return;
+              ev.preventDefault();
+              document.body.classList.add('is-exiting');
+              setTimeout(()=>{ window.location.href = href; }, 240);
+            });
+          });
+        }
+        if (document.readyState === 'loading'){
+          document.addEventListener('DOMContentLoaded', enableSoftNav);
+        } else {
+          enableSoftNav();
+        }
       })();
     </script>
   </body>
