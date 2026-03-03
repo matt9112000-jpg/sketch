@@ -12,14 +12,12 @@
     />
     <style>
       :root{
-        --bg0:#05071a;
-        --bg1:#0a1359;
-        --card:#0b1031cc;
-        --text:#e9ebff;
-        --muted:#b6bbff;
-        --accent:#ee00b8;
-        --accent2:#1a26ff;
-        --ring: rgba(238,0,184,.35);
+        --bg:#f4f4f8;
+        --text:#101018;
+        --muted:#73738a;
+        --accent:#ff1744;
+        --ring: rgba(255,23,68,.35);
+        --border:#e0e0ea;
       }
       *{ box-sizing:border-box; }
       html, body{ height:100%; }
@@ -27,7 +25,7 @@
         margin:0;
         font-family: Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
         color: var(--text);
-        background:#000e51;
+        background: var(--bg);
         overflow:hidden;
         opacity:0;
         transition: opacity 260ms ease-out;
@@ -38,269 +36,145 @@
       body.is-exiting{
         opacity:0;
       }
-      .scene{
-        position:fixed;
-        inset:0;
-        z-index:0;
-      }
-      .scene canvas{
-        width:100%;
-        height:100%;
-        display:block;
-      }
-      .wrap{
+      .page{
         min-height:100%;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        padding: 48px 18px;
-        position:relative;
-        z-index:1;
+        max-width:1040px;
+        margin:0 auto;
+        padding: 32px 18px 40px;
       }
-      .card{
-        width:min(920px, 100%);
-        background: var(--card);
-        border: 1px solid rgba(255,255,255,.10);
-        border-radius: 18px;
-        padding: 28px;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 18px 60px rgba(0,0,0,.35);
-      }
-      .top{
+      header{
         display:flex;
-        gap:18px;
-        align-items:flex-start;
         justify-content:space-between;
-        flex-wrap:wrap;
-      }
-      h1{
-        margin:0;
-        font-size: clamp(34px, 4.6vw, 54px);
-        line-height:1.05;
-        letter-spacing:-0.03em;
-      }
-      .subtitle{
-        margin: 10px 0 0 0;
-        color: var(--muted);
-        max-width: 60ch;
-        line-height: 1.5;
-      }
-      .actions{
-        display:flex;
-        gap: 10px;
         align-items:center;
-        padding-top: 6px;
-      }
-      a.button{
-        display:inline-flex;
-        align-items:center;
-        justify-content:center;
+        margin-bottom:20px;
         gap:10px;
-        padding: 12px 16px;
-        border-radius: 12px;
+      }
+      .logo{
+        font-weight:800;
+        letter-spacing:.18em;
+        text-transform:uppercase;
+        font-size:12px;
+      }
+      .nav-links{
+        display:flex;
+        gap:12px;
+        font-size:12px;
+        text-transform:uppercase;
+        letter-spacing:.16em;
+      }
+      .nav-links a{
         text-decoration:none;
-        font-weight: 800;
-        letter-spacing:.01em;
-        color: white;
-        border: 1px solid rgba(255,255,255,.16);
-        background: linear-gradient(135deg, var(--accent), #ff3bda 50%, #ff4622);
-        box-shadow: 0 14px 40px rgba(238,0,184,.22);
-        outline: none;
+        color:var(--muted);
       }
-      a.button:focus-visible{
-        box-shadow: 0 0 0 4px var(--ring), 0 14px 40px rgba(238,0,184,.22);
+      .nav-links a:hover{
+        color:var(--text);
       }
-      a.secondary{
-        background: transparent;
-        color: var(--text);
-        font-weight: 600;
-        border: 1px solid rgba(255,255,255,.14);
+      .hero-title{
+        font-size: clamp(30px, 5vw, 46px);
+        font-weight:800;
+        letter-spacing:-0.04em;
+        margin: 4px 0 4px;
       }
-      a.secondary:hover{
-        border-color: rgba(255,255,255,.28);
+      .hero-sub{
+        margin:0;
+        color:var(--muted);
+        max-width:36rem;
+        font-size:14px;
       }
-      .grid{
-        margin-top: 22px;
+      .list{
+        margin-top:26px;
+        border-top:1px solid var(--border);
+      }
+      .row{
         display:grid;
-        grid-template-columns: 1fr;
-        gap: 14px;
+        grid-template-columns: 54px minmax(0,1fr) 96px;
+        align-items:center;
+        gap:10px;
+        padding: 11px 0;
+        border-bottom:1px solid var(--border);
       }
-      .panel{
-        background: rgba(0,0,0,.20);
-        border: 1px solid rgba(255,255,255,.10);
-        border-radius: 14px;
-        padding: 16px 16px;
-      }
-      .panel h2{
-        margin: 0 0 10px 0;
-        font-size: 14px;
-        color: var(--muted);
-        letter-spacing:.14em;
+      .row-index{
+        font-size:11px;
+        color:var(--muted);
+        letter-spacing:.16em;
         text-transform:uppercase;
       }
-      ul{ margin: 0; padding-left: 18px; }
-      li{ margin: 8px 0; color: var(--text); line-height:1.45; }
-      code{
-        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-        font-size: .95em;
-        color: #fff;
-        background: rgba(255,255,255,.10);
-        padding: 2px 6px;
-        border-radius: 8px;
+      .row-main{
+        display:flex;
+        flex-direction:column;
+        gap:3px;
       }
-      .foot{
-        margin-top: 14px;
-        color: rgba(233,235,255,.75);
-        font-size: 13px;
-        line-height: 1.5;
+      .row-title{
+        font-weight:700;
+        font-size:14px;
       }
-      @media (min-width: 860px){
-        .grid{ grid-template-columns: 1fr 1fr; }
+      .row-meta{
+        font-size:12px;
+        color:var(--muted);
+      }
+      .row-cta{
+        text-align:right;
+      }
+      .pill{
+        display:inline-block;
+        padding: 5px 9px;
+        border-radius:999px;
+        font-size:10px;
+        letter-spacing:.18em;
+        text-transform:uppercase;
+        border:1px solid var(--border);
+        color:var(--text);
+        background:#fff;
+      }
+      .pill-live{
+        border-color:var(--accent);
+        color:var(--accent);
+      }
+      .row-link{
+        position:absolute;
+        inset:0;
+      }
+      .row-wrap{
+        position:relative;
       }
     </style>
   </head>
   <body>
-    <div class="scene" aria-hidden="true">
-      <canvas id="hero-canvas"></canvas>
-    </div>
-    <main class="wrap">
-      <section class="card">
-        <div class="top">
-          <div>
-            <h1>Home</h1>
-            <p class="subtitle">
-              Launch the sketch and start playing. Your score can be saved to the leaderboard.
-            </p>
-          </div>
-          <div class="actions">
-            <a class="button" href="./sketch.html" data-soft-nav>Play</a>
-            <a class="button secondary" href="./sketch.html#leaderboard" data-soft-nav>Leaderboard</a>
-          </div>
-        </div>
+    <div class="page">
+      <header>
+        <div class="logo">INSUFFICIENT&nbsp;SPACE</div>
+        <nav class="nav-links" aria-label="Global">
+          <a href="https://github.com/matt9112000-jpg" target="_blank" rel="noreferrer">Github</a>
+          <a href="mailto:">Contact</a>
+        </nav>
+      </header>
 
-        <div class="grid" role="list">
-          <div class="panel" role="listitem">
-            <h2>Controls</h2>
-            <ul>
-              <li><code>←</code> / <code>→</code>: move</li>
-              <li><code>↓</code>: soft drop</li>
-              <li><code>↑</code>: rotate</li>
-              <li>On mobile: use the on-screen buttons</li>
-            </ul>
-          </div>
-          <div class="panel" role="listitem">
-            <h2>Tips</h2>
-            <ul>
-              <li>Use rotate to fit tight gaps.</li>
-              <li>If loading looks stuck, refresh once (some assets load from CDNs).</li>
-              <li>Try fullscreen on mobile for more space.</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="foot">
-          This homepage is separate from the sketch. The sketch itself runs on <code>sketch.html</code>.
-        </div>
+      <section aria-label="Intro">
+        <h1 class="hero-title">Experiments, games &amp; other bad ideas.</h1>
+        <p class="hero-sub">
+          A small file of interactive projects. Things may be broken, weird, or both.
+        </p>
       </section>
-    </main>
+
+      <section class="list" aria-label="Projects">
+        <div class="row row-wrap">
+          <div class="row">
+            <div class="row-index">001</div>
+            <div class="row-main">
+              <div class="row-title">Insufficient Space</div>
+              <div class="row-meta">Tetris-ish arcade experiment with 3D blocks &amp; leaderboard.</div>
+            </div>
+            <div class="row-cta">
+              <span class="pill pill-live">Live</span>
+            </div>
+          </div>
+          <a class="row-link" href="./sketch.html" data-soft-nav aria-label="Open Insufficient Space"></a>
+        </div>
+        <!-- Add more rows here later -->
+      </section>
+    </div>
+
     <script>
-      (function(){
-        const canvas = document.getElementById('hero-canvas');
-        const ctx = canvas.getContext('2d');
-        const COLORS = ['#FCC730','#1A26FF','#FF4622','#FF3BDA','#6DFF69','#FF99B1','#4C4C4C'];
-        const PIECES = [];
-        const MAX_PIECES = 26;
-
-        function resize(){
-          const ratio = window.devicePixelRatio || 1;
-          const { innerWidth:w, innerHeight:h } = window;
-          canvas.width = w * ratio;
-          canvas.height = h * ratio;
-          canvas.style.width = w + 'px';
-          canvas.style.height = h + 'px';
-          ctx.setTransform(ratio,0,0,ratio,0,0);
-        }
-
-        function spawnPiece(){
-          const w = 40 + Math.random()*70;
-          const h = 30 + Math.random()*60;
-          const depth = 0.4 + Math.random()*1.1;
-          const speed = 30 + Math.random()*60;
-          const rotSpeed = (Math.random()*0.9 - 0.45) * 0.8;
-          const side = Math.random() < 0.5 ? -1 : 1;
-          const startX = side < 0 ? -w - 40 : window.innerWidth + 40;
-          const startY = Math.random()*window.innerHeight;
-          PIECES.push({
-            x:startX,
-            y:startY,
-            w,
-            h,
-            depth,
-            angle: Math.random()*Math.PI*2,
-            rotSpeed,
-            vx: side * (speed * depth),
-            vy: (Math.random()*20 - 10),
-            color: COLORS[Math.floor(Math.random()*COLORS.length)],
-            shadow: 'rgba(0,0,0,0.35)'
-          });
-        }
-
-        function step(dt){
-          const w = window.innerWidth;
-          const h = window.innerHeight;
-          for (let i = PIECES.length - 1; i >= 0; i--){
-            const p = PIECES[i];
-            p.x += p.vx * dt;
-            p.y += p.vy * dt;
-            p.angle += p.rotSpeed * dt;
-            if (p.x < -w*0.6 || p.x > w*1.6 || p.y < -h*0.6 || p.y > h*1.6){
-              PIECES.splice(i,1);
-            }
-          }
-          while (PIECES.length < MAX_PIECES){
-            spawnPiece();
-          }
-        }
-
-        function draw(){
-          const w = window.innerWidth;
-          const h = window.innerHeight;
-          ctx.clearRect(0,0,w,h);
-          const sorted = PIECES.slice().sort((a,b)=>a.depth - b.depth);
-          for (const p of sorted){
-            const scale = 0.7 + p.depth*0.6;
-            const cx = p.x;
-            const cy = p.y;
-            ctx.save();
-            ctx.translate(cx, cy);
-            ctx.rotate(p.angle);
-            ctx.scale(scale, scale);
-            ctx.fillStyle = p.shadow;
-            ctx.beginPath();
-            ctx.roundRect(-p.w/2 + 7, -p.h/2 + 7, p.w, p.h, 10);
-            ctx.fill();
-            ctx.fillStyle = p.color;
-            ctx.beginPath();
-            ctx.roundRect(-p.w/2, -p.h/2, p.w, p.h, 10);
-            ctx.fill();
-            ctx.restore();
-          }
-        }
-
-        let lastTime = performance.now();
-        function loop(now){
-          const dt = Math.min(0.05, (now - lastTime)/1000);
-          lastTime = now;
-          step(dt);
-          draw();
-          requestAnimationFrame(loop);
-        }
-
-        resize();
-        window.addEventListener('resize', resize);
-        requestAnimationFrame(loop);
-      })();
-
       (function(){
         function enableSoftNav(){
           document.body.classList.add('is-ready');
