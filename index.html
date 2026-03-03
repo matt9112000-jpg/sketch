@@ -153,6 +153,38 @@
         height:100%;
         display:block;
       }
+      .rules{
+        margin-top:22px;
+        display:grid;
+        grid-template-columns: 1fr;
+        gap:14px;
+      }
+      .panel{
+        background:#ffffff;
+        border:1px solid var(--border);
+        border-radius:14px;
+        padding:14px 14px 12px;
+      }
+      .panel h2{
+        margin:0 0 10px 0;
+        font-size:11px;
+        color:var(--muted);
+        letter-spacing:.18em;
+        text-transform:uppercase;
+      }
+      ul{ margin: 0; padding-left: 18px; }
+      li{ margin: 8px 0; color: var(--text); line-height:1.45; font-size:13px; }
+      code{
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: .95em;
+        color: var(--text);
+        background: rgba(16,16,24,.08);
+        padding: 2px 6px;
+        border-radius: 8px;
+      }
+      @media (min-width: 860px){
+        .rules{ grid-template-columns: 1fr 1fr; }
+      }
     </style>
   </head>
   <body>
@@ -188,6 +220,26 @@
           <a class="row-link" href="./sketch.html" data-soft-nav aria-label="Open Insufficient Space"></a>
         </div>
         <!-- Add more rows here later -->
+      </section>
+
+      <section class="rules" aria-label="Rules">
+        <div class="panel">
+          <h2>Controls</h2>
+          <ul>
+            <li><code>←</code> / <code>→</code>: move</li>
+            <li><code>↓</code>: soft drop</li>
+            <li><code>↑</code>: rotate</li>
+            <li>On mobile: use the on-screen buttons</li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h2>Tips</h2>
+          <ul>
+            <li>Use rotate to fit tight gaps.</li>
+            <li>If loading looks stuck, refresh once (some assets load from CDNs).</li>
+            <li>Try fullscreen on mobile for more space.</li>
+          </ul>
+        </div>
       </section>
     </div>
 
