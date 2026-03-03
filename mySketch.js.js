@@ -710,9 +710,13 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, glbPath){
   scene.add(dl);
 
   // 材質
-  const FRAME_COLOR = '#FF3ADA';
+  const FRAME_COLOR = '#d8dbe6'; // silver tone
   const metalMat = new THREE.MeshPhysicalMaterial({
-    color: FRAME_COLOR, metalness: 0.05, roughness: 0.45, clearcoat: 0.08, clearcoatRoughness: 0.25
+    color: FRAME_COLOR,
+    metalness: 0.9,
+    roughness: 0.2,
+    clearcoat: 0.3,
+    clearcoatRoughness: 0.25
   });
 
   const cvs = getSnapshotCanvas();
