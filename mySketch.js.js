@@ -21,7 +21,7 @@ let gameState = 'input'; // 'input','playing','endedWait','gameover','leaderboar
 /***** 本地備援排行榜 *****/
 const STORAGE_KEY = 'tetris_scores';
 const CLOUD_CACHE_KEY = 'tetris_scores_cache';
-const GLB_URL = 'https://cdn.jsdelivr.net/gh/matt9112000-jpg/insufficient-space-assets@22a8ceb/box.glb';
+const GLB_URL = 'https://github.com/matt9112000-jpg/insufficient-space-assets.git';
 /***** Three.js（非 ESM 版） *****/
 const THREE_CDNS = [
   'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js',
