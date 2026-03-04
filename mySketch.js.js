@@ -582,7 +582,21 @@ function drawIntroPieces(){
 function renderLeaderboard(){
   background('#ffffff');
   noStroke(); fill(BG_BLUE); rect(BORDER_HALF, BORDER_HALF, innerW, innerH);
+  for (let i=0; i<8; i++){
+    const a = map(i, 0, 7, 16, 52);
+    fill(255, 59, 218, a);
+    rect(BORDER_HALF + i * (innerW/8), BORDER_HALF, innerW/16, innerH);
+  }
   stroke(PINK); strokeWeight(BORDER_THICK); noFill(); rect(0,0,width,height);
+  noStroke();
+  fill('#f9f7ff');
+  textAlign(CENTER, TOP);
+  textStyle(BOLD);
+  textSize(max(20, innerW * 0.07));
+  text('LEADERBOARD', width/2, BORDER_HALF + 12);
+  fill('#ffd9f8');
+  textSize(max(12, innerW * 0.025));
+  text('Top survivors in insufficient space', width/2, BORDER_HALF + 42);
 
   if (SHOW_CLEAR && !select('#clearBtn')) createStyledButton('clearBtn','Clear', canvasX + 20, canvasY + 20, clearScores);
   if (!select('#saveBtn')) createStyledButton('saveBtn','Save', canvasX + 20, canvasY + 60, saveLastGamePng);
@@ -596,42 +610,100 @@ function renderLeaderboard(){
   }
 
   lbRects = [];
-  const gap=max(28, innerW*0.10), vGap=max(24, innerH*0.10);
-  const maxWPerItem=(innerW-gap)/2, maxCellByWidth=floor(maxWPerItem/cols), maxCellByHeight=floor((innerH*0.40)/rows);
-  const cellBottom=max(3, min(maxCellByWidth, maxCellByHeight, floor((innerW*LB_THUMB_RATIO)/cols)));
-  const thumbW=cellBottom*cols, thumbH=cellBottom*rows;
-  const cellTop=floor(cellBottom*1.28), thumbW1=cellTop*cols, thumbH1=cellTop*rows;
+  const podiumY = BORDER_HALF + innerH * 0.74;
+  const cx = BORDER_HALF + innerW/2;
+  const lane = innerW * 0.28;
+  const colW = innerW * 0.22;
+  const colHeights = [innerH * 0.33, innerH * 0.23, innerH * 0.18]; // 1 > 2 > 3
+  const colX = [cx - colW/2, cx - lane - colW/2, cx + lane - colW/2];
+  const colY = [podiumY - colHeights[0], podiumY - colHeights[1], podiumY - colHeights[2]];
+  const medalColors = ['#ffd530','#9fe7ff','#ff8fda'];
+  const edgeColors = ['#fef08a','#9ee7ff','#ff77d6'];
 
-  const totalH=thumbH1+vGap+thumbH, startY=BORDER_HALF+(innerH-totalH)/2, cx=BORDER_HALF+innerW/2;
+  // podium columns behind cards
+  for (let i=0; i<3; i++){
+    noStroke();
+    fill(8, 14, 36, 125);
+    rect(colX[i], colY[i], colW, colHeights[i], 12, 12, 3, 3);
+    stroke(edgeColors[i]); strokeWeight(2); noFill();
+    rect(colX[i], colY[i], colW, colHeights[i], 12, 12, 3, 3);
+    noStroke(); fill('#f6f8ff');
+    textAlign(CENTER, CENTER); textStyle(BOLD); textSize(max(14, innerW * 0.038));
+    text(String(i+1), colX[i] + colW/2, colY[i] + colHeights[i] - 18);
+  }
 
-  const tx1=cx-thumbW1/2, ty1=startY, title1=max(26,LB_SIZES[0]*1.2), lineY1=ty1 - title1 - 10;
-  lbRects.push({x:tx1, y:lineY1 - title1*0.6, w:thumbW1, h:title1 + 10 + thumbH1});
-
-  const tx2=cx-gap/2-thumbW, ty2=startY+thumbH1+vGap, title2=max(18,LB_SIZES[1]), lineY2=ty2 - title2 - 8;
-  lbRects.push({x:tx2, y:lineY2 - title2*0.6, w:thumbW, h:title2 + 8 + thumbH});
-
-  const tx3=cx+gap/2, ty3=ty2, title3=max(18,LB_SIZES[2]), lineY3=ty3 - title3 - 8;
-  lbRects.push({x:tx3, y:lineY3 - title3*0.6, w:thumbW, h:title3 + 8 + thumbH});
+  const maxCardW = innerW * 0.34;
+  const cellSmall = max(3, floor((maxCardW * 0.70) / cols));
+  const cellBig = floor(cellSmall * 1.25);
+  const dims = [
+    { cell:cellBig, title:max(28, LB_SIZES[0]*1.24), x:cx, y:colY[0] - innerH*0.22, rank:1 },
+    { cell:cellSmall, title:max(18, LB_SIZES[1]), x:cx - lane, y:colY[1] - innerH*0.18, rank:2 },
+    { cell:cellSmall, title:max(18, LB_SIZES[2]), x:cx + lane, y:colY[2] - innerH*0.18, rank:3 }
+  ];
 
   const items=[];
-  if (source[0]) items.push({rec:source[0], i:0, titleSize:title1, tx:tx1, ty:ty1, lineY:lineY1, cell:cellTop,    thumbW:thumbW1, thumbH:thumbH1, bx:tx1, by:lineY1 - title1*0.6, bw:thumbW1, bh:title1 + 10 + thumbH1});
-  if (source[1]) items.push({rec:source[1], i:1, titleSize:title2, tx:tx2, ty:ty2, lineY:lineY2, cell:cellBottom, thumbW:thumbW,  thumbH:thumbH,  bx:tx2, by:lineY2 - title2*0.6, bw:thumbW,  bh:title2 + 8 + thumbH});
-  if (source[2]) items.push({rec:source[2], i:2, titleSize:title3, tx:tx3, ty:ty3, lineY:lineY3, cell:cellBottom, thumbW:thumbW,  thumbH:thumbH,  bx:tx3, by:lineY3 - title3*0.6, bw:thumbW,  bh:title3 + 8 + thumbH});
+  for (let i=0; i<3; i++){
+    if (!source[i]) continue;
+    const d = dims[i];
+    const thumbW = d.cell * cols;
+    const thumbH = d.cell * rows;
+    const bw = thumbW + 26;
+    const bh = thumbH + d.title * 1.85 + 18;
+    const bx = d.x - bw/2;
+    const by = d.y;
+    const tx = d.x - thumbW/2;
+    const ty = by + d.title * 1.42 + 8;
+    const lineY = by + 10;
+    lbRects.push({x:bx, y:by, w:bw, h:bh});
+    items.push({ rec:source[i], i, rank:d.rank, titleSize:d.title, tx, ty, lineY, cell:d.cell, thumbW, thumbH, bx, by, bw, bh });
+  }
 
   updateLbHover(mouseX, mouseY);
   let hi=-1; if (lbActive>=0 && millis()<lbActiveUntil) hi=lbActive; else if (lbHover>=0) hi=lbHover;
 
   function drawLbItem(it, lifted){
-    const {rec,i,titleSize,lineY,cell,thumbW,thumbH,tx,ty,bx,by,bw,bh}=it;
+    const {rec,i,rank,titleSize,lineY,cell,thumbW,thumbH,tx,ty,bx,by,bw,bh}=it;
+    const rankColor = medalColors[i] || '#d8ddff';
+    const edgeColor = edgeColors[i] || '#aab4ff';
     push();
       if (lifted){
         translate(bx+bw/2, by+bh/2-BOUNCE_OFFSET); scale(SCALE_HOVER); translate(-(bx+bw/2), -(by+bh/2));
-        noStroke(); fill(0,60); rect(bx-10, by-10, bw+20, bh+20, 10);
+        noStroke(); fill(0,80); rect(bx-10, by-10, bw+20, bh+20, 12);
       }
-      noStroke(); fill('#FF3BDA'); textSize(titleSize); textAlign(CENTER,TOP); textStyle(BOLD);
-      text(`${i+1}. ${rec.name}  ${rec.score}`, bx + bw/2, lineY);
-      if (rec.snapshot) drawSnapshot(rec.snapshot, tx, ty, cell);
-      else { noFill(); stroke('#FF99B1'); strokeWeight(2); rect(tx,ty,thumbW,thumbH,6); }
+      noStroke();
+      fill(7, 11, 28, 160);
+      rect(bx-8, by-6, bw+16, bh+14, 12);
+      noFill();
+      stroke(edgeColor);
+      strokeWeight(2);
+      rect(bx-8, by-6, bw+16, bh+14, 12);
+
+      noStroke();
+      fill(rankColor);
+      textSize(titleSize * 0.96);
+      textAlign(CENTER, TOP);
+      textStyle(BOLD);
+      text(`#${rank}  ${rec.name}`, bx + bw/2, lineY + 8);
+      fill('#f6f8ff');
+      textSize(max(16, titleSize * 0.72));
+      text(`Empty Blocks: ${rec.score}`, bx + bw/2, lineY + titleSize * 0.98);
+
+      // Medal badge
+      fill(rankColor);
+      circle(bx + bw - 22, by + 18, 24);
+      fill('#10131f');
+      textAlign(CENTER, CENTER);
+      textSize(14);
+      text(String(rank), bx + bw - 22, by + 18);
+
+      if (rec.snapshot){
+        drawSnapshot(rec.snapshot, tx, ty, cell);
+      } else {
+        noFill();
+        stroke('#FF99B1');
+        strokeWeight(2);
+        rect(tx, ty, thumbW, thumbH, 6);
+      }
     pop();
   }
 
@@ -832,7 +904,7 @@ function makeResultVoxelGroup(snapshot, panelRoot, cubeTemplate){
   }
   group.rotation.set(Math.PI / 2, 0, 0);
   group.position.y += z + panelBox.max.y + cell * 0.12;
-  group.position.add(new THREE.Vector3(10, -2, 15));
+  group.position.add(new THREE.Vector3(0, 0, 0));
   return group.children.length ? group : null;
 }
 
@@ -1133,18 +1205,53 @@ async function openCharmPreview3D(options = {}){
       .style('mix-blend-mode','screen')
       .style('animation','rewardPulse 1000ms ease-out 2');
 
-    const fxRays = createDiv('');
-    fxRays.parent(ov);
-    fxRays.style('position','absolute').style('left','50%').style('top','40%')
-      .style('width','68vmin').style('height','68vmin')
-      .style('transform','translate(-50%, -50%)')
+    const tetriLayer = createDiv('');
+    tetriLayer.parent(ov);
+    tetriLayer.style('position','absolute').style('inset','0')
       .style('z-index','10052')
       .style('pointer-events','none')
-      .style('border-radius','999px')
-      .style('background','conic-gradient(from 0deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02), rgba(255,255,255,0.10), rgba(255,255,255,0.02), rgba(255,255,255,0.08))')
-      .style('filter','blur(1px)')
-      .style('mix-blend-mode','screen')
-      .style('animation','rewardRays 1400ms linear infinite');
+      .style('overflow','hidden');
+
+    const shapeKeys = Object.keys(SHAPES);
+    for (let i=0; i<38; i++){
+      const key = shapeKeys[i % shapeKeys.length];
+      const mat = SHAPES[key];
+      const unit = 8 + (i % 4) * 2;
+      const w = mat[0].length * unit;
+      const h = mat.length * unit;
+      const piece = createDiv('');
+      piece.parent(tetriLayer);
+      piece.style('position','absolute')
+        .style('left', `${Math.floor(Math.random() * 100)}%`)
+        .style('top', '-14%')
+        .style('width', `${w}px`)
+        .style('height', `${h}px`)
+        .style('opacity', '0')
+        .style('transform-origin','50% 50%')
+        .style('z-index', '10052')
+        .style('pointer-events', 'none')
+        .style('--drift', `${-120 + Math.random() * 240}px`)
+        .style('--rot', `${-220 + Math.random() * 440}deg`)
+        .style('--scale', `${0.75 + Math.random() * 0.65}`)
+        .style('animation', `rewardTetFall ${1500 + Math.floor(Math.random()*1200)}ms linear infinite`)
+        .style('animation-delay', `${-Math.floor(Math.random()*2200)}ms`);
+      for (let r=0; r<mat.length; r++){
+        for (let c=0; c<mat[r].length; c++){
+          if (!mat[r][c]) continue;
+          const cell = createDiv('');
+          cell.parent(piece);
+          const col = PALETTE[(i + r + c) % PALETTE.length];
+          cell.style('position','absolute')
+            .style('left', `${c * unit}px`)
+            .style('top', `${r * unit}px`)
+            .style('width', `${unit-1}px`)
+            .style('height', `${unit-1}px`)
+            .style('border-radius','2px')
+            .style('background', col)
+            .style('box-shadow', '0 0 8px rgba(255,255,255,0.38)');
+        }
+      }
+    }
 
     const boom = createDiv('BLAST REWARD');
     boom.parent(ov);
@@ -1367,9 +1474,10 @@ if (!document.getElementById('rewardFxStyle')){
       25% { opacity: 1; transform: scale(1.02); }
       100% { opacity: 0.35; transform: scale(1); }
     }
-    @keyframes rewardRays {
-      0% { transform: translate(-50%, -50%) rotate(0deg) scale(0.96); opacity: 0.38; }
-      100% { transform: translate(-50%, -50%) rotate(360deg) scale(1.08); opacity: 0.16; }
+    @keyframes rewardTetFall {
+      0% { opacity: 0; transform: translate3d(0, -14vh, 0) rotate(0deg) scale(var(--scale)); }
+      12% { opacity: 0.95; }
+      100% { opacity: 0; transform: translate3d(var(--drift), 122vh, 0) rotate(var(--rot)) scale(var(--scale)); }
     }
     @keyframes rewardPopOut {
       0% { opacity: 0; transform: translateX(-50%) rotate(-8deg) scale(0.65); }
