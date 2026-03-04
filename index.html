@@ -90,12 +90,30 @@
         grid-template-columns: 120px 54px minmax(0,1fr);
         align-items:center;
         gap:10px;
-        padding: 11px 92px 11px 0;
-        border-bottom:1px solid var(--border);
+        padding: 14px 12px;
+        border:1px solid var(--border);
+        border-radius:16px;
+        margin-top:12px;
         position:relative;
+        overflow:hidden;
       }
       .row:hover{
         background:#ffffff;
+      }
+      .row-introduction{
+        background:
+          radial-gradient(280px 120px at 92% 12%, rgba(26,38,255,.13), transparent 70%),
+          radial-gradient(240px 130px at 8% 92%, rgba(255,70,34,.12), transparent 70%),
+          #ffffff;
+      }
+      .row-introduction::before{
+        content:"";
+        position:absolute;
+        left:0;
+        top:0;
+        bottom:0;
+        width:5px;
+        background: linear-gradient(180deg, #1A26FF, #FF3BDA, #FF4622);
       }
       .row-index{
         font-size:11px;
@@ -110,19 +128,12 @@
       }
       .row-title{
         font-weight:700;
-        font-size:14px;
+        font-size:15px;
         line-height:1.2;
       }
       .row-meta{
         font-size:12px;
         color:var(--muted);
-      }
-      .row-cta{
-        position:absolute;
-        right:-18px;
-        top:50%;
-        transform:translateY(-50%);
-        text-align:right;
       }
       .pill{
         display:inline-block;
@@ -138,6 +149,9 @@
       .pill-live{
         border-color:var(--accent);
         color:var(--accent);
+      }
+      .row-vibe{
+        margin-top:5px;
       }
       .row-link{
         position:absolute;
@@ -163,7 +177,7 @@
         .row{
           grid-template-columns: 84px 36px minmax(0,1fr);
           gap:8px;
-          padding-right:84px;
+          padding:10px 10px;
         }
         .thumb3d{
           width:84px;
@@ -193,15 +207,13 @@
       </section>
 
       <section class="list" aria-label="Projects">
-        <div class="row row-wrap" data-project-row>
-          <div class="row">
+        <div class="row-wrap" data-project-row>
+          <div class="row row-introduction">
             <div class="thumb3d" data-project-3d></div>
             <div class="row-index">001</div>
             <div class="row-main">
               <div class="row-title">INTRODUCTION</div>
-            </div>
-            <div class="row-cta">
-              <span class="pill pill-live">Live</span>
+              <div class="row-vibe"><span class="pill">Arcade / Metallic / Neon</span></div>
             </div>
           </div>
           <a class="row-link" href="./sketch.html" data-soft-nav aria-label="Open Insufficient Space"></a>
