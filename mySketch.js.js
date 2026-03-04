@@ -642,6 +642,42 @@ let charmFS = { overlay:null, footer:null, closeBtn:null };
 let charm3D = { texFront:null };
 let threeCtx = null;
 
+function getPartIdFromName(name){
+  const n = (name || '').trim();
+  if (n === '1' || n === '2' || n === '3') return n;
+  const m = n.match(/(?:^|[^0-9])([123])(?:[^0-9]|$)/);
+  return m ? m[1] : null;
+}
+function collectPartMeshes(root){
+  const parts = { '1':[], '2':[], '3':[], other:[] };
+  const unnamed = [];
+  root.traverse((o)=>{
+    if (!o.isMesh) return;
+    const id = getPartIdFromName(o.name);
+    if (id) parts[id].push(o);
+    else {
+      parts.other.push(o);
+      unnamed.push(o);
+    }
+  });
+
+  // Fallback: if model has no explicit 1/2/3 names, auto-map by mesh volume.
+  if (!parts['1'].length && !parts['2'].length && !parts['3'].length && unnamed.length){
+    const vol = (mesh)=>{
+      const b = new THREE.Box3().setFromObject(mesh);
+      const s = b.getSize(new THREE.Vector3());
+      return Math.max(0, s.x * s.y * s.z);
+    };
+    unnamed.sort((a,b)=>vol(b)-vol(a));
+    if (unnamed[0]) parts['1'].push(unnamed[0]); // likely case (largest)
+    if (unnamed[1]) parts['2'].push(unnamed[1]);
+    if (unnamed[2]) parts['3'].push(unnamed[2]);
+    const picked = new Set(parts['1'].concat(parts['2'], parts['3']));
+    parts.other = unnamed.filter(m=>!picked.has(m));
+  }
+  return parts;
+}
+
 // 依當前盤面生成貼圖
 function buildCharmTexture(w, h){
   const cell = floor(min(w/cols, h/rows));
@@ -685,7 +721,7 @@ function frameObject(object, camera, controls){
   controls.update();
 }
 
-async function initThreeViewer(containerEl, getSnapshotCanvas, glbPath){
+async function initThreeViewer(containerEl, getSnapshotCanvas, glbPath, options = {}){
   if (!window.THREE || !THREE.GLTFLoader || !THREE.OrbitControls) {
     alert('Three.js 尚未載好'); return;
   }
@@ -747,13 +783,27 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, glbPath){
     map: snapTex, metalness: 0.05, roughness: 0.08, clearcoat: 0.08, clearcoatRoughness: 0.25, side: THREE.FrontSide
   });
 
+  // Material presets for named parts 1/2/3
+  const blueMat = new THREE.MeshPhysicalMaterial({
+    color:'#1A26FF', metalness:0.45, roughness:0.18, clearcoat:0.55, clearcoatRoughness:0.2
+  });
+  const pinkMat = new THREE.MeshPhysicalMaterial({
+    color:'#FF3BDA', metalness:0.35, roughness:0.22, clearcoat:0.6, clearcoatRoughness:0.25
+  });
+  const blackMat = new THREE.MeshPhysicalMaterial({
+    color:'#111111', metalness:0.55, roughness:0.28, clearcoat:0.35, clearcoatRoughness:0.28
+  });
+
+  const mode = options.mode || 'charm'; // charm | shop
+  const partState = {
+    caseVisible: true,   // item 1 (box case)
+    showPart3: true      // item 3 optional (charm mode)
+  };
+
   // 載入 GLB
   const loader = new THREE.GLTFLoader();
   loader.setCrossOrigin('anonymous');
-  // === 參數：用第幾個 Node（從 1 開始數）來當面板 ===
-const FORCE_PANEL_INDEX = 5;   // 先試 Node1；要改就改 1→2→3…
-
-loader.load(GLB_URL, (gltf) => {
+loader.load(glbPath || GLB_URL, (gltf) => {
   const root = gltf.scene;
 
   // --- 列出所有 mesh 並照 Node1..Node5 排序 ---
@@ -778,21 +828,34 @@ loader.load(GLB_URL, (gltf) => {
   const postCenter = postBox.getCenter(new THREE.Vector3());
   root.position.sub(postCenter);
 
-  // --- 直接用索引選目標 mesh（超出範圍就夾回 1..N）---
-  const idx = Math.min(Math.max(1, FORCE_PANEL_INDEX), meshes.length) - 1;
-  const target = meshes[idx];
-
-  // --- 套材質：預設全銀色；需要時再啟用 panel snapshot ---
-  if (USE_SNAPSHOT_PANEL) {
-    meshes.forEach(m => { m.material = (m === target) ? panelMat : metalMat; });
-    console.log(`✅ Snapshot applied to ${target.name} (index ${idx+1})`);
-  } else {
-    meshes.forEach(m => { m.material = metalMat; });
-    console.log('✅ Silver material applied to all meshes');
-  }
+  const parts = collectPartMeshes(root);
+  const applyParts = ()=>{
+    const setList = (arr, mat, visible=true)=>{
+      arr.forEach((m)=>{ m.material = mat; m.visible = visible; });
+    };
+    if (mode === 'charm'){
+      setList(parts['1'], blueMat, partState.caseVisible);
+      setList(parts['2'], pinkMat, true);
+      setList(parts['3'], blackMat, partState.showPart3);
+      setList(parts.other, metalMat, true);
+    } else {
+      setList(parts['1'], metalMat, partState.caseVisible);
+      setList(parts['2'], metalMat, true);
+      setList(parts['3'], blackMat, true);
+      setList(parts.other, metalMat, true);
+    }
+  };
+  applyParts();
 
   scene.add(root);
   frameObject(root, camera, controls);
+
+  if (threeCtx){
+    threeCtx.partState = partState;
+    threeCtx.refreshParts = applyParts;
+    threeCtx.hasPart3 = parts['3'].length > 0;
+    threeCtx.hasCase = parts['1'].length > 0;
+  }
 });
 
   // render loop
@@ -801,7 +864,7 @@ loader.load(GLB_URL, (gltf) => {
     renderer.render(scene, camera);
     threeCtx && (threeCtx.rafId = requestAnimationFrame(tick));
   }
-  threeCtx = { renderer, scene, camera, controls, containerEl, rafId:null, onResize:null };
+  threeCtx = { renderer, scene, camera, controls, containerEl, rafId:null, onResize:null, partState:null, refreshParts:null, hasPart3:false, hasCase:false };
   tick();
 
   // resize
@@ -861,9 +924,29 @@ async function openCharmPreview3D(){
   footer.style('position','absolute').style('left','50%')
         .style('top','calc(42% + 230px)')
         .style('transform','translateX(-50%)')
-        .style('display','flex').style('gap','10px')
+        .style('display','flex').style('gap','10px').style('flex-wrap','wrap').style('justify-content','center')
         .style('z-index','10060').style('pointer-events','auto');
   charmFS.footer = footer;
+
+  const caseBtn = createButton('Case: On');
+  stylePill(caseBtn);
+  caseBtn.parent(footer);
+  caseBtn.mousePressed(()=>{
+    if (!threeCtx || !threeCtx.partState || !threeCtx.hasCase) return;
+    threeCtx.partState.caseVisible = !threeCtx.partState.caseVisible;
+    if (threeCtx.refreshParts) threeCtx.refreshParts();
+    caseBtn.html('Case: ' + (threeCtx.partState.caseVisible ? 'On' : 'Off'));
+  });
+
+  const part3Btn = createButton('Part 3: On');
+  stylePill(part3Btn);
+  part3Btn.parent(footer);
+  part3Btn.mousePressed(()=>{
+    if (!threeCtx || !threeCtx.partState || !threeCtx.hasPart3) return;
+    threeCtx.partState.showPart3 = !threeCtx.partState.showPart3;
+    if (threeCtx.refreshParts) threeCtx.refreshParts();
+    part3Btn.html('Part 3: ' + (threeCtx.partState.showPart3 ? 'On' : 'Off'));
+  });
 
   const reserve = createButton('Reserve');
   stylePill(reserve, PALETTE[2], PALETTE[3]);
@@ -893,8 +976,14 @@ async function openCharmPreview3D(){
   await initThreeViewer(
     threeWrap.elt,
     () => charm3D.texFront.elt,
-    GLB_URL
+    GLB_URL,
+    { mode:'charm' }
   );
+
+  if (threeCtx){
+    if (!threeCtx.hasCase) caseBtn.attribute('disabled','true').style('opacity','0.55');
+    if (!threeCtx.hasPart3) part3Btn.attribute('disabled','true').style('opacity','0.55');
+  }
 
   // Slide-in + scale-up intro (small → big) after click
   requestAnimationFrame(()=>{
