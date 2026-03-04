@@ -736,8 +736,7 @@ function makeResultVoxelGroup(snapshot, panelRoot, cubeTemplate){
   const gridW = (cols - 1) * step + cell;
   const gridH = (rows - 1) * step + cell;
 
-  const startX = panelBox.min.x + (panelSize.x - gridW) / 2 + cell / 2;
-  const startY = panelBox.max.y - (panelSize.y - gridH) / 2 - cell / 2;
+  const panelCenter = panelBox.getCenter(new THREE.Vector3());
   const z = panelBox.max.z + Math.max(cell * 0.06, panelSize.z * 0.012);
 
   let template = cubeTemplate;
@@ -760,7 +759,9 @@ function makeResultVoxelGroup(snapshot, panelRoot, cubeTemplate){
       if (colorIdx < 0 || colorIdx >= PALETTE.length) continue;
 
       const voxel = template.clone();
-      voxel.position.set(startX + c * step, startY - r * step, z);
+      const lx = (c - (cols - 1) / 2) * step;
+      const ly = ((rows - 1) / 2 - r) * step;
+      voxel.position.set(lx, ly, 0);
       const s = (cell * 0.84) / baseScale;
       voxel.scale.set(s, s, s);
       voxel.rotation.set(Math.PI / 2, 0, 0);
@@ -777,8 +778,8 @@ function makeResultVoxelGroup(snapshot, panelRoot, cubeTemplate){
       group.add(voxel);
     }
   }
-  group.rotation.set(Math.PI / 2, 0, 0);
-  group.position.y += z + panelBox.max.y + cell * 0.12;
+  group.rotation.set(0, 0, 0);
+  group.position.set(panelCenter.x, panelCenter.y, z);
   return group.children.length ? group : null;
 }
 
@@ -829,7 +830,7 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
   renderer.setSize(w, h, false);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.0;
+  renderer.toneMappingExposure = 0.9;
   containerEl.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
@@ -850,13 +851,13 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
 
   scene.add(new THREE.HemisphereLight(0xffffff, 0x97a3b5, 0.86));
   scene.add(new THREE.AmbientLight(0xffffff, 0.34));
-  const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
+  const keyLight = new THREE.DirectionalLight(0xffffff, 0.82);
   keyLight.position.set(-1.1, 1.4, 1.35);
   scene.add(keyLight);
-  const fillLight = new THREE.DirectionalLight(0xecf3ff, 0.78);
+  const fillLight = new THREE.DirectionalLight(0xecf3ff, 0.62);
   fillLight.position.set(1.4, 0.85, 1.5);
   scene.add(fillLight);
-  const rimLight = new THREE.DirectionalLight(0xffffff, 0.42);
+  const rimLight = new THREE.DirectionalLight(0xffffff, 0.34);
   rimLight.position.set(0.0, 1.0, -1.6);
   scene.add(rimLight);
   const leftFill = new THREE.DirectionalLight(0xf6f9ff, 0.35);
