@@ -779,7 +779,7 @@ function makeResultVoxelGroup(snapshot, panelRoot, cubeTemplate){
   }
   group.rotation.set(Math.PI / 2, 0, 0);
   group.position.y += z + panelBox.max.y + cell * 0.12;
-  group.position.add(new THREE.Vector3(10, -2, 15));
+  group.position.add(new THREE.Vector3(5, -5, 5));
   return group.children.length ? group : null;
 }
 
@@ -830,7 +830,7 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
   renderer.setSize(w, h, false);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.82;
+  renderer.toneMappingExposure = 0.72;
   containerEl.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
@@ -849,24 +849,24 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
     rotateResumeAt = performance.now() + 1000;
   });
 
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x97a3b5, 0.62));
-  scene.add(new THREE.AmbientLight(0xffffff, 0.24));
-  const keyLight = new THREE.DirectionalLight(0xffffff, 0.68);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x97a3b5, 0.52));
+  scene.add(new THREE.AmbientLight(0xffffff, 0.18));
+  const keyLight = new THREE.DirectionalLight(0xffffff, 0.56);
   keyLight.position.set(-1.1, 1.4, 1.35);
   scene.add(keyLight);
-  const fillLight = new THREE.DirectionalLight(0xecf3ff, 0.52);
+  const fillLight = new THREE.DirectionalLight(0xecf3ff, 0.44);
   fillLight.position.set(1.4, 0.85, 1.5);
   scene.add(fillLight);
-  const rimLight = new THREE.DirectionalLight(0xffffff, 0.26);
+  const rimLight = new THREE.DirectionalLight(0xffffff, 0.2);
   rimLight.position.set(0.0, 1.0, -1.6);
   scene.add(rimLight);
-  const leftFill = new THREE.DirectionalLight(0xf6f9ff, 0.22);
+  const leftFill = new THREE.DirectionalLight(0xf6f9ff, 0.16);
   leftFill.position.set(-1.8, 0.35, 0.6);
   scene.add(leftFill);
-  const rightFill = new THREE.DirectionalLight(0xf6f9ff, 0.22);
+  const rightFill = new THREE.DirectionalLight(0xf6f9ff, 0.16);
   rightFill.position.set(1.8, 0.35, 0.6);
   scene.add(rightFill);
-  const topSoft = new THREE.PointLight(0xffffff, 0.14, 6);
+  const topSoft = new THREE.PointLight(0xffffff, 0.1, 6);
   topSoft.position.set(0, 1.8, 0.9);
   scene.add(topSoft);
 
