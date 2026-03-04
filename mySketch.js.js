@@ -748,6 +748,7 @@ function makeResultVoxelGroup(snapshot, panelRoot, cubeTemplate){
   }
 
   const group = new THREE.Group();
+  const selfRotate90 = Math.PI / 2;
   for (let r=0; r<rows; r++){
     for (let c=0; c<cols; c++){
       const idxInSnap = r * cols + c;
@@ -758,9 +759,9 @@ function makeResultVoxelGroup(snapshot, panelRoot, cubeTemplate){
 
       const voxel = template.clone();
       voxel.position.set(startX + c * cell, startY - r * cell, z);
-      const s = (cell * 0.88) / baseScale;
+      const s = (cell * 0.72) / baseScale;
       voxel.scale.set(s, s, s);
-      voxel.rotation.set(0, 0, 0);
+      voxel.rotation.set(selfRotate90, 0, 0);
       voxel.traverse((o)=>{
         if (!o.isMesh) return;
         o.material = new THREE.MeshPhysicalMaterial({
@@ -774,6 +775,7 @@ function makeResultVoxelGroup(snapshot, panelRoot, cubeTemplate){
       group.add(voxel);
     }
   }
+  group.rotation.z = Math.PI / 2;
   return group.children.length ? group : null;
 }
 
@@ -924,7 +926,7 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
     const preBox = new THREE.Box3().setFromObject(root);
     const preSize = preBox.getSize(new THREE.Vector3());
     const maxDim = Math.max(preSize.x, preSize.y, preSize.z);
-    const TARGET_MAX = 1.0;
+    const TARGET_MAX = (mode === 'charm') ? 0.82 : 1.0;
     const scale = maxDim > 0 ? TARGET_MAX / maxDim : 1.0;
     root.scale.setScalar(scale);
     root.updateWorldMatrix(true, true);
@@ -1066,13 +1068,13 @@ async function openCharmPreview3D(){
 
   charm3D.texFront = buildCharmTexture(420*0.82, Math.floor(420*(8/6))*0.82);
 
-  const canvasW = Math.min(420, Math.floor((windowWidth-120)*0.9));
+  const canvasW = Math.min(380, Math.floor((windowWidth-120)*0.82));
   const threeWrap = createDiv('');
   threeWrap.parent(ov);
   threeWrap.id('threeWrap');
   threeWrap.style('position','absolute')
     .style('left','50%').style('top','40%')
-    .style('transform','translate(-50%,-50%) scale(0.55)')
+    .style('transform','translate(calc(-50% - 50px), calc(-50% - 50px)) scale(0.55)')
     .style('width', canvasW+'px')
     .style('height', Math.floor(canvasW*(8/6))+'px')
     .style('z-index','10055')
@@ -1151,7 +1153,7 @@ async function openCharmPreview3D(){
   requestAnimationFrame(()=>{
     requestAnimationFrame(()=>{
       threeWrap.style('opacity','1');
-      threeWrap.style('transform','translate(-50%,-50%) scale(1)');
+      threeWrap.style('transform','translate(calc(-50% - 50px), calc(-50% - 50px)) scale(1)');
     });
   });
 
