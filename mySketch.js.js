@@ -779,6 +779,7 @@ function makeResultVoxelGroup(snapshot, panelRoot, cubeTemplate){
   }
   group.rotation.set(Math.PI / 2, 0, 0);
   group.position.y += z + panelBox.max.y + cell * 0.12;
+  group.position.add(new THREE.Vector3(-5, -5, -5));
   return group.children.length ? group : null;
 }
 
