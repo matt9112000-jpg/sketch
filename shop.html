@@ -78,7 +78,7 @@
         top:48%;
         width:min(760px, 86vw);
         height:min(520px, 62vh);
-        transform: translate(-50%, -50%) scale(0.88);
+        transform: translate(-50%, -50%) scale(0.72);
         transform-origin: center center;
         transition: transform 620ms cubic-bezier(.2,.9,.2,1), filter 320ms ease;
         z-index:2;
@@ -197,7 +197,7 @@
         renderer.setSize(mount.clientWidth, mount.clientHeight);
         renderer.outputColorSpace = THREE.SRGBColorSpace;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1.08;
+        renderer.toneMappingExposure = 1.15;
         mount.appendChild(renderer.domElement);
 
         scene.add(new THREE.HemisphereLight(0xffffff, 0x97a3b5, 1.45));

@@ -704,28 +704,38 @@ function buildCharmTexture(w, h){
   g.rect(6, 6, texW-8, texH-8);
   return g;
 }
-function makeResultVoxelGroup(snapshot, part2Meshes, cubeTemplate){
-  if (!snapshot || snapshot.length !== cols * rows) return null;
-  const targetMeshes = (part2Meshes && part2Meshes.length) ? part2Meshes : null;
-  const panelBox = new THREE.Box3();
-  if (targetMeshes){
-    targetMeshes.forEach((m)=>panelBox.expandByObject(m));
-  } else {
-    return null;
-  }
-  if (panelBox.isEmpty()) return null;
+function getLocalBounds(root){
+  if (!root) return null;
+  root.updateWorldMatrix(true, true);
+  const invRoot = new THREE.Matrix4().copy(root.matrixWorld).invert();
+  const out = new THREE.Box3();
+  let has = false;
+  root.traverse((o)=>{
+    if (!o.isMesh || !o.geometry) return;
+    if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
+    const bb = o.geometry.boundingBox && o.geometry.boundingBox.clone();
+    if (!bb) return;
+    const toRoot = new THREE.Matrix4().multiplyMatrices(invRoot, o.matrixWorld);
+    bb.applyMatrix4(toRoot);
+    if (!has){ out.copy(bb); has = true; } else out.union(bb);
+  });
+  return has ? out : null;
+}
+function makeResultVoxelGroup(snapshot, panelRoot, cubeTemplate){
+  if (!snapshot || snapshot.length !== cols * rows || !panelRoot) return null;
+  const panelBox = getLocalBounds(panelRoot);
+  if (!panelBox || panelBox.isEmpty()) return null;
 
   const panelSize = panelBox.getSize(new THREE.Vector3());
-  const panelCenter = panelBox.getCenter(new THREE.Vector3());
-  const insetRatio = 0.86;
+  const insetRatio = 0.84;
   const availW = panelSize.x * insetRatio;
   const availH = panelSize.y * insetRatio;
   const cell = Math.min(availW / cols, availH / rows);
   if (!isFinite(cell) || cell <= 0) return null;
 
-  const startX = panelCenter.x - (cols * cell) / 2 + cell / 2;
-  const startY = panelCenter.y + (rows * cell) / 2 - cell / 2;
-  const z = panelBox.max.z + Math.max(cell * 0.12, panelSize.z * 0.02);
+  const startX = panelBox.min.x + (panelSize.x - cols * cell) / 2 + cell / 2;
+  const startY = panelBox.max.y - (panelSize.y - rows * cell) / 2 - cell / 2;
+  const z = panelBox.max.z + Math.max(cell * 0.16, panelSize.z * 0.04);
 
   let template = cubeTemplate;
   let baseScale = 1;
@@ -748,15 +758,18 @@ function makeResultVoxelGroup(snapshot, part2Meshes, cubeTemplate){
 
       const voxel = template.clone();
       voxel.position.set(startX + c * cell, startY - r * cell, z);
-      const s = (cell * 0.86) / baseScale;
+      const s = (cell * 0.88) / baseScale;
       voxel.scale.set(s, s, s);
       voxel.rotation.set(0, 0, 0);
-      voxel.material = new THREE.MeshPhysicalMaterial({
-        color: PALETTE[colorIdx],
-        metalness: 0.1,
-        roughness: 0.38,
-        clearcoat: 0.3,
-        clearcoatRoughness: 0.22
+      voxel.traverse((o)=>{
+        if (!o.isMesh) return;
+        o.material = new THREE.MeshPhysicalMaterial({
+          color: PALETTE[colorIdx],
+          metalness: 0.08,
+          roughness: 0.42,
+          clearcoat: 0.22,
+          clearcoatRoughness: 0.28
+        });
       });
       group.add(voxel);
     }
@@ -885,7 +898,8 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
   const partState = {
     caseVisible: true,   // item 1 (box case)
     showPart3: true,     // item 3 optional (charm mode)
-    part3Node: null      // explicit node visibility control for split file
+    part3Node: null,     // explicit node visibility control for split file
+    panelNode: null      // panel node for placing result voxels
   };
 
   // 載入 GLB（優先三件式；失敗則回退單檔）
@@ -902,7 +916,7 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
   let cubeTemplateMesh = null;
   try {
     const cubeGltf = await loadGlb(CUBE_MODEL_URL);
-    cubeTemplateMesh = meshListOf(cubeGltf.scene)[0] || null;
+    cubeTemplateMesh = cubeGltf.scene || null;
   } catch (e){
     console.warn('cube.glb not found, using fallback cube geometry');
   }
@@ -948,11 +962,14 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
     applyParts();
 
     scene.add(root);
-    frameObject(root, camera, controls, null);
+    const focusMeshes = (parts['1'] && parts['1'].length ? parts['1'] : [])
+      .concat(parts['2'] && parts['2'].length ? parts['2'] : []);
+    frameObject(root, camera, controls, focusMeshes.length ? focusMeshes : null);
     if (mode === 'charm'){
       const snap = lastSnapshot || encodeBoardSnapshot();
-      const voxelGroup = makeResultVoxelGroup(snap, parts['2'], cubeTemplateMesh);
-      if (voxelGroup) scene.add(voxelGroup);
+      const panelRoot = partState.panelNode || (parts['2'] && parts['2'][0] ? parts['2'][0].parent : null);
+      const voxelGroup = makeResultVoxelGroup(snap, panelRoot, cubeTemplateMesh);
+      if (voxelGroup && panelRoot) panelRoot.add(voxelGroup);
     }
 
     if (threeCtx){
@@ -975,6 +992,7 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
       root.add(panelGltf.scene);
       root.add(part3Gltf.scene);
       partState.part3Node = part3Gltf.scene;
+      partState.panelNode = panelGltf.scene;
 
       const p1 = meshListOf(caseGltf.scene);
       const p2 = meshListOf(panelGltf.scene);
@@ -986,6 +1004,7 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
     } catch (splitErr){
       console.warn('split model load failed, fallback to single glb', splitErr);
       partState.part3Node = null;
+      partState.panelNode = null;
       try {
         const gltf = await loadGlb(modelPath || MODEL_URL);
         finalizeLoadedRoot(gltf.scene, null);
