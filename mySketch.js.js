@@ -521,9 +521,37 @@ function drawPiece(){
   for (let y=0;y<m.length;y++){ for(let x=0;x<m[y].length;x++){ if(m[y][x]){ const px=(currentPiece.x+x)*blockSize, py=(currentPiece.y+y)*blockSize; drawCell(px,py,blockSize,colFromIndex(currentPiece.cidx),255); } } }
 }
 function drawHintSquares(){
-  const btns=[UI_BTN.left,UI_BTN.down,UI_BTN.right,UI_BTN.rotate];
-  const base=color('#4C4C4C'); base.setAlpha(90); const border=color('#FF99B1'); border.setAlpha(140);
-  for(const b of btns){ fill(base); stroke(border); strokeWeight(2); rect(b.x,b.y,b.s,b.s,6); }
+  const spec = [
+    { b:UI_BTN.left,   label:'\u25C0', glow:'#30f5ff' },
+    { b:UI_BTN.down,   label:'\u25BC', glow:'#ffd530' },
+    { b:UI_BTN.right,  label:'\u25B6', glow:'#6dff69' },
+    { b:UI_BTN.rotate, label:'\u21BB', glow:'#ff3bda' }
+  ];
+  const pulse = 0.86 + 0.14 * sin(frameCount * 0.08);
+  for (const it of spec){
+    const b = it.b;
+    const cx = b.x + b.s/2;
+    const cy = b.y + b.s/2;
+    const ring = b.s * 0.62;
+    noStroke();
+    fill(0, 0, 0, 120);
+    ellipse(cx, cy + b.s * 0.1, b.s * 0.92, b.s * 0.35);
+    fill(18, 24, 40, 215);
+    ellipse(cx, cy, ring * 1.16, ring * 1.16);
+    noFill();
+    const gc = color(it.glow); gc.setAlpha(190 * pulse);
+    stroke(gc); strokeWeight(2.2);
+    ellipse(cx, cy, ring, ring);
+    const gc2 = color(it.glow); gc2.setAlpha(60 * pulse);
+    stroke(gc2); strokeWeight(6);
+    ellipse(cx, cy, ring * 1.05, ring * 1.05);
+    noStroke();
+    fill('#f8fbff');
+    textAlign(CENTER, CENTER);
+    textStyle(BOLD);
+    textSize(max(12, b.s * 0.36));
+    text(it.label, cx, cy - 1);
+  }
 }
 
 /***** Intro 背景掉落 *****/
@@ -804,7 +832,7 @@ function makeResultVoxelGroup(snapshot, panelRoot, cubeTemplate){
   }
   group.rotation.set(Math.PI / 2, 0, 0);
   group.position.y += z + panelBox.max.y + cell * 0.12;
-  group.position.add(new THREE.Vector3(15, -8, 20));
+  group.position.add(new THREE.Vector3(10, -2, 15));
   return group.children.length ? group : null;
 }
 
@@ -1117,6 +1145,97 @@ async function openCharmPreview3D(options = {}){
       .style('filter','blur(1px)')
       .style('mix-blend-mode','screen')
       .style('animation','rewardRays 1400ms linear infinite');
+
+    const boom = createDiv('BLAST REWARD');
+    boom.parent(ov);
+    boom.style('position','absolute')
+      .style('left','50%').style('top','12%')
+      .style('transform','translateX(-50%) rotate(-8deg)')
+      .style('z-index','10058')
+      .style('pointer-events','none')
+      .style('font-family',"Montserrat, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', Arial, sans-serif")
+      .style('font-weight','900')
+      .style('font-size','clamp(26px, 4.3vw, 58px)')
+      .style('letter-spacing','2px')
+      .style('color','#fff34f')
+      .style('text-shadow','-3px 3px 0 #15151c, 0 0 18px rgba(255,244,84,0.75)')
+      .style('animation','rewardPopOut 620ms cubic-bezier(0.16, 1, 0.3, 1)');
+
+    const rewardScore = Math.max(0, 1200 - (lastBlocks || 0) * 20);
+    const chips = [
+      { label:'NAME', value:(lastName || playerName || 'PLAYER').toUpperCase(), color:'#44f1ff', delay:80 },
+      { label:'BLOCKS', value:String(lastBlocks || 0), color:'#ff6adf', delay:180 },
+      { label:'SCORE', value:String(rewardScore), color:'#83ff4a', delay:280 }
+    ];
+    const infoWrap = createDiv('');
+    infoWrap.parent(ov);
+    infoWrap.style('position','absolute')
+      .style('right','max(16px, 3.4vw)')
+      .style('top','max(72px, 12vh)')
+      .style('display','flex')
+      .style('flex-direction','column')
+      .style('gap','10px')
+      .style('z-index','10061')
+      .style('pointer-events','none');
+    chips.forEach((chip)=>{
+      const card = createDiv(`<span>${chip.label}</span><strong>${chip.value}</strong>`);
+      card.parent(infoWrap);
+      card.style('display','flex')
+        .style('align-items','baseline')
+        .style('justify-content','space-between')
+        .style('gap','12px')
+        .style('min-width','190px')
+        .style('padding','8px 12px')
+        .style('border-radius','12px')
+        .style('background','rgba(7,9,16,0.68)')
+        .style('border',`1px solid ${chip.color}`)
+        .style('box-shadow',`0 0 0 1px rgba(255,255,255,0.06) inset, 0 0 18px ${chip.color}55`)
+        .style('font-family',"Montserrat, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', Arial, sans-serif")
+        .style('opacity','0')
+        .style('transform','translateX(34px) scale(0.88)')
+        .style('animation','rewardPopCard 700ms cubic-bezier(0.16, 1, 0.3, 1) forwards')
+        .style('animation-delay', `${chip.delay}ms`);
+      const sp = card.elt.querySelector('span');
+      const st = card.elt.querySelector('strong');
+      if (sp){
+        sp.style.fontWeight = '800';
+        sp.style.fontSize = '12px';
+        sp.style.letterSpacing = '1.4px';
+        sp.style.color = '#f5f7ff';
+        sp.style.opacity = '0.92';
+      }
+      if (st){
+        st.style.fontWeight = '900';
+        st.style.fontSize = '18px';
+        st.style.letterSpacing = '1px';
+        st.style.color = chip.color;
+      }
+    });
+
+    const shardColors = ['#44f1ff','#ffd33d','#ff6adf','#83ff4a','#ffffff','#ff7b29'];
+    for (let i=0; i<14; i++){
+      const shard = createDiv('');
+      const angle = (i / 14) * Math.PI * 2;
+      const dist = 140 + (i % 4) * 28;
+      shard.parent(ov);
+      shard.style('position','absolute')
+        .style('left','50%').style('top','38%')
+        .style('width', `${12 + (i % 3) * 5}px`)
+        .style('height', `${20 + (i % 5) * 6}px`)
+        .style('background', shardColors[i % shardColors.length])
+        .style('clip-path','polygon(50% 0%, 100% 38%, 78% 100%, 22% 100%, 0% 38%)')
+        .style('transform','translate(-50%,-50%)')
+        .style('opacity','0')
+        .style('mix-blend-mode','screen')
+        .style('filter','drop-shadow(0 0 8px rgba(255,255,255,0.35))')
+        .style('z-index','10053')
+        .style('pointer-events','none')
+        .style('--dx', `${Math.cos(angle) * dist}px`)
+        .style('--dy', `${Math.sin(angle) * dist}px`)
+        .style('--rot', `${-120 + i * 23}deg`)
+        .style('animation','rewardShard 880ms ease-out forwards')
+        .style('animation-delay', `${70 + i * 18}ms`);
+    }
   }
 
   charm3D.texFront = buildCharmTexture(420*0.82, Math.floor(420*(8/6))*0.82);
@@ -1251,6 +1370,21 @@ if (!document.getElementById('rewardFxStyle')){
     @keyframes rewardRays {
       0% { transform: translate(-50%, -50%) rotate(0deg) scale(0.96); opacity: 0.38; }
       100% { transform: translate(-50%, -50%) rotate(360deg) scale(1.08); opacity: 0.16; }
+    }
+    @keyframes rewardPopOut {
+      0% { opacity: 0; transform: translateX(-50%) rotate(-8deg) scale(0.65); }
+      65% { opacity: 1; transform: translateX(-50%) rotate(-8deg) scale(1.12); }
+      100% { opacity: 1; transform: translateX(-50%) rotate(-8deg) scale(1); }
+    }
+    @keyframes rewardPopCard {
+      0% { opacity: 0; transform: translateX(34px) scale(0.88); }
+      55% { opacity: 1; transform: translateX(-5px) scale(1.05); }
+      100% { opacity: 1; transform: translateX(0) scale(1); }
+    }
+    @keyframes rewardShard {
+      0% { opacity: 0; transform: translate(-50%,-50%) scale(0.2) rotate(0deg); }
+      20% { opacity: 1; transform: translate(calc(-50% + var(--dx) * 0.38), calc(-50% + var(--dy) * 0.38)) scale(1) rotate(calc(var(--rot) * 0.45)); }
+      100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.9) rotate(var(--rot)); }
     }
   `;
   document.head.appendChild(style);
