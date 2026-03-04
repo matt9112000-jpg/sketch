@@ -223,8 +223,9 @@
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
         controls.enablePan = false;
-        controls.autoRotate = true;
-        controls.autoRotateSpeed = 0.42;
+        controls.enableRotate = false;
+        controls.autoRotate = false;
+        controls.autoRotateSpeed = 0;
         controls.minDistance = 0.9;
         controls.maxDistance = 3.2;
 
@@ -240,14 +241,21 @@
         function getPartIdFromName(name){
           const n = (name || '').trim();
           if (n === '1' || n === '2' || n === '3') return n;
-          const m = n.match(/(?:^|[^0-9])([123])(?:[^0-9]|$)/);
+          const m = n.match(/(?:^|[^0-9])0*([123])(?:[^0-9]|$)/);
           return m ? m[1] : null;
         }
         function collectPartMeshes(root){
           const parts = { '1':[], '2':[], '3':[], other:[] };
+          const allMeshes = [];
           const unnamed = [];
+          const meshVolume = (mesh)=>{
+            const b = new THREE.Box3().setFromObject(mesh);
+            const s = b.getSize(new THREE.Vector3());
+            return Math.max(0, s.x * s.y * s.z);
+          };
           root.traverse((o)=>{
             if (!o.isMesh) return;
+            allMeshes.push(o);
             const id = getPartIdFromName(o.name);
             if (id) parts[id].push(o);
             else {
@@ -255,20 +263,24 @@
               unnamed.push(o);
             }
           });
-          // Fallback when model has no 1/2/3 mesh names.
-          if (!parts['1'].length && !parts['2'].length && !parts['3'].length && unnamed.length){
-            const vol = (mesh)=>{
-              const b = new THREE.Box3().setFromObject(mesh);
-              const s = b.getSize(new THREE.Vector3());
-              return Math.max(0, s.x * s.y * s.z);
-            };
-            unnamed.sort((a,b)=>vol(b)-vol(a));
-            if (unnamed[0]) parts['1'].push(unnamed[0]); // likely case
-            if (unnamed[1]) parts['2'].push(unnamed[1]);
-            if (unnamed[2]) parts['3'].push(unnamed[2]);
-            const picked = new Set(parts['1'].concat(parts['2'], parts['3']));
-            parts.other = unnamed.filter(m=>!picked.has(m));
+          // Fallback / repair: fill missing parts by volume rank.
+          const byVolDesc = allMeshes.slice().sort((a,b)=>meshVolume(b)-meshVolume(a));
+          const used = new Set(parts['1'].concat(parts['2'], parts['3']));
+          const firstUnused = ()=>byVolDesc.find((m)=>!used.has(m)) || null;
+          const smallestUnused = ()=>byVolDesc.slice().reverse().find((m)=>!used.has(m)) || null;
+          if (!parts['1'].length){
+            const m = firstUnused();
+            if (m){ parts['1'].push(m); used.add(m); }
           }
+          if (!parts['2'].length){
+            const m = firstUnused();
+            if (m){ parts['2'].push(m); used.add(m); }
+          }
+          if (!parts['3'].length){
+            const m = smallestUnused();
+            if (m){ parts['3'].push(m); used.add(m); }
+          }
+          parts.other = allMeshes.filter((m)=>!used.has(m));
           return parts;
         }
         const blackMat = new THREE.MeshPhysicalMaterial({
@@ -326,13 +338,11 @@
         });
 
         let active = false;
-        let hoverTilt = 0;
         function setActive(v){
           if (active === v) return;
           active = v;
           shell.classList.toggle('is-active', active);
           info.classList.toggle('is-active', active);
-          controls.autoRotateSpeed = active ? 0.85 : 0.42;
         }
 
         function checkProximity(clientX, clientY){
@@ -343,7 +353,6 @@
           const dy = clientY - cy;
           const dist = Math.hypot(dx, dy);
           setActive(dist < 210);
-          hoverTilt = active ? Math.max(-0.26, Math.min(0.26, dx / 520)) : 0;
         }
 
         stage.addEventListener('pointermove', (e)=>checkProximity(e.clientX, e.clientY));
@@ -351,10 +360,6 @@
         stage.addEventListener('pointerdown', ()=>setActive(true));
 
         function tick(){
-          if (modelRoot){
-            const targetZ = active ? hoverTilt : 0;
-            modelRoot.rotation.z += (targetZ - modelRoot.rotation.z) * 0.08;
-          }
           controls.update();
           renderer.render(scene, camera);
           requestAnimationFrame(tick);

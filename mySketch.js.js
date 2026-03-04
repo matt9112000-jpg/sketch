@@ -645,14 +645,21 @@ let threeCtx = null;
 function getPartIdFromName(name){
   const n = (name || '').trim();
   if (n === '1' || n === '2' || n === '3') return n;
-  const m = n.match(/(?:^|[^0-9])([123])(?:[^0-9]|$)/);
+  const m = n.match(/(?:^|[^0-9])0*([123])(?:[^0-9]|$)/);
   return m ? m[1] : null;
 }
 function collectPartMeshes(root){
   const parts = { '1':[], '2':[], '3':[], other:[] };
+  const allMeshes = [];
   const unnamed = [];
+  const meshVolume = (mesh)=>{
+    const b = new THREE.Box3().setFromObject(mesh);
+    const s = b.getSize(new THREE.Vector3());
+    return Math.max(0, s.x * s.y * s.z);
+  };
   root.traverse((o)=>{
     if (!o.isMesh) return;
+    allMeshes.push(o);
     const id = getPartIdFromName(o.name);
     if (id) parts[id].push(o);
     else {
@@ -661,20 +668,24 @@ function collectPartMeshes(root){
     }
   });
 
-  // Fallback: if model has no explicit 1/2/3 names, auto-map by mesh volume.
-  if (!parts['1'].length && !parts['2'].length && !parts['3'].length && unnamed.length){
-    const vol = (mesh)=>{
-      const b = new THREE.Box3().setFromObject(mesh);
-      const s = b.getSize(new THREE.Vector3());
-      return Math.max(0, s.x * s.y * s.z);
-    };
-    unnamed.sort((a,b)=>vol(b)-vol(a));
-    if (unnamed[0]) parts['1'].push(unnamed[0]); // likely case (largest)
-    if (unnamed[1]) parts['2'].push(unnamed[1]);
-    if (unnamed[2]) parts['3'].push(unnamed[2]);
-    const picked = new Set(parts['1'].concat(parts['2'], parts['3']));
-    parts.other = unnamed.filter(m=>!picked.has(m));
+  // Fallback / repair: fill missing parts by volume rank.
+  const byVolDesc = allMeshes.slice().sort((a,b)=>meshVolume(b)-meshVolume(a));
+  const used = new Set(parts['1'].concat(parts['2'], parts['3']));
+  const firstUnused = ()=>byVolDesc.find((m)=>!used.has(m)) || null;
+  const smallestUnused = ()=>byVolDesc.slice().reverse().find((m)=>!used.has(m)) || null;
+  if (!parts['1'].length){
+    const m = firstUnused();
+    if (m){ parts['1'].push(m); used.add(m); }
   }
+  if (!parts['2'].length){
+    const m = firstUnused();
+    if (m){ parts['2'].push(m); used.add(m); }
+  }
+  if (!parts['3'].length){
+    const m = smallestUnused();
+    if (m){ parts['3'].push(m); used.add(m); }
+  }
+  parts.other = allMeshes.filter((m)=>!used.has(m));
   return parts;
 }
 
@@ -696,8 +707,8 @@ function frameObject(object, camera, controls){
   const sphere = box.getBoundingSphere(new THREE.Sphere());
   const center = sphere.center;
   const radius = Math.max(sphere.radius, 1e-6);
-  controls.autoRotate = true;
-  controls.autoRotateSpeed = 0.6;
+  controls.autoRotate = false;
+  controls.autoRotateSpeed = 0;
 
   controls.target.copy(center);
 
@@ -740,7 +751,7 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
   camera.position.set(0.6, 0.35, 0.9);
 
   const controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true; controls.enablePan = false;
+  controls.enableDamping = true; controls.enablePan = false; controls.enableRotate = false;
   controls.minDistance = 0.2;    controls.maxDistance = 5;
 
   scene.add(new THREE.HemisphereLight(0xffffff, 0x97a3b5, 1.5));
