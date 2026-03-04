@@ -774,7 +774,7 @@ function makeResultVoxelGroup(snapshot, panelRoot, cubeTemplate){
       group.add(voxel);
     }
   }
-  group.rotation.z = Math.PI / 2;
+  group.rotation.set(0, Math.PI / 2, Math.PI / 2);
   return group.children.length ? group : null;
 }
 
