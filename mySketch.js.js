@@ -21,13 +21,13 @@ let gameState = 'input'; // 'input','playing','endedWait','gameover','leaderboar
 /***** 本地備援排行榜 *****/
 const STORAGE_KEY = 'tetris_scores';
 const CLOUD_CACHE_KEY = 'tetris_scores_cache';
-const GLB_URL = './box.glb';
+const MODEL_URL = './box.stl';
 /***** Three.js（非 ESM 版） *****/
 const THREE_CDNS = [
   'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js',
 ];
-const GLTF_CDNS = [
-  'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js',
+const STL_CDNS = [
+  'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js',
 ];
 const ORBIT_CDNS = [
   'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js',
@@ -52,10 +52,10 @@ async function loadOneFrom(list){
 }
 async function ensureThreeScripts(){
   if (!window.THREE) { await loadOneFrom(THREE_CDNS); }
-  if (!THREE.GLTFLoader) { await loadOneFrom(GLTF_CDNS); }
+  if (!THREE.STLLoader) { await loadOneFrom(STL_CDNS); }
   if (!THREE.OrbitControls) { await loadOneFrom(ORBIT_CDNS); }
-  if (!window.THREE || !THREE.GLTFLoader || !THREE.OrbitControls){
-    throw new Error('Three.js / GLTFLoader / OrbitControls not available');
+  if (!window.THREE || !THREE.STLLoader || !THREE.OrbitControls){
+    throw new Error('Three.js / STLLoader / OrbitControls not available');
   }
 }
 
@@ -721,8 +721,8 @@ function frameObject(object, camera, controls){
   controls.update();
 }
 
-async function initThreeViewer(containerEl, getSnapshotCanvas, glbPath, options = {}){
-  if (!window.THREE || !THREE.GLTFLoader || !THREE.OrbitControls) {
+async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, options = {}){
+  if (!window.THREE || !THREE.STLLoader || !THREE.OrbitControls) {
     alert('Three.js 尚未載好'); return;
   }
 
@@ -800,11 +800,14 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, glbPath, options 
     showPart3: true      // item 3 optional (charm mode)
   };
 
-  // 載入 GLB
-  const loader = new THREE.GLTFLoader();
+  // 載入 STL
+  const loader = new THREE.STLLoader();
   loader.setCrossOrigin('anonymous');
-loader.load(glbPath || GLB_URL, (gltf) => {
-  const root = gltf.scene;
+loader.load(modelPath || MODEL_URL, (geometry) => {
+  if (geometry && !geometry.attributes.normal) geometry.computeVertexNormals();
+  const root = new THREE.Group();
+  const mesh = new THREE.Mesh(geometry, metalMat);
+  root.add(mesh);
 
   // --- 列出所有 mesh 並照 Node1..Node5 排序 ---
   const meshes = [];
@@ -976,7 +979,7 @@ async function openCharmPreview3D(){
   await initThreeViewer(
     threeWrap.elt,
     () => charm3D.texFront.elt,
-    GLB_URL,
+    MODEL_URL,
     { mode:'charm' }
   );
 
