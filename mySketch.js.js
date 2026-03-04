@@ -181,32 +181,6 @@ function drawSnapshotToGraphics(g, snapshot, x, y, cell){
   }
   g.pop();
 }
-function drawInfoCard(title, subtitle=''){
-  const w = min(innerW * 0.86, 360);
-  const h = subtitle ? 96 : 74;
-  const x = width/2 - w/2;
-  const y = height/2 - h/2;
-  noStroke();
-  fill(0, 92);
-  rect(x, y, w, h, 14);
-  stroke('rgba(255,255,255,0.16)');
-  strokeWeight(1.5);
-  noFill();
-  rect(x, y, w, h, 14);
-
-  noStroke();
-  fill('#FF3BDA');
-  textAlign(CENTER, CENTER);
-  textStyle(BOLD);
-  textSize(max(18, blockSize * 0.5));
-  text(title, width/2, y + h * 0.38);
-  if (subtitle){
-    fill('#FF99B1');
-    textStyle(NORMAL);
-    textSize(max(12, blockSize * 0.28));
-    text(subtitle, width/2, y + h * 0.70);
-  }
-}
 function saveLastGamePng(){
   const snap = lastSnapshot || encodeBoardSnapshot();
   const nm = (lastName || playerName || 'player').replace(/ /g,'_');
@@ -345,15 +319,9 @@ function setup(){
            .attribute('inputmode','text').attribute('autocomplete','off')
            .attribute('autocorrect','off').attribute('autocapitalize','off');
   nameInput.style('position','absolute').style('z-index','10010').style('pointer-events','auto')
-           .style('font-weight','700')
-           .style('text-align','center')
-           .style('color','#ffffff')
-           .style('background','rgba(0,0,0,.38)')
-           .style('border','1px solid rgba(255,255,255,.22)')
-           .style('border-radius','12px')
-           .style('outline','none')
+           .style('font-weight','600')
            .style('font-family', "Montserrat, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', Arial, sans-serif")
-           .size(240,34);
+           .size(220,28);
   centerInput(); nameInput.elt.focus();
   nameInput.elt.addEventListener('keydown', e=>{
     if (e.key === 'Enter' && nameInput.value().trim()){
@@ -364,10 +332,8 @@ function setup(){
 }
 function windowResized(){ calculateLayout(); if(!inputComplete) centerInput(); positionMarquees(); clearButtons(); }
 function centerInput(){
-  const iw = nameInput && nameInput.elt ? nameInput.elt.offsetWidth || 240 : 240;
-  const ih = nameInput && nameInput.elt ? nameInput.elt.offsetHeight || 34 : 34;
   const w = innerW + BORDER_THICK, h = innerH + BORDER_THICK;
-  nameInput.position(canvasX + (w - iw)/2, canvasY + (h - ih)/2 + 14);
+  nameInput.position(canvasX + (w - 220)/2, canvasY + (h - 28)/2);
 }
 function applyResponsiveUI(){
   IS_MOBILE =
@@ -425,7 +391,8 @@ function draw(){
 
   if (gameState === 'input'){
     push(); translate(BORDER_HALF, BORDER_HALF); updateIntroPieces(); drawIntroPieces(); pop();
-    drawInfoCard('INSUFFICIENT SPACE', 'Enter your IG, then press Enter');
+    noStroke(); fill('#FF3BDA'); textAlign(CENTER,CENTER); textSize(14); textStyle(BOLD);
+    text('Enter your IG and press Enter', width/2, height/2);
     nameInput.show(); nameInput.elt.focus();
     return;
   }
@@ -439,11 +406,10 @@ function draw(){
   }
   if (gameState === 'endedWait'){
     push(); translate(BORDER_HALF, BORDER_HALF); drawBoard(); drawPiece(); pop();
-    drawInfoCard('Round Complete', 'Show your final result');
     if (!select('#nextPromptBtn')){
       clearButtons();
-      createCenteredStyledButton('nextPromptBtn','Continue', canvasX + width/2, canvasY + height/2 + 44,
-        () => { gameState = 'gameover'; clearButtons(); }, 112);
+      createStyledButton('nextPromptBtn','Next', canvasX + width/2 - 50, canvasY + height/2 - 14,
+        () => { gameState = 'gameover'; clearButtons(); });
     }
     return;
   }
@@ -455,12 +421,14 @@ function draw(){
       saveScore(playerName, endBlocks, snap); incPlayed();
       const flag = createDiv(''); flag.id('savedFlag'); flag.style('display','none');
     }
-    drawInfoCard('Game Over', `Empty Blocks: ${endBlocks}`);
+    noStroke(); fill('#FF3BDA'); textAlign(CENTER,CENTER); textStyle(BOLD);
+    textSize(28); text('Game Over!', width/2, height/2 - 26);
+    textSize(22); text(`Empty Blocks: ${endBlocks}`, width/2, height/2 + 6);
     if (!select('#nextBtn')){
       clearButtons();
-      createCenteredStyledButton('nextBtn','Leaderboard',
-        canvasX + width/2, canvasY + height/2 + 44,
-        () => { gameState = 'leaderboard'; clearButtons(); removeSavedFlag(); }, 132);
+      createStyledButton('nextBtn','Next',
+        canvasX + width/2 - 50, canvasY + height/2 + 40,
+        () => { gameState = 'leaderboard'; clearButtons(); removeSavedFlag(); });
     }
     return;
   }
@@ -559,18 +527,9 @@ function renderLeaderboard(){
   noStroke(); fill(BG_BLUE); rect(BORDER_HALF, BORDER_HALF, innerW, innerH);
   stroke(PINK); strokeWeight(BORDER_THICK); noFill(); rect(0,0,width,height);
 
-  if (!select('#clearBtn') || !select('#saveBtn') || !select('#makeCharmBtnLB')){
-    clearButtons();
-    const y = canvasY + 18;
-    const gap = 12;
-    const smallW = 92;
-    const largeW = 152;
-    const totalW = smallW + gap + smallW + gap + largeW;
-    const startX = canvasX + (width - totalW) / 2;
-    if (SHOW_CLEAR) createStyledButton('clearBtn','Clear', startX, y, clearScores, smallW);
-    createStyledButton('saveBtn','Save', startX + smallW + gap, y, saveLastGamePng, smallW);
-    createStyledButton('makeCharmBtnLB','★ Make a Charm', startX + smallW + gap + smallW + gap, y, () => { openCharmPreview3D(); }, largeW);
-  }
+  if (SHOW_CLEAR && !select('#clearBtn')) createStyledButton('clearBtn','Clear', canvasX + 20, canvasY + 20, clearScores);
+  if (!select('#saveBtn')) createStyledButton('saveBtn','Save', canvasX + 20, canvasY + 60, saveLastGamePng);
+  if (!select('#makeCharmBtnLB')) createStyledButton('makeCharmBtnLB','★ Make a Charm', canvasX + 20, canvasY + 100, () => { openCharmPreview3D(); });
 
   let source = [];
   if (topScores && topScores.length) source = topScores;
@@ -635,7 +594,7 @@ function clearButtons(){
   ['#nextPromptBtn','#nextBtn','#savedFlag','#clearBtn','#saveBtn','#makeCharmBtn','#makeCharmBtnLB'].forEach(id=>{ const el=select(id); if(el) el.remove(); });
 }
 function removeSavedFlag(){ const flag=select('#savedFlag'); if(flag) flag.remove(); }
-function createStyledButton(id,label,x,y,onClick,minW){
+function createStyledButton(id,label,x,y,onClick){
   const old=select('#'+id); if(old) old.remove();
   const btn=createButton(label); btn.id(id);
   btn.style('position','absolute').style('z-index','9999').style('pointer-events','auto').position(x,y);
@@ -646,16 +605,9 @@ function createStyledButton(id,label,x,y,onClick,minW){
   const smallIDs=['nextPromptBtn','nextBtn','clearBtn','saveBtn','makeCharmBtn','makeCharmBtnLB'];
   const pad=smallIDs.includes(id)?BTN_PAD_SMALL:BTN_PAD_LARGE; const fz=smallIDs.includes(id)?BTN_FZ_SMALL:BTN_FZ_LARGE;
   btn.style('padding', pad).style('font-size', fz);
-  if (minW) btn.style('min-width', minW + 'px').style('text-align','center');
   btn.mouseOver(()=>btn.style('border-color','rgba(255,255,255,.28)'));
   btn.mouseOut(()=>btn.style('border-color','rgba(255,255,255,.14)'));
   btn.mousePressed(onClick);
-  return btn;
-}
-function createCenteredStyledButton(id,label,cx,y,onClick,minW){
-  const btn = createStyledButton(id,label,cx,y,onClick,minW);
-  const w = btn && btn.elt ? btn.elt.offsetWidth || minW || 108 : (minW || 108);
-  btn.position(cx - w/2, y);
   return btn;
 }
 function removeIfExists(ref){
