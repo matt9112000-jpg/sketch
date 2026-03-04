@@ -118,6 +118,26 @@
         font-size:15px;
         font-weight:800;
       }
+      .product-top{
+        display:flex;
+        align-items:center;
+        gap:10px;
+        flex-wrap:wrap;
+      }
+      .limited-badge{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        padding:4px 8px;
+        border-radius:999px;
+        border:1px solid #f2c65f;
+        background:#fff6dc;
+        color:#7a5713;
+        font-size:11px;
+        font-weight:800;
+        letter-spacing:.05em;
+        text-transform:uppercase;
+      }
       .product-meta{
         margin-top:6px;
         font-size:12px;
@@ -141,6 +161,15 @@
       }
       .product-actions button:hover{
         border-color:#aeb7d1;
+      }
+      #add-cart-btn{
+        background:#121827;
+        border-color:#121827;
+        color:#ffffff;
+      }
+      #add-cart-btn:hover{
+        border-color:#2b3755;
+        background:#1a2440;
       }
       .hint{
         position:absolute;
@@ -166,11 +195,15 @@
           <div id="box-viewer" class="viewer"></div>
         </div>
         <div class="product-body" id="product-info">
-          <h2 class="product-title">001 — Box Charm</h2>
-          <p class="product-meta">Material: metallic silver (part 1,2) + black (part 3) · Model files: <code>box_case.glb</code> + <code>box_panel.glb</code> + <code>box_part3.glb</code></p>
+          <div class="product-top">
+            <h2 class="product-title">001-CCC $120</h2>
+            <span class="limited-badge">25 Limited</span>
+          </div>
+          <p class="product-meta">Material : 3D Printing</p>
           <div class="product-actions">
             <button id="case-toggle-btn" type="button">Case: On</button>
             <button id="part3-toggle-btn" type="button">Part 3: On</button>
+            <button id="add-cart-btn" type="button">Add Cart</button>
           </div>
         </div>
         <div class="hint">Hover near the model</div>
@@ -253,12 +286,12 @@
         }
 
         const silverMat = new THREE.MeshPhysicalMaterial({
-          color: '#d4d9e3',
-          metalness: 0.3,
-          roughness: 0.4,
-          clearcoat: 0.28,
-          clearcoatRoughness: 0.26,
-          envMapIntensity: 0.75
+          color: '#aeb4c0',
+          metalness: 0.24,
+          roughness: 0.52,
+          clearcoat: 0.16,
+          clearcoatRoughness: 0.34,
+          envMapIntensity: 0.55
         });
 
         function getPartIdFromName(name){

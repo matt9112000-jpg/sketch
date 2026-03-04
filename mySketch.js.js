@@ -630,9 +630,11 @@ function renderLeaderboard(){
     noStroke(); fill('#f6f8ff');
     textAlign(CENTER, CENTER); textStyle(BOLD); textSize(max(14, innerW * 0.038));
     text(String(i+1), colX[i] + colW/2, colY[i] + colHeights[i] - 24);
-    fill('#cbd2ff');
-    textSize(max(9, innerW * 0.017));
-    text(`played ${playedCount}`, colX[i] + colW/2, colY[i] + colHeights[i] - 8);
+    if (i === 0){
+      fill('#cbd2ff');
+      textSize(max(10, innerW * 0.018));
+      text(`played ${playedCount}`, colX[i] + colW/2, colY[i] + colHeights[i] - 8);
+    }
   }
 
   const maxCardW = innerW * 0.30;
@@ -912,7 +914,7 @@ function makeResultVoxelGroup(snapshot, panelRoot, cubeTemplate){
   }
   group.rotation.set(Math.PI / 2, 0, 0);
   group.position.y += z + panelBox.max.y + cell * 0.12;
-  group.position.add(new THREE.Vector3(-10, -7, -13));
+  group.position.add(new THREE.Vector3(-10, -7, -16));
   return group.children.length ? group : null;
 }
 
