@@ -16,7 +16,7 @@ let inputComplete = false;
 let nameInput;
 
 let endBlocks = 0;
-let gameState = 'input'; // 'input','playing','endedWait','gameover','leaderboard'
+let gameState = 'input'; // 'input','playing','endedWait','gameover','rewardPreview','leaderboard'
 
 /***** 本地備援排行榜 *****/
 const STORAGE_KEY = 'tetris_scores';
@@ -117,6 +117,8 @@ let introLastTime = 0, introSpawnTimer = 0, introSpawnEvery = 650;
 
 /***** 跑馬燈（行動版） *****/
 let mqTop = null, mqBottom = null;
+let pendingLeaderboardAfterReward = false;
+let charmCloseHook = null;
 
 /***** 遊玩次數（右下角顯示） *****/
 const PLAYED_KEY = 'tetris_played_count';
@@ -432,8 +434,31 @@ function draw(){
       clearButtons();
       createStyledButton('nextBtn','Next',
         canvasX + width/2 - 50, canvasY + height/2 + 40,
-        () => { gameState = 'leaderboard'; clearButtons(); removeSavedFlag(); });
+        () => {
+          clearButtons();
+          removeSavedFlag();
+          pendingLeaderboardAfterReward = true;
+          gameState = 'rewardPreview';
+          openCharmPreview3D({
+            fromGameOver: true,
+            onClose: () => {
+              if (pendingLeaderboardAfterReward){
+                pendingLeaderboardAfterReward = false;
+                gameState = 'leaderboard';
+                clearButtons();
+                removeSavedFlag();
+              }
+            }
+          });
+        });
     }
+    return;
+  }
+  if (gameState === 'rewardPreview'){
+    // Keep a clean pause state while reward popup is open.
+    background('#ffffff');
+    noStroke(); fill(BG_BLUE); rect(BORDER_HALF, BORDER_HALF, innerW, innerH);
+    stroke(PINK); strokeWeight(BORDER_THICK); noFill(); rect(0,0,width,height);
     return;
   }
   if (gameState === 'leaderboard'){
@@ -768,10 +793,10 @@ function makeResultVoxelGroup(snapshot, panelRoot, cubeTemplate){
         if (!o.isMesh) return;
         o.material = new THREE.MeshPhysicalMaterial({
           color: PALETTE[colorIdx],
-          metalness: 0.08,
-          roughness: 0.42,
-          clearcoat: 0.22,
-          clearcoatRoughness: 0.28
+          metalness: 0.14,
+          roughness: 0.18,
+          clearcoat: 0.78,
+          clearcoatRoughness: 0.12
         });
       });
       group.add(voxel);
@@ -779,7 +804,7 @@ function makeResultVoxelGroup(snapshot, panelRoot, cubeTemplate){
   }
   group.rotation.set(Math.PI / 2, 0, 0);
   group.position.y += z + panelBox.max.y + cell * 0.12;
-  group.position.add(new THREE.Vector3(5, -5, 5));
+  group.position.add(new THREE.Vector3(15, -8, 20));
   return group.children.length ? group : null;
 }
 
@@ -897,7 +922,7 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
     color:'#FF25DA', metalness:0.14, roughness:0.24, clearcoat:0.3, clearcoatRoughness:0.22
   });
   const blackMat = new THREE.MeshPhysicalMaterial({
-    color:'#111111', metalness:0.05, roughness:0.75, clearcoat:0.05, clearcoatRoughness:0.75
+    color:'#2f3138', metalness:0.08, roughness:0.58, clearcoat:0.12, clearcoatRoughness:0.42
   });
 
   const mode = options.mode || 'charm'; // charm | shop
@@ -1055,18 +1080,44 @@ function disposeThreeViewer(){
   threeCtx = null;
 }
 
-async function openCharmPreview3D(){
+async function openCharmPreview3D(options = {}){
   closeCharmPreview3D();
+  const fromGameOver = !!options.fromGameOver;
+  charmCloseHook = (typeof options.onClose === 'function') ? options.onClose : null;
 
   const ov = createDiv('');
   ov.id('charmFSOverlay');
   ov.style('position','fixed').style('inset','0')
     .style('z-index','10050')
-    .style('background','rgba(1,1,1,0.12)')
+    .style('background', fromGameOver ? 'rgba(1,1,1,0.22)' : 'rgba(1,1,1,0.12)')
     .style('backdrop-filter','blur(8px) saturate(1.15)')
     .style('-webkit-backdrop-filter','blur(8px) saturate(1.15)');
   ov.mousePressed((e)=>{ if(e.target===ov.elt) closeCharmPreview3D(); });
   charmFS.overlay = ov;
+
+  if (fromGameOver){
+    const fxPulse = createDiv('');
+    fxPulse.parent(ov);
+    fxPulse.style('position','absolute').style('inset','0')
+      .style('z-index','10051')
+      .style('pointer-events','none')
+      .style('background','radial-gradient(circle at 50% 38%, rgba(255,255,255,0.30) 0%, rgba(245,210,255,0.20) 30%, rgba(27,16,63,0.10) 62%, rgba(0,0,0,0) 100%)')
+      .style('mix-blend-mode','screen')
+      .style('animation','rewardPulse 1000ms ease-out 2');
+
+    const fxRays = createDiv('');
+    fxRays.parent(ov);
+    fxRays.style('position','absolute').style('left','50%').style('top','40%')
+      .style('width','68vmin').style('height','68vmin')
+      .style('transform','translate(-50%, -50%)')
+      .style('z-index','10052')
+      .style('pointer-events','none')
+      .style('border-radius','999px')
+      .style('background','conic-gradient(from 0deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02), rgba(255,255,255,0.10), rgba(255,255,255,0.02), rgba(255,255,255,0.08))')
+      .style('filter','blur(1px)')
+      .style('mix-blend-mode','screen')
+      .style('animation','rewardRays 1400ms linear infinite');
+  }
 
   charm3D.texFront = buildCharmTexture(420*0.82, Math.floor(420*(8/6))*0.82);
 
@@ -1076,14 +1127,16 @@ async function openCharmPreview3D(){
   threeWrap.id('threeWrap');
   threeWrap.style('position','absolute')
     .style('left','50%').style('top','34%')
-    .style('transform','translate(calc(-50% - 50px), calc(-50% - 50px)) scale(0.55)')
+    .style('transform', fromGameOver ? 'translate(calc(-50% - 50px), calc(-50% - 50px)) scale(0.18)' : 'translate(calc(-50% - 50px), calc(-50% - 50px)) scale(0.55)')
     .style('width', canvasW+'px')
     .style('height', Math.floor(canvasW*(8/6))+'px')
     .style('z-index','10055')
     .style('pointer-events','auto')
     .style('opacity','0')
     .style('will-change','transform, opacity')
-    .style('transition','transform 520ms cubic-bezier(0.2, 0.9, 0.2, 1), opacity 260ms ease-out');
+    .style('transition', fromGameOver
+      ? 'transform 280ms cubic-bezier(0.16, 1, 0.3, 1), opacity 180ms ease-out'
+      : 'transform 520ms cubic-bezier(0.2, 0.9, 0.2, 1), opacity 260ms ease-out');
 
   const footer = createDiv('');
   footer.parent(ov);
@@ -1127,7 +1180,7 @@ async function openCharmPreview3D(){
   closeBtn.mousePressed(closeCharmPreview3D);
   charmFS.closeBtn = closeBtn;
 
-  const tip = createDiv('Make your own charm');
+  const tip = createDiv(fromGameOver ? 'Reward Unlocked' : 'Make your own charm');
   tip.parent(ov);
   tip.style('position','absolute')
      .style('left','50%')
@@ -1155,7 +1208,17 @@ async function openCharmPreview3D(){
   requestAnimationFrame(()=>{
     requestAnimationFrame(()=>{
       threeWrap.style('opacity','1');
-      threeWrap.style('transform','translate(calc(-50% - 50px), calc(-50% - 50px)) scale(1)');
+      threeWrap.style('transform', fromGameOver
+        ? 'translate(calc(-50% - 50px), calc(-50% - 50px)) scale(1.14)'
+        : 'translate(calc(-50% - 50px), calc(-50% - 50px)) scale(1)');
+      if (fromGameOver){
+        setTimeout(()=>{
+          if (charmFS.overlay && threeWrap){
+            threeWrap.style('transition','transform 190ms cubic-bezier(0.2, 0.9, 0.2, 1), opacity 180ms ease-out');
+            threeWrap.style('transform','translate(calc(-50% - 50px), calc(-50% - 50px)) scale(1)');
+          }
+        }, 210);
+      }
     });
   });
 
@@ -1168,4 +1231,27 @@ function closeCharmPreview3D(){
   if (charmFS.closeBtn){ charmFS.closeBtn.remove(); charmFS.closeBtn=null; }
   if (charmFS.footer){ charmFS.footer.remove(); charmFS.footer=null; }
   if (charmFS.overlay){ charmFS.overlay.remove(); charmFS.overlay=null; }
+  const cb = charmCloseHook;
+  charmCloseHook = null;
+  if (cb){
+    try { cb(); } catch (e){ console.warn('close hook error', e); }
+  }
+}
+
+// Reward reveal animation keyframes for game-over transition.
+if (!document.getElementById('rewardFxStyle')){
+  const style = document.createElement('style');
+  style.id = 'rewardFxStyle';
+  style.textContent = `
+    @keyframes rewardPulse {
+      0% { opacity: 0; transform: scale(0.96); }
+      25% { opacity: 1; transform: scale(1.02); }
+      100% { opacity: 0.35; transform: scale(1); }
+    }
+    @keyframes rewardRays {
+      0% { transform: translate(-50%, -50%) rotate(0deg) scale(0.96); opacity: 0.38; }
+      100% { transform: translate(-50%, -50%) rotate(360deg) scale(1.08); opacity: 0.16; }
+    }
+  `;
+  document.head.appendChild(style);
 }
