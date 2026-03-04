@@ -22,6 +22,9 @@ let gameState = 'input'; // 'input','playing','endedWait','gameover','leaderboar
 const STORAGE_KEY = 'tetris_scores';
 const CLOUD_CACHE_KEY = 'tetris_scores_cache';
 const MODEL_URL = './box.glb';
+const MODEL_CASE_URL = './box_case.glb';
+const MODEL_PANEL_URL = './box_panel.glb';
+const MODEL_PART3_URL = './box_part3.glb';
 /***** Three.js（非 ESM 版） *****/
 const THREE_CDNS = [
   'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js',
@@ -812,72 +815,95 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
     showPart3: true      // item 3 optional (charm mode)
   };
 
-  // 載入 GLB
+  // 載入 GLB（優先三件式；失敗則回退單檔）
   const loader = new THREE.GLTFLoader();
   loader.setCrossOrigin('anonymous');
-loader.load(modelPath || MODEL_URL, (gltf) => {
-  const root = gltf.scene;
+  const loadGlb = (url)=>new Promise((resolve, reject)=>{
+    loader.load(url, resolve, undefined, reject);
+  });
+  const meshListOf = (obj)=>{
+    const arr = [];
+    obj.traverse((o)=>{ if (o.isMesh) arr.push(o); });
+    return arr;
+  };
+  const finalizeLoadedRoot = (root, forcedParts = null)=>{
+    const preBox = new THREE.Box3().setFromObject(root);
+    const preSize = preBox.getSize(new THREE.Vector3());
+    const maxDim = Math.max(preSize.x, preSize.y, preSize.z);
+    const TARGET_MAX = 1.0;
+    const scale = maxDim > 0 ? TARGET_MAX / maxDim : 1.0;
+    root.scale.setScalar(scale);
+    root.updateWorldMatrix(true, true);
+    const postBox = new THREE.Box3().setFromObject(root);
+    const postCenter = postBox.getCenter(new THREE.Vector3());
+    root.position.sub(postCenter);
 
-  // --- 列出所有 mesh 並照 Node1..Node5 排序 ---
-  const meshes = [];
-  root.traverse(o => { if (o.isMesh) meshes.push(o); });
-
-  // 讓 "Node2" 會排在 "Node10" 前面（用 numeric 排序）
-  meshes.sort((a,b)=> a.name.localeCompare(b.name, undefined, {numeric:true}));
-
-  console.log('--- Loaded Meshes ---');
-  meshes.forEach((m,i)=> console.log(`${i+1}. ${m.name}`));
-
-  // --- 尺寸、置中（跟你原本一樣） ---
-  const preBox = new THREE.Box3().setFromObject(root);
-  const preSize = preBox.getSize(new THREE.Vector3());
-  const maxDim = Math.max(preSize.x, preSize.y, preSize.z);
-  const TARGET_MAX = 1.0;
-  const scale = maxDim > 0 ? TARGET_MAX / maxDim : 1.0;
-  root.scale.setScalar(scale);
-  root.updateWorldMatrix(true, true);
-  const postBox = new THREE.Box3().setFromObject(root);
-  const postCenter = postBox.getCenter(new THREE.Vector3());
-  root.position.sub(postCenter);
-
-  let parts = { '1':[], '2':[], '3':[], other:[] };
-  try {
-    parts = collectPartMeshes(root);
-  } catch (err) {
-    console.warn('part parse failed, fallback to single-material model', err);
-    root.traverse((o)=>{ if (o.isMesh) parts.other.push(o); });
-  }
-  const applyParts = ()=>{
-    const setList = (arr, mat, visible=true)=>{
-      arr.forEach((m)=>{ m.material = mat; m.visible = visible; });
+    let parts = forcedParts || { '1':[], '2':[], '3':[], other:[] };
+    if (!forcedParts){
+      try {
+        parts = collectPartMeshes(root);
+      } catch (err) {
+        console.warn('part parse failed, fallback to single-material model', err);
+        root.traverse((o)=>{ if (o.isMesh) parts.other.push(o); });
+      }
+    }
+    const applyParts = ()=>{
+      const setList = (arr, mat, visible=true)=>{ arr.forEach((m)=>{ m.material = mat; m.visible = visible; }); };
+      if (mode === 'charm'){
+        setList(parts['1'], blueMat, partState.caseVisible);
+        setList(parts['2'], pinkMat, true);
+        setList(parts['3'], blackMat, partState.showPart3);
+        setList(parts.other, metalMat, true);
+      } else {
+        setList(parts['1'], metalMat, partState.caseVisible);
+        setList(parts['2'], metalMat, true);
+        setList(parts['3'], blackMat, true);
+        setList(parts.other, metalMat, true);
+      }
     };
-    if (mode === 'charm'){
-      setList(parts['1'], blueMat, partState.caseVisible);
-      setList(parts['2'], pinkMat, true);
-      setList(parts['3'], blackMat, partState.showPart3);
-      setList(parts.other, metalMat, true);
-    } else {
-      setList(parts['1'], metalMat, partState.caseVisible);
-      setList(parts['2'], metalMat, true);
-      setList(parts['3'], blackMat, true);
-      setList(parts.other, metalMat, true);
+    applyParts();
+
+    scene.add(root);
+    frameObject(root, camera, controls);
+
+    if (threeCtx){
+      threeCtx.partState = partState;
+      threeCtx.refreshParts = applyParts;
+      threeCtx.hasPart3 = parts['3'].length > 0;
+      threeCtx.hasCase = parts['1'].length > 0;
     }
   };
-  applyParts();
 
-  scene.add(root);
-  frameObject(root, camera, controls);
+  (async ()=>{
+    try {
+      const [caseGltf, panelGltf, part3Gltf] = await Promise.all([
+        loadGlb(MODEL_CASE_URL),
+        loadGlb(MODEL_PANEL_URL),
+        loadGlb(MODEL_PART3_URL),
+      ]);
+      const root = new THREE.Group();
+      root.add(caseGltf.scene);
+      root.add(panelGltf.scene);
+      root.add(part3Gltf.scene);
 
-  if (threeCtx){
-    threeCtx.partState = partState;
-    threeCtx.refreshParts = applyParts;
-    threeCtx.hasPart3 = parts['3'].length > 0;
-    threeCtx.hasCase = parts['1'].length > 0;
-  }
-}, undefined, (err)=>{
-  console.error('GLB load failed', err);
-  alert('Unable to load 3D model (box.glb).');
-});
+      const p1 = meshListOf(caseGltf.scene);
+      const p2 = meshListOf(panelGltf.scene);
+      const p3 = meshListOf(part3Gltf.scene);
+      const used = new Set([].concat(p1, p2, p3));
+      const all = meshListOf(root);
+      const forcedParts = { '1':p1, '2':p2, '3':p3, other: all.filter((m)=>!used.has(m)) };
+      finalizeLoadedRoot(root, forcedParts);
+    } catch (splitErr){
+      console.warn('split model load failed, fallback to single glb', splitErr);
+      try {
+        const gltf = await loadGlb(modelPath || MODEL_URL);
+        finalizeLoadedRoot(gltf.scene, null);
+      } catch (err){
+        console.error('GLB load failed', err);
+        alert('Unable to load 3D model (box_case/panel/part3.glb or box.glb).');
+      }
+    }
+  })();
 
   // render loop
   function tick(){
