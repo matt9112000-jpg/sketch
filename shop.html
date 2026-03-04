@@ -167,7 +167,7 @@
         </div>
         <div class="product-body" id="product-info">
           <h2 class="product-title">001 — Box Charm</h2>
-          <p class="product-meta">Material: metallic silver (part 1,2) + black (part 3) · Model file: <code>box.stl</code></p>
+          <p class="product-meta">Material: metallic silver (part 1,2) + black (part 3) · Model file: <code>box.glb</code></p>
           <div class="product-actions">
             <button id="case-toggle-btn" type="button">Case: On</button>
           </div>
@@ -176,7 +176,7 @@
       </section>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script>
       (function(){
@@ -185,7 +185,7 @@
         const shell = document.getElementById('viewer-shell');
         const info = document.getElementById('product-info');
         const mount = document.getElementById('box-viewer');
-        if (!mount || !stage || !shell || !info || !window.THREE || !THREE.STLLoader || !THREE.OrbitControls) return;
+        if (!mount || !stage || !shell || !info || !window.THREE || !THREE.GLTFLoader || !THREE.OrbitControls) return;
 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(35, mount.clientWidth / mount.clientHeight, 0.01, 100);
@@ -271,7 +271,6 @@
           }
           return parts;
         }
-
         const blackMat = new THREE.MeshPhysicalMaterial({
           color: '#111111',
           metalness: 0.55,
@@ -304,13 +303,10 @@
           });
         }
 
-        const loader = new THREE.STLLoader();
+        const loader = new THREE.GLTFLoader();
         let modelRoot = null;
-        loader.load('./box.stl', (geometry)=>{
-          if (geometry && !geometry.attributes.normal) geometry.computeVertexNormals();
-          const root = new THREE.Group();
-          const mesh = new THREE.Mesh(geometry, silverMat);
-          root.add(mesh);
+        loader.load('./box.glb', (gltf)=>{
+          const root = gltf.scene;
           modelState.parts = collectPartMeshes(root);
           applyShopParts();
 
@@ -326,7 +322,7 @@
           modelRoot = root;
           scene.add(root);
         }, undefined, ()=>{
-          mount.innerHTML = '<div style="display:flex;height:100%;align-items:center;justify-content:center;color:#73738a;font-size:12px;">Unable to load box.stl</div>';
+          mount.innerHTML = '<div style="display:flex;height:100%;align-items:center;justify-content:center;color:#73738a;font-size:12px;">Unable to load box.glb</div>';
         });
 
         let active = false;
@@ -356,12 +352,8 @@
 
         function tick(){
           if (modelRoot){
-            const t = performance.now() * 0.001;
-            const targetY = active ? 0.28 : 0;
-            modelRoot.rotation.y += (targetY - modelRoot.rotation.y) * 0.08;
-            const targetZ = hoverTilt;
-            modelRoot.rotation.z += (targetZ - modelRoot.rotation.z) * 0.1;
-            modelRoot.rotation.x = Math.sin(t * 0.7) * 0.04;
+            const targetZ = active ? hoverTilt : 0;
+            modelRoot.rotation.z += (targetZ - modelRoot.rotation.z) * 0.08;
           }
           controls.update();
           renderer.render(scene, camera);
