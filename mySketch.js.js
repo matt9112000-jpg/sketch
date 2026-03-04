@@ -760,7 +760,7 @@ function makeResultVoxelGroup(snapshot, panelRoot, cubeTemplate){
       voxel.position.set(startX + c * cell, startY - r * cell, z);
       const s = (cell * 0.72) / baseScale;
       voxel.scale.set(s, s, s);
-      voxel.rotation.set(0, 0, 0);
+      voxel.rotation.set(Math.PI / 2, 0, 0);
       voxel.traverse((o)=>{
         if (!o.isMesh) return;
         o.material = new THREE.MeshPhysicalMaterial({
@@ -774,7 +774,7 @@ function makeResultVoxelGroup(snapshot, panelRoot, cubeTemplate){
       group.add(voxel);
     }
   }
-  group.rotation.x = Math.PI / 2;
+  group.rotation.z = Math.PI / 2;
   return group.children.length ? group : null;
 }
 
