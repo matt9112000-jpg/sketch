@@ -25,6 +25,7 @@ const MODEL_URL = './box.glb';
 const MODEL_CASE_URL = './box_case.glb';
 const MODEL_PANEL_URL = './box_panel.glb';
 const MODEL_PART3_URL = './box_part3.glb';
+const CUBE_MODEL_URL = './cube.glb';
 /***** Three.js（非 ESM 版） *****/
 const THREE_CDNS = [
   'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js',
@@ -703,6 +704,65 @@ function buildCharmTexture(w, h){
   g.rect(6, 6, texW-8, texH-8);
   return g;
 }
+function makeResultVoxelGroup(snapshot, part2Meshes, cubeTemplate){
+  if (!snapshot || snapshot.length !== cols * rows) return null;
+  const targetMeshes = (part2Meshes && part2Meshes.length) ? part2Meshes : null;
+  const panelBox = new THREE.Box3();
+  if (targetMeshes){
+    targetMeshes.forEach((m)=>panelBox.expandByObject(m));
+  } else {
+    return null;
+  }
+  if (panelBox.isEmpty()) return null;
+
+  const panelSize = panelBox.getSize(new THREE.Vector3());
+  const panelCenter = panelBox.getCenter(new THREE.Vector3());
+  const insetRatio = 0.86;
+  const availW = panelSize.x * insetRatio;
+  const availH = panelSize.y * insetRatio;
+  const cell = Math.min(availW / cols, availH / rows);
+  if (!isFinite(cell) || cell <= 0) return null;
+
+  const startX = panelCenter.x - (cols * cell) / 2 + cell / 2;
+  const startY = panelCenter.y + (rows * cell) / 2 - cell / 2;
+  const z = panelBox.max.z + Math.max(cell * 0.12, panelSize.z * 0.02);
+
+  let template = cubeTemplate;
+  let baseScale = 1;
+  if (!template){
+    template = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), new THREE.MeshStandardMaterial({ color:'#ffffff' }));
+  } else {
+    const b = new THREE.Box3().setFromObject(template);
+    const s = b.getSize(new THREE.Vector3());
+    baseScale = Math.max(s.x, s.y, s.z) || 1;
+  }
+
+  const group = new THREE.Group();
+  for (let r=0; r<rows; r++){
+    for (let c=0; c<cols; c++){
+      const idxInSnap = r * cols + c;
+      const ch = snapshot[idxInSnap];
+      if (ch === '8') continue;
+      const colorIdx = ch.charCodeAt(0) - 48;
+      if (colorIdx < 0 || colorIdx >= PALETTE.length) continue;
+
+      const voxel = template.clone();
+      voxel.position.set(startX + c * cell, startY - r * cell, z);
+      const s = (cell * 0.86) / baseScale;
+      voxel.scale.set(s, s, s);
+      voxel.rotation.set(0, 0, 0);
+      voxel.material = new THREE.MeshPhysicalMaterial({
+        color: PALETTE[colorIdx],
+        metalness: 0.1,
+        roughness: 0.38,
+        clearcoat: 0.3,
+        clearcoatRoughness: 0.22
+      });
+      group.add(voxel);
+    }
+  }
+  return group.children.length ? group : null;
+}
 
 
 function frameObject(object, camera, controls, focusMeshes = null){
@@ -751,7 +811,7 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
   renderer.setSize(w, h, false);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.88;
+  renderer.toneMappingExposure = 1.0;
   containerEl.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
@@ -812,10 +872,10 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
 
   // Material presets for named parts 1/2/3
   const blueMat = new THREE.MeshPhysicalMaterial({
-    color:'#2455FF', metalness:0.12, roughness:0.34, clearcoat:0.18, clearcoatRoughness:0.35
+    color:'#1F42FF', metalness:0.16, roughness:0.24, clearcoat:0.35, clearcoatRoughness:0.22
   });
   const pinkMat = new THREE.MeshPhysicalMaterial({
-    color:'#FF2FD8', metalness:0.1, roughness:0.36, clearcoat:0.16, clearcoatRoughness:0.34
+    color:'#FF25DA', metalness:0.14, roughness:0.24, clearcoat:0.3, clearcoatRoughness:0.22
   });
   const blackMat = new THREE.MeshPhysicalMaterial({
     color:'#111111', metalness:0.05, roughness:0.75, clearcoat:0.05, clearcoatRoughness:0.75
@@ -839,6 +899,13 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
     obj.traverse((o)=>{ if (o.isMesh) arr.push(o); });
     return arr;
   };
+  let cubeTemplateMesh = null;
+  try {
+    const cubeGltf = await loadGlb(CUBE_MODEL_URL);
+    cubeTemplateMesh = meshListOf(cubeGltf.scene)[0] || null;
+  } catch (e){
+    console.warn('cube.glb not found, using fallback cube geometry');
+  }
   const finalizeLoadedRoot = (root, forcedParts = null)=>{
     const preBox = new THREE.Box3().setFromObject(root);
     const preSize = preBox.getSize(new THREE.Vector3());
@@ -882,6 +949,11 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
 
     scene.add(root);
     frameObject(root, camera, controls, null);
+    if (mode === 'charm'){
+      const snap = lastSnapshot || encodeBoardSnapshot();
+      const voxelGroup = makeResultVoxelGroup(snap, parts['2'], cubeTemplateMesh);
+      if (voxelGroup) scene.add(voxelGroup);
+    }
 
     if (threeCtx){
       threeCtx.partState = partState;
@@ -980,8 +1052,8 @@ async function openCharmPreview3D(){
   threeWrap.parent(ov);
   threeWrap.id('threeWrap');
   threeWrap.style('position','absolute')
-    .style('left','50%').style('top','13%')
-    .style('transform','translate(-95%,-50%) translateX(-80px) scale(0.55)')
+    .style('left','50%').style('top','40%')
+    .style('transform','translate(-50%,-50%) scale(0.55)')
     .style('width', canvasW+'px')
     .style('height', Math.floor(canvasW*(8/6))+'px')
     .style('z-index','10055')
@@ -1060,7 +1132,7 @@ async function openCharmPreview3D(){
   requestAnimationFrame(()=>{
     requestAnimationFrame(()=>{
       threeWrap.style('opacity','1');
-      threeWrap.style('transform','translate(-95%,-50%) scale(1)');
+      threeWrap.style('transform','translate(-50%,-50%) scale(1)');
     });
   });
 

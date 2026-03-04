@@ -75,17 +75,17 @@
       .viewer-shell{
         position:absolute;
         left:50%;
-        top:50%;
-        width:min(420px, 56vw);
-        height:min(315px, 42vw);
-        transform: translate(-50%, -44%) scale(0.72);
+        top:48%;
+        width:min(760px, 86vw);
+        height:min(520px, 62vh);
+        transform: translate(-50%, -50%) scale(0.88);
         transform-origin: center center;
         transition: transform 620ms cubic-bezier(.2,.9,.2,1), filter 320ms ease;
         z-index:2;
         filter: drop-shadow(0 14px 26px rgba(0,0,0,.10));
       }
       .viewer-shell.is-active{
-        transform: translate(-50%, -52%) scale(1.22);
+        transform: translate(-50%, -50%) scale(1);
         filter: drop-shadow(0 22px 44px rgba(0,0,0,.16));
       }
       .viewer{
@@ -97,7 +97,7 @@
       .product-body{
         position:absolute;
         left:50%;
-        top:70%;
+        top:74%;
         width:min(460px, calc(100% - 36px));
         transform: translate(-50%, 26px);
         opacity:0;
@@ -170,6 +170,7 @@
           <p class="product-meta">Material: metallic silver (part 1,2) + black (part 3) · Model files: <code>box_case.glb</code> + <code>box_panel.glb</code> + <code>box_part3.glb</code></p>
           <div class="product-actions">
             <button id="case-toggle-btn" type="button">Case: On</button>
+            <button id="part3-toggle-btn" type="button">Part 3: On</button>
           </div>
         </div>
         <div class="hint">Hover near the model</div>
@@ -252,12 +253,12 @@
         }
 
         const silverMat = new THREE.MeshPhysicalMaterial({
-          color: '#f1f4fb',
-          metalness: 0.92,
-          roughness: 0.12,
-          clearcoat: 0.9,
-          clearcoatRoughness: 0.08,
-          envMapIntensity: 1.35
+          color: '#f7f9ff',
+          metalness: 0.9,
+          roughness: 0.09,
+          clearcoat: 1.0,
+          clearcoatRoughness: 0.06,
+          envMapIntensity: 1.7
         });
 
         function getPartIdFromName(name){
@@ -312,18 +313,20 @@
           clearcoat: 0.18,
           clearcoatRoughness: 0.35
         });
-        const modelState = { caseVisible:true, parts:null, part3Node:null };
+        const modelState = { caseVisible:true, showPart3:true, parts:null, part3Node:null };
         const caseBtn = document.getElementById('case-toggle-btn');
+        const part3Btn = document.getElementById('part3-toggle-btn');
 
         function applyShopParts(){
           if (!modelState.parts) return;
           const parts = modelState.parts;
           parts['1'].forEach((m)=>{ m.material = silverMat; m.visible = modelState.caseVisible; });
           parts['2'].forEach((m)=>{ m.material = silverMat; m.visible = true; });
-          parts['3'].forEach((m)=>{ m.material = blackMat; m.visible = true; });
+          parts['3'].forEach((m)=>{ m.material = blackMat; m.visible = modelState.showPart3; });
           parts.other.forEach((m)=>{ m.material = silverMat; m.visible = true; });
           if (modelState.part3Node){
-            modelState.part3Node.traverse((o)=>{ if (o.isMesh) o.material = blackMat; });
+            modelState.part3Node.visible = modelState.showPart3;
+            modelState.part3Node.traverse((o)=>{ if (o.isMesh){ o.material = blackMat; o.visible = modelState.showPart3; } });
           }
           if (caseBtn){
             caseBtn.textContent = 'Case: ' + (modelState.caseVisible ? 'On' : 'Off');
@@ -332,10 +335,24 @@
               caseBtn.style.opacity = '0.55';
             }
           }
+          if (part3Btn){
+            part3Btn.textContent = 'Part 3: ' + (modelState.showPart3 ? 'On' : 'Off');
+            const hasPart3 = (parts['3'] && parts['3'].length) || !!modelState.part3Node;
+            if (!hasPart3){
+              part3Btn.disabled = true;
+              part3Btn.style.opacity = '0.55';
+            }
+          }
         }
         if (caseBtn){
           caseBtn.addEventListener('click', ()=>{
             modelState.caseVisible = !modelState.caseVisible;
+            applyShopParts();
+          });
+        }
+        if (part3Btn){
+          part3Btn.addEventListener('click', ()=>{
+            modelState.showPart3 = !modelState.showPart3;
             applyShopParts();
           });
         }
