@@ -736,7 +736,8 @@ function makeResultVoxelGroup(snapshot, panelRoot, cubeTemplate){
   const gridW = (cols - 1) * step + cell;
   const gridH = (rows - 1) * step + cell;
 
-  const panelCenter = panelBox.getCenter(new THREE.Vector3());
+  const startX = panelBox.min.x + (panelSize.x - gridW) / 2 + cell / 2;
+  const startY = panelBox.max.y - (panelSize.y - gridH) / 2 - cell / 2;
   const z = panelBox.max.z + Math.max(cell * 0.06, panelSize.z * 0.012);
 
   let template = cubeTemplate;
@@ -759,9 +760,7 @@ function makeResultVoxelGroup(snapshot, panelRoot, cubeTemplate){
       if (colorIdx < 0 || colorIdx >= PALETTE.length) continue;
 
       const voxel = template.clone();
-      const lx = (c - (cols - 1) / 2) * step;
-      const ly = ((rows - 1) / 2 - r) * step;
-      voxel.position.set(lx, ly, 0);
+      voxel.position.set(startX + c * step, startY - r * step, z);
       const s = (cell * 0.84) / baseScale;
       voxel.scale.set(s, s, s);
       voxel.rotation.set(Math.PI / 2, 0, 0);
@@ -778,8 +777,8 @@ function makeResultVoxelGroup(snapshot, panelRoot, cubeTemplate){
       group.add(voxel);
     }
   }
-  group.rotation.set(0, 0, 0);
-  group.position.set(panelCenter.x, panelCenter.y, z);
+  group.rotation.set(Math.PI / 2, 0, 0);
+  group.position.y += z + panelBox.max.y + cell * 0.12;
   return group.children.length ? group : null;
 }
 
@@ -830,7 +829,7 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
   renderer.setSize(w, h, false);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.9;
+  renderer.toneMappingExposure = 0.82;
   containerEl.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
@@ -849,24 +848,24 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
     rotateResumeAt = performance.now() + 1000;
   });
 
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x97a3b5, 0.86));
-  scene.add(new THREE.AmbientLight(0xffffff, 0.34));
-  const keyLight = new THREE.DirectionalLight(0xffffff, 0.82);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x97a3b5, 0.62));
+  scene.add(new THREE.AmbientLight(0xffffff, 0.24));
+  const keyLight = new THREE.DirectionalLight(0xffffff, 0.68);
   keyLight.position.set(-1.1, 1.4, 1.35);
   scene.add(keyLight);
-  const fillLight = new THREE.DirectionalLight(0xecf3ff, 0.62);
+  const fillLight = new THREE.DirectionalLight(0xecf3ff, 0.52);
   fillLight.position.set(1.4, 0.85, 1.5);
   scene.add(fillLight);
-  const rimLight = new THREE.DirectionalLight(0xffffff, 0.34);
+  const rimLight = new THREE.DirectionalLight(0xffffff, 0.26);
   rimLight.position.set(0.0, 1.0, -1.6);
   scene.add(rimLight);
-  const leftFill = new THREE.DirectionalLight(0xf6f9ff, 0.35);
+  const leftFill = new THREE.DirectionalLight(0xf6f9ff, 0.22);
   leftFill.position.set(-1.8, 0.35, 0.6);
   scene.add(leftFill);
-  const rightFill = new THREE.DirectionalLight(0xf6f9ff, 0.35);
+  const rightFill = new THREE.DirectionalLight(0xf6f9ff, 0.22);
   rightFill.position.set(1.8, 0.35, 0.6);
   scene.add(rightFill);
-  const topSoft = new THREE.PointLight(0xffffff, 0.25, 6);
+  const topSoft = new THREE.PointLight(0xffffff, 0.14, 6);
   topSoft.position.set(0, 1.8, 0.9);
   scene.add(topSoft);
 
@@ -968,9 +967,7 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
     applyParts();
 
     scene.add(root);
-    const focusMeshes = (parts['1'] && parts['1'].length ? parts['1'] : [])
-      .concat(parts['2'] && parts['2'].length ? parts['2'] : []);
-    frameObject(root, camera, controls, focusMeshes.length ? focusMeshes : null);
+    frameObject(root, camera, controls, null);
     if (mode === 'charm'){
       const snap = lastSnapshot || encodeBoardSnapshot();
       const panelRoot = partState.panelNode || (parts['2'] && parts['2'][0] ? parts['2'][0].parent : null);
