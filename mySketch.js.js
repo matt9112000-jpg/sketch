@@ -612,8 +612,8 @@ function renderLeaderboard(){
   lbRects = [];
   const podiumY = BORDER_HALF + innerH * 0.74;
   const cx = BORDER_HALF + innerW/2;
-  const lane = innerW * 0.28;
-  const colW = innerW * 0.22;
+  const lane = innerW * 0.31;
+  const colW = innerW * 0.20;
   const colHeights = [innerH * 0.33, innerH * 0.23, innerH * 0.18]; // 1 > 2 > 3
   const colX = [cx - colW/2, cx - lane - colW/2, cx + lane - colW/2];
   const colY = [podiumY - colHeights[0], podiumY - colHeights[1], podiumY - colHeights[2]];
@@ -632,13 +632,13 @@ function renderLeaderboard(){
     text(String(i+1), colX[i] + colW/2, colY[i] + colHeights[i] - 18);
   }
 
-  const maxCardW = innerW * 0.34;
+  const maxCardW = innerW * 0.30;
   const cellSmall = max(3, floor((maxCardW * 0.70) / cols));
-  const cellBig = floor(cellSmall * 1.25);
+  const cellBig = floor(cellSmall * 1.18);
   const dims = [
-    { cell:cellBig, title:max(28, LB_SIZES[0]*1.24), x:cx, y:colY[0] - innerH*0.22, rank:1 },
-    { cell:cellSmall, title:max(18, LB_SIZES[1]), x:cx - lane, y:colY[1] - innerH*0.18, rank:2 },
-    { cell:cellSmall, title:max(18, LB_SIZES[2]), x:cx + lane, y:colY[2] - innerH*0.18, rank:3 }
+    { cell:cellBig, title:max(26, LB_SIZES[0]*1.14), x:cx, y:colY[0] - innerH*0.20, rank:1 },
+    { cell:cellSmall, title:max(16, LB_SIZES[1]*0.95), x:cx - lane, y:colY[1] - innerH*0.16, rank:2 },
+    { cell:cellSmall, title:max(16, LB_SIZES[2]*0.95), x:cx + lane, y:colY[2] - innerH*0.16, rank:3 }
   ];
 
   const items=[];
@@ -648,12 +648,12 @@ function renderLeaderboard(){
     const thumbW = d.cell * cols;
     const thumbH = d.cell * rows;
     const bw = thumbW + 26;
-    const bh = thumbH + d.title * 1.85 + 18;
+    const bh = thumbH + d.title * 2.35 + 26;
     const bx = d.x - bw/2;
     const by = d.y;
     const tx = d.x - thumbW/2;
-    const ty = by + d.title * 1.42 + 8;
-    const lineY = by + 10;
+    const ty = by + d.title * 1.9 + 18;
+    const lineY = by + 14;
     lbRects.push({x:bx, y:by, w:bw, h:bh});
     items.push({ rec:source[i], i, rank:d.rank, titleSize:d.title, tx, ty, lineY, cell:d.cell, thumbW, thumbH, bx, by, bw, bh });
   }
@@ -678,15 +678,20 @@ function renderLeaderboard(){
       strokeWeight(2);
       rect(bx-8, by-6, bw+16, bh+14, 12);
 
+      const nameSize = max(15, titleSize * 0.72);
+      const scoreSize = max(13, titleSize * 0.48);
+      const nameY = lineY + 4;
+      const scoreY = nameY + nameSize + 6;
+      const displayName = String(rec.name || '').slice(0, 12);
       noStroke();
       fill(rankColor);
-      textSize(titleSize * 0.96);
+      textSize(nameSize);
       textAlign(CENTER, TOP);
       textStyle(BOLD);
-      text(`#${rank}  ${rec.name}`, bx + bw/2, lineY + 8);
+      text(`#${rank}  ${displayName}`, bx + bw/2, nameY);
       fill('#f6f8ff');
-      textSize(max(16, titleSize * 0.72));
-      text(`Empty Blocks: ${rec.score}`, bx + bw/2, lineY + titleSize * 0.98);
+      textSize(scoreSize);
+      text(`Empty Blocks: ${rec.score}`, bx + bw/2, scoreY);
 
       // Medal badge
       fill(rankColor);
@@ -904,7 +909,7 @@ function makeResultVoxelGroup(snapshot, panelRoot, cubeTemplate){
   }
   group.rotation.set(Math.PI / 2, 0, 0);
   group.position.y += z + panelBox.max.y + cell * 0.12;
-  group.position.add(new THREE.Vector3(0, 0, 0));
+  group.position.add(new THREE.Vector3(-5, -5, -5));
   return group.children.length ? group : null;
 }
 
@@ -955,7 +960,7 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
   renderer.setSize(w, h, false);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.72;
+  renderer.toneMappingExposure = 0.76;
   containerEl.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
@@ -974,24 +979,24 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
     rotateResumeAt = performance.now() + 1000;
   });
 
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x97a3b5, 0.52));
-  scene.add(new THREE.AmbientLight(0xffffff, 0.18));
-  const keyLight = new THREE.DirectionalLight(0xffffff, 0.56);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x97a3b5, 0.56));
+  scene.add(new THREE.AmbientLight(0xffffff, 0.22));
+  const keyLight = new THREE.DirectionalLight(0xffffff, 0.62);
   keyLight.position.set(-1.1, 1.4, 1.35);
   scene.add(keyLight);
-  const fillLight = new THREE.DirectionalLight(0xecf3ff, 0.44);
+  const fillLight = new THREE.DirectionalLight(0xecf3ff, 0.5);
   fillLight.position.set(1.4, 0.85, 1.5);
   scene.add(fillLight);
-  const rimLight = new THREE.DirectionalLight(0xffffff, 0.2);
+  const rimLight = new THREE.DirectionalLight(0xffffff, 0.24);
   rimLight.position.set(0.0, 1.0, -1.6);
   scene.add(rimLight);
-  const leftFill = new THREE.DirectionalLight(0xf6f9ff, 0.16);
+  const leftFill = new THREE.DirectionalLight(0xf6f9ff, 0.18);
   leftFill.position.set(-1.8, 0.35, 0.6);
   scene.add(leftFill);
-  const rightFill = new THREE.DirectionalLight(0xf6f9ff, 0.16);
+  const rightFill = new THREE.DirectionalLight(0xf6f9ff, 0.18);
   rightFill.position.set(1.8, 0.35, 0.6);
   scene.add(rightFill);
-  const topSoft = new THREE.PointLight(0xffffff, 0.1, 6);
+  const topSoft = new THREE.PointLight(0xffffff, 0.12, 6);
   topSoft.position.set(0, 1.8, 0.9);
   scene.add(topSoft);
 
@@ -1253,7 +1258,7 @@ async function openCharmPreview3D(options = {}){
       }
     }
 
-    const boom = createDiv('BLAST REWARD');
+    const boom = createDiv('MERCH UNLOCKED');
     boom.parent(ov);
     boom.style('position','absolute')
       .style('left','50%').style('top','12%')
@@ -1270,9 +1275,9 @@ async function openCharmPreview3D(options = {}){
 
     const rewardScore = Math.max(0, 1200 - (lastBlocks || 0) * 20);
     const chips = [
-      { label:'NAME', value:(lastName || playerName || 'PLAYER').toUpperCase(), color:'#44f1ff', delay:80 },
-      { label:'BLOCKS', value:String(lastBlocks || 0), color:'#ff6adf', delay:180 },
-      { label:'SCORE', value:String(rewardScore), color:'#83ff4a', delay:280 }
+      { label:'DESIGNER', value:(lastName || playerName || 'PLAYER').toUpperCase(), color:'#44f1ff', delay:80 },
+      { label:'EMPTY BLOCKS', value:String(lastBlocks || 0), color:'#ff6adf', delay:180 },
+      { label:'MERCH SCORE', value:String(rewardScore), color:'#83ff4a', delay:280 }
     ];
     const infoWrap = createDiv('');
     infoWrap.parent(ov);
@@ -1347,7 +1352,7 @@ async function openCharmPreview3D(options = {}){
 
   charm3D.texFront = buildCharmTexture(420*0.82, Math.floor(420*(8/6))*0.82);
 
-  const canvasW = Math.min(380, Math.floor((windowWidth-120)*0.82));
+  const canvasW = Math.min(460, Math.floor((windowWidth-70)*0.9));
   const threeWrap = createDiv('');
   threeWrap.parent(ov);
   threeWrap.id('threeWrap');
@@ -1406,7 +1411,7 @@ async function openCharmPreview3D(options = {}){
   closeBtn.mousePressed(closeCharmPreview3D);
   charmFS.closeBtn = closeBtn;
 
-  const tip = createDiv(fromGameOver ? 'Reward Unlocked' : 'Make your own charm');
+  const tip = createDiv(fromGameOver ? 'Merch Unlocked' : 'Make your own charm');
   tip.parent(ov);
   tip.style('position','absolute')
      .style('left','50%')
