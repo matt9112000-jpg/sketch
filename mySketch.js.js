@@ -727,28 +727,31 @@ function makeResultVoxelGroup(snapshot, panelRoot, cubeTemplate){
   if (!panelBox || panelBox.isEmpty()) return null;
 
   const panelSize = panelBox.getSize(new THREE.Vector3());
-  const insetRatio = 0.84;
+  const insetRatio = 0.88;
   const availW = panelSize.x * insetRatio;
   const availH = panelSize.y * insetRatio;
-  const cell = Math.min(availW / cols, availH / rows);
-  if (!isFinite(cell) || cell <= 0) return null;
+  const cellW = availW / cols;
+  const cellH = availH / rows;
+  if (!isFinite(cellW) || !isFinite(cellH) || cellW <= 0 || cellH <= 0) return null;
 
-  const startX = panelBox.min.x + (panelSize.x - cols * cell) / 2 + cell / 2;
-  const startY = panelBox.max.y - (panelSize.y - rows * cell) / 2 - cell / 2;
-  const z = panelBox.max.z + Math.max(cell * 0.16, panelSize.z * 0.04);
+  const startX = panelBox.min.x + (panelSize.x - cols * cellW) / 2 + cellW / 2;
+  const startY = panelBox.max.y - (panelSize.y - rows * cellH) / 2 - cellH / 2;
 
-  let template = cubeTemplate;
-  let baseScale = 1;
+  let template = cubeTemplate ? cubeTemplate.clone(true) : null;
+  let baseSize = new THREE.Vector3(1,1,1);
   if (!template){
     template = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), new THREE.MeshStandardMaterial({ color:'#ffffff' }));
   } else {
     const b = new THREE.Box3().setFromObject(template);
+    const c = b.getCenter(new THREE.Vector3());
     const s = b.getSize(new THREE.Vector3());
-    baseScale = Math.max(s.x, s.y, s.z) || 1;
+    baseSize.copy(s);
+    template.position.sub(c);
   }
+  const scaleXY = Math.min((cellW * 0.84) / Math.max(baseSize.x, 1e-6), (cellH * 0.84) / Math.max(baseSize.y, 1e-6));
+  const z = panelBox.max.z + (baseSize.z * scaleXY * 0.5) + Math.max(panelSize.z * 0.008, 0.0015);
 
   const group = new THREE.Group();
-  const selfRotate90 = Math.PI / 2;
   for (let r=0; r<rows; r++){
     for (let c=0; c<cols; c++){
       const idxInSnap = r * cols + c;
@@ -757,11 +760,10 @@ function makeResultVoxelGroup(snapshot, panelRoot, cubeTemplate){
       const colorIdx = ch.charCodeAt(0) - 48;
       if (colorIdx < 0 || colorIdx >= PALETTE.length) continue;
 
-      const voxel = template.clone();
-      voxel.position.set(startX + c * cell, startY - r * cell, z);
-      const s = (cell * 0.72) / baseScale;
-      voxel.scale.set(s, s, s);
-      voxel.rotation.set(selfRotate90, 0, 0);
+      const voxel = template.clone(true);
+      voxel.position.set(startX + c * cellW, startY - r * cellH, z);
+      voxel.scale.set(scaleXY, scaleXY, scaleXY);
+      voxel.rotation.set(0, 0, 0);
       voxel.traverse((o)=>{
         if (!o.isMesh) return;
         o.material = new THREE.MeshPhysicalMaterial({
@@ -775,7 +777,6 @@ function makeResultVoxelGroup(snapshot, panelRoot, cubeTemplate){
       group.add(voxel);
     }
   }
-  group.rotation.z = Math.PI / 2;
   return group.children.length ? group : null;
 }
 
@@ -794,6 +795,7 @@ function frameObject(object, camera, controls, focusMeshes = null){
   controls.autoRotateSpeed = 0.38;
 
   controls.target.copy(center);
+  controls.target.x += radius * 0.035;
 
   const fov = camera.fov * (Math.PI / 180);
   let dist = radius / Math.sin(fov / 2);
@@ -926,7 +928,7 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
     const preBox = new THREE.Box3().setFromObject(root);
     const preSize = preBox.getSize(new THREE.Vector3());
     const maxDim = Math.max(preSize.x, preSize.y, preSize.z);
-    const TARGET_MAX = (mode === 'charm') ? 0.82 : 1.0;
+    const TARGET_MAX = (mode === 'charm') ? 0.74 : 1.0;
     const scale = maxDim > 0 ? TARGET_MAX / maxDim : 1.0;
     root.scale.setScalar(scale);
     root.updateWorldMatrix(true, true);
