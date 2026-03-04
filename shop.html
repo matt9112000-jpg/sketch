@@ -253,12 +253,12 @@
         }
 
         const silverMat = new THREE.MeshPhysicalMaterial({
-          color: '#f7f9ff',
-          metalness: 0.9,
-          roughness: 0.09,
+          color: '#ffffff',
+          metalness: 0.96,
+          roughness: 0.06,
           clearcoat: 1.0,
-          clearcoatRoughness: 0.06,
-          envMapIntensity: 1.7
+          clearcoatRoughness: 0.05,
+          envMapIntensity: 2.2
         });
 
         function getPartIdFromName(name){
@@ -307,11 +307,11 @@
           return parts;
         }
         const blackMat = new THREE.MeshPhysicalMaterial({
-          color: '#2f3138',
-          metalness: 0.24,
-          roughness: 0.46,
-          clearcoat: 0.18,
-          clearcoatRoughness: 0.35
+          color: '#050506',
+          metalness: 0.02,
+          roughness: 0.9,
+          clearcoat: 0.02,
+          clearcoatRoughness: 0.9
         });
         const modelState = { caseVisible:true, showPart3:true, parts:null, part3Node:null };
         const caseBtn = document.getElementById('case-toggle-btn');

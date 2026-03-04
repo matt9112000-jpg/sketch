@@ -592,11 +592,11 @@ function renderLeaderboard(){
   fill('#f9f7ff');
   textAlign(CENTER, TOP);
   textStyle(BOLD);
-  textSize(max(20, innerW * 0.07));
-  text('LEADERBOARD', width/2, BORDER_HALF + 12);
+  textSize(max(20, innerW * 0.062));
+  text('LEADERBOARD', width/2, BORDER_HALF + 8);
   fill('#ffd9f8');
   textSize(max(12, innerW * 0.025));
-  text('Top survivors in insufficient space', width/2, BORDER_HALF + 42);
+  text('Top survivors in insufficient space', width/2, BORDER_HALF + 58);
 
   if (SHOW_CLEAR && !select('#clearBtn')) createStyledButton('clearBtn','Clear', canvasX + 20, canvasY + 20, clearScores);
   if (!select('#saveBtn')) createStyledButton('saveBtn','Save', canvasX + 20, canvasY + 60, saveLastGamePng);
@@ -909,7 +909,7 @@ function makeResultVoxelGroup(snapshot, panelRoot, cubeTemplate){
   }
   group.rotation.set(Math.PI / 2, 0, 0);
   group.position.y += z + panelBox.max.y + cell * 0.12;
-  group.position.add(new THREE.Vector3(-5, -5, -5));
+  group.position.add(new THREE.Vector3(-10, -10, -10));
   return group.children.length ? group : null;
 }
 
