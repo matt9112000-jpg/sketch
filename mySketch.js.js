@@ -648,9 +648,66 @@ function getPartIdFromName(name){
   const m = n.match(/(?:^|[^0-9])0*([123])(?:[^0-9]|$)/);
   return m ? m[1] : null;
 }
+function splitMeshIntoThreeBands(mesh){
+  if (!mesh || !mesh.isMesh || !mesh.geometry || !mesh.geometry.attributes || !mesh.geometry.attributes.position) return [mesh];
+  const src = mesh.geometry.index ? mesh.geometry.toNonIndexed() : mesh.geometry.clone();
+  const posAttr = src.attributes.position;
+  const pos = posAttr.array;
+  const nor = src.attributes.normal ? src.attributes.normal.array : null;
+  const triCount = Math.floor(posAttr.count / 3);
+  if (triCount < 3) return [mesh];
+
+  src.computeBoundingBox();
+  const size = src.boundingBox ? src.boundingBox.getSize(new THREE.Vector3()) : new THREE.Vector3(1,1,1);
+  const dims = [size.x, size.y, size.z];
+  const axis = dims.indexOf(Math.max(dims[0], dims[1], dims[2]));
+
+  const centroids = new Array(triCount);
+  for (let t=0; t<triCount; t++){
+    const i = t * 9;
+    centroids[t] = (pos[i + axis] + pos[i + 3 + axis] + pos[i + 6 + axis]) / 3;
+  }
+  const sorted = centroids.slice().sort((a,b)=>a-b);
+  const cut1 = sorted[Math.floor(sorted.length / 3)];
+  const cut2 = sorted[Math.floor((sorted.length * 2) / 3)];
+  const triBuckets = [[], [], []];
+  for (let t=0; t<triCount; t++){
+    const c = centroids[t];
+    const b = c < cut1 ? 0 : (c < cut2 ? 1 : 2);
+    triBuckets[b].push(t);
+  }
+
+  const buildGeom = (tris)=>{
+    const outPos = new Float32Array(tris.length * 9);
+    const outNor = nor ? new Float32Array(tris.length * 9) : null;
+    for (let i=0; i<tris.length; i++){
+      const srcBase = tris[i] * 9;
+      const dstBase = i * 9;
+      outPos.set(pos.subarray(srcBase, srcBase + 9), dstBase);
+      if (outNor) outNor.set(nor.subarray(srcBase, srcBase + 9), dstBase);
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(outPos, 3));
+    if (outNor) g.setAttribute('normal', new THREE.BufferAttribute(outNor, 3));
+    if (!outNor) g.computeVertexNormals();
+    return g;
+  };
+
+  const split = triBuckets
+    .filter((tris)=>tris.length > 0)
+    .map((tris, idx)=>{
+      const m = new THREE.Mesh(buildGeom(tris), mesh.material);
+      m.name = `${mesh.name || 'mesh'}_band${idx+1}`;
+      m.position.copy(mesh.position);
+      m.quaternion.copy(mesh.quaternion);
+      m.scale.copy(mesh.scale);
+      return m;
+    });
+  return split.length ? split : [mesh];
+}
 function collectPartMeshes(root){
   const parts = { '1':[], '2':[], '3':[], other:[] };
-  const allMeshes = [];
+  let allMeshes = [];
   const unnamed = [];
   const meshVolume = (mesh)=>{
     const b = new THREE.Box3().setFromObject(mesh);
@@ -667,6 +724,18 @@ function collectPartMeshes(root){
       unnamed.push(o);
     }
   });
+
+  if (allMeshes.length === 1){
+    const only = allMeshes[0];
+    const split = splitMeshIntoThreeBands(only);
+    if (split.length > 1 && only.parent){
+      only.parent.remove(only);
+      split.forEach((m)=>only.parent.add(m));
+      allMeshes = split.slice();
+      unnamed.length = 0;
+      split.forEach((m)=>unnamed.push(m));
+    }
+  }
 
   // Fallback / repair: fill missing parts by volume rank.
   const byVolDesc = allMeshes.slice().sort((a,b)=>meshVolume(b)-meshVolume(a));
@@ -711,6 +780,7 @@ function frameObject(object, camera, controls){
   controls.autoRotateSpeed = 0;
 
   controls.target.copy(center);
+  controls.target.y += radius * 0.08;
 
   const fov = camera.fov * (Math.PI / 180);
   let dist = radius / Math.sin(fov / 2);
@@ -743,15 +813,15 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
   renderer.setSize(w, h, false);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.38;
+  renderer.toneMappingExposure = 1.12;
   containerEl.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(35, w/h, 0.01, 100);
-  camera.position.set(0.6, 0.35, 0.9);
+  camera.position.set(0.72, 0.5, 1.05);
 
   const controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true; controls.enablePan = false; controls.enableRotate = false;
+  controls.enableDamping = true; controls.enablePan = false; controls.enableRotate = true;
   controls.minDistance = 0.2;    controls.maxDistance = 5;
 
   scene.add(new THREE.HemisphereLight(0xffffff, 0x97a3b5, 1.5));
@@ -796,13 +866,13 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
 
   // Material presets for named parts 1/2/3
   const blueMat = new THREE.MeshPhysicalMaterial({
-    color:'#1A26FF', metalness:0.45, roughness:0.18, clearcoat:0.55, clearcoatRoughness:0.2
+    color:'#2455FF', metalness:0.12, roughness:0.34, clearcoat:0.18, clearcoatRoughness:0.35
   });
   const pinkMat = new THREE.MeshPhysicalMaterial({
-    color:'#FF3BDA', metalness:0.35, roughness:0.22, clearcoat:0.6, clearcoatRoughness:0.25
+    color:'#FF2FD8', metalness:0.1, roughness:0.36, clearcoat:0.16, clearcoatRoughness:0.34
   });
   const blackMat = new THREE.MeshPhysicalMaterial({
-    color:'#111111', metalness:0.55, roughness:0.28, clearcoat:0.35, clearcoatRoughness:0.28
+    color:'#111111', metalness:0.05, roughness:0.75, clearcoat:0.05, clearcoatRoughness:0.75
   });
 
   const mode = options.mode || 'charm'; // charm | shop
