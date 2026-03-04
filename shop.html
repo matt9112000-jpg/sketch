@@ -167,7 +167,7 @@
         </div>
         <div class="product-body" id="product-info">
           <h2 class="product-title">001 — Box Charm</h2>
-          <p class="product-meta">Material: metallic silver (part 1,2) + black (part 3) · Model file: <code>box.glb</code></p>
+          <p class="product-meta">Material: metallic silver (part 1,2) + black (part 3) · Model files: <code>box_case.glb</code> + <code>box_panel.glb</code> + <code>box_part3.glb</code></p>
           <div class="product-actions">
             <button id="case-toggle-btn" type="button">Case: On</button>
           </div>
@@ -316,10 +316,17 @@
         }
 
         const loader = new THREE.GLTFLoader();
+        const loadGlb = (url)=>new Promise((resolve, reject)=>{
+          loader.load(url, resolve, undefined, reject);
+        });
+        const meshListOf = (obj)=>{
+          const arr = [];
+          obj.traverse((o)=>{ if (o.isMesh) arr.push(o); });
+          return arr;
+        };
         let modelRoot = null;
-        loader.load('./box.glb', (gltf)=>{
-          const root = gltf.scene;
-          modelState.parts = collectPartMeshes(root);
+        const finalizeRoot = (root, parts)=>{
+          modelState.parts = parts;
           applyShopParts();
 
           const box = new THREE.Box3().setFromObject(root);
@@ -333,9 +340,39 @@
 
           modelRoot = root;
           scene.add(root);
-        }, undefined, ()=>{
-          mount.innerHTML = '<div style="display:flex;height:100%;align-items:center;justify-content:center;color:#73738a;font-size:12px;">Unable to load box.glb</div>';
-        });
+        };
+
+        (async ()=>{
+          try {
+            const [caseGltf, panelGltf, part3Gltf] = await Promise.all([
+              loadGlb('./box_case.glb'),
+              loadGlb('./box_panel.glb'),
+              loadGlb('./box_part3.glb'),
+            ]);
+            const root = new THREE.Group();
+            root.add(caseGltf.scene);
+            root.add(panelGltf.scene);
+            root.add(part3Gltf.scene);
+
+            const p1 = meshListOf(caseGltf.scene);
+            const p2 = meshListOf(panelGltf.scene);
+            const p3 = meshListOf(part3Gltf.scene);
+            const used = new Set([].concat(p1, p2, p3));
+            const all = meshListOf(root);
+            const parts = { '1':p1, '2':p2, '3':p3, other: all.filter((m)=>!used.has(m)) };
+            finalizeRoot(root, parts);
+          } catch (splitErr){
+            console.warn('split model load failed, fallback to box.glb', splitErr);
+            try {
+              const gltf = await loadGlb('./box.glb');
+              const root = gltf.scene;
+              const parts = collectPartMeshes(root);
+              finalizeRoot(root, parts);
+            } catch (err){
+              mount.innerHTML = '<div style="display:flex;height:100%;align-items:center;justify-content:center;color:#73738a;font-size:12px;">Unable to load split model or box.glb</div>';
+            }
+          }
+        })();
 
         let active = false;
         function setActive(v){
