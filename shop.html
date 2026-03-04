@@ -196,7 +196,7 @@
         renderer.setSize(mount.clientWidth, mount.clientHeight);
         renderer.outputColorSpace = THREE.SRGBColorSpace;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1.15;
+        renderer.toneMappingExposure = 0.95;
         mount.appendChild(renderer.domElement);
 
         scene.add(new THREE.HemisphereLight(0xffffff, 0x97a3b5, 1.45));
@@ -224,10 +224,32 @@
         controls.enableDamping = true;
         controls.enablePan = false;
         controls.enableRotate = true;
-        controls.autoRotate = false;
-        controls.autoRotateSpeed = 0;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 0.32;
         controls.minDistance = 1.15;
         controls.maxDistance = 3.8;
+        let rotateResumeAt = 0;
+        controls.addEventListener('start', ()=>{
+          controls.autoRotate = false;
+        });
+        controls.addEventListener('end', ()=>{
+          rotateResumeAt = performance.now() + 1000;
+        });
+        function focusControlsOnMeshes(root, parts){
+          const box = new THREE.Box3();
+          const focus = (parts && parts['1'] ? parts['1'] : []).concat(parts && parts['2'] ? parts['2'] : []);
+          if (focus.length){
+            focus.forEach((m)=>box.expandByObject(m));
+          } else {
+            box.setFromObject(root);
+          }
+          if (box.isEmpty()) return;
+          const center = box.getCenter(new THREE.Vector3());
+          const offset = new THREE.Vector3().subVectors(camera.position, controls.target);
+          controls.target.copy(center);
+          camera.position.copy(center.clone().add(offset));
+          controls.update();
+        }
 
         const silverMat = new THREE.MeshPhysicalMaterial({
           color: '#f1f4fb',
@@ -337,6 +359,8 @@
           const centered = new THREE.Box3().setFromObject(root);
           const center = centered.getCenter(new THREE.Vector3());
           root.position.sub(center);
+          root.updateWorldMatrix(true, true);
+          focusControlsOnMeshes(root, parts);
 
           modelRoot = root;
           scene.add(root);
@@ -397,6 +421,11 @@
         stage.addEventListener('pointerdown', ()=>setActive(true));
 
         function tick(){
+          if (rotateResumeAt && performance.now() >= rotateResumeAt){
+            controls.autoRotate = true;
+            controls.autoRotateSpeed = 0.32;
+            rotateResumeAt = 0;
+          }
           controls.update();
           renderer.render(scene, camera);
           requestAnimationFrame(tick);

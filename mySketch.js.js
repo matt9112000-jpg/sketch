@@ -705,13 +705,18 @@ function buildCharmTexture(w, h){
 }
 
 
-function frameObject(object, camera, controls){
-  const box = new THREE.Box3().setFromObject(object);
+function frameObject(object, camera, controls, focusMeshes = null){
+  const box = new THREE.Box3();
+  if (focusMeshes && focusMeshes.length){
+    focusMeshes.forEach((m)=>box.expandByObject(m));
+  } else {
+    box.setFromObject(object);
+  }
   const sphere = box.getBoundingSphere(new THREE.Sphere());
   const center = sphere.center;
   const radius = Math.max(sphere.radius, 1e-6);
-  controls.autoRotate = false;
-  controls.autoRotateSpeed = 0;
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 0.38;
 
   controls.target.copy(center);
   controls.target.y += radius * 0.08;
@@ -747,7 +752,7 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
   renderer.setSize(w, h, false);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.12;
+  renderer.toneMappingExposure = 0.95;
   containerEl.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
@@ -757,9 +762,17 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
   const controls = new THREE.OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true; controls.enablePan = false; controls.enableRotate = true;
   controls.minDistance = 0.2;    controls.maxDistance = 5;
+  const baseAutoRotateSpeed = 0.38;
+  let rotateResumeAt = 0;
+  controls.addEventListener('start', ()=>{
+    controls.autoRotate = false;
+  });
+  controls.addEventListener('end', ()=>{
+    rotateResumeAt = performance.now() + 1000;
+  });
 
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x97a3b5, 1.5));
-  scene.add(new THREE.AmbientLight(0xffffff, 0.82));
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x97a3b5, 1.08));
+  scene.add(new THREE.AmbientLight(0xffffff, 0.48));
   const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
   keyLight.position.set(-1.1, 1.4, 1.35);
   scene.add(keyLight);
@@ -812,7 +825,8 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
   const mode = options.mode || 'charm'; // charm | shop
   const partState = {
     caseVisible: true,   // item 1 (box case)
-    showPart3: true      // item 3 optional (charm mode)
+    showPart3: true,     // item 3 optional (charm mode)
+    part3Node: null      // explicit node visibility control for split file
   };
 
   // 載入 GLB（優先三件式；失敗則回退單檔）
@@ -854,6 +868,7 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
         setList(parts['2'], pinkMat, true);
         setList(parts['3'], blackMat, partState.showPart3);
         setList(parts.other, metalMat, true);
+        if (partState.part3Node) partState.part3Node.visible = partState.showPart3;
       } else {
         setList(parts['1'], metalMat, partState.caseVisible);
         setList(parts['2'], metalMat, true);
@@ -864,7 +879,9 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
     applyParts();
 
     scene.add(root);
-    frameObject(root, camera, controls);
+    const focusMeshes = (parts['1'] && parts['1'].length ? parts['1'] : [])
+      .concat(parts['2'] && parts['2'].length ? parts['2'] : []);
+    frameObject(root, camera, controls, focusMeshes.length ? focusMeshes : null);
 
     if (threeCtx){
       threeCtx.partState = partState;
@@ -885,6 +902,7 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
       root.add(caseGltf.scene);
       root.add(panelGltf.scene);
       root.add(part3Gltf.scene);
+      partState.part3Node = part3Gltf.scene;
 
       const p1 = meshListOf(caseGltf.scene);
       const p2 = meshListOf(panelGltf.scene);
@@ -895,6 +913,7 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
       finalizeLoadedRoot(root, forcedParts);
     } catch (splitErr){
       console.warn('split model load failed, fallback to single glb', splitErr);
+      partState.part3Node = null;
       try {
         const gltf = await loadGlb(modelPath || MODEL_URL);
         finalizeLoadedRoot(gltf.scene, null);
@@ -907,6 +926,11 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
 
   // render loop
   function tick(){
+    if (rotateResumeAt && performance.now() >= rotateResumeAt){
+      controls.autoRotate = true;
+      controls.autoRotateSpeed = baseAutoRotateSpeed;
+      rotateResumeAt = 0;
+    }
     controls.update();
     renderer.render(scene, camera);
     threeCtx && (threeCtx.rafId = requestAnimationFrame(tick));
