@@ -732,10 +732,13 @@ function makeResultVoxelGroup(snapshot, panelRoot, cubeTemplate){
   const availH = panelSize.y * insetRatio;
   const cell = Math.min(availW / cols, availH / rows);
   if (!isFinite(cell) || cell <= 0) return null;
+  const step = cell * 0.88;
+  const gridW = (cols - 1) * step + cell;
+  const gridH = (rows - 1) * step + cell;
 
-  const startX = panelBox.min.x + (panelSize.x - cols * cell) / 2 + cell / 2;
-  const startY = panelBox.max.y - (panelSize.y - rows * cell) / 2 - cell / 2;
-  const z = panelBox.max.z + Math.max(cell * 0.16, panelSize.z * 0.04);
+  const startX = panelBox.min.x + (panelSize.x - gridW) / 2 + cell / 2;
+  const startY = panelBox.max.y - (panelSize.y - gridH) / 2 - cell / 2;
+  const z = panelBox.max.z + Math.max(cell * 0.06, panelSize.z * 0.012);
 
   let template = cubeTemplate;
   let baseScale = 1;
@@ -757,8 +760,8 @@ function makeResultVoxelGroup(snapshot, panelRoot, cubeTemplate){
       if (colorIdx < 0 || colorIdx >= PALETTE.length) continue;
 
       const voxel = template.clone();
-      voxel.position.set(startX + c * cell, startY - r * cell, z);
-      const s = (cell * 0.72) / baseScale;
+      voxel.position.set(startX + c * step, startY - r * step, z);
+      const s = (cell * 0.84) / baseScale;
       voxel.scale.set(s, s, s);
       voxel.rotation.set(Math.PI / 2, 0, 0);
       voxel.traverse((o)=>{
@@ -775,6 +778,7 @@ function makeResultVoxelGroup(snapshot, panelRoot, cubeTemplate){
     }
   }
   group.rotation.set(Math.PI / 2, 0, 0);
+  group.position.y += z + panelBox.max.y + cell * 0.12;
   return group.children.length ? group : null;
 }
 
