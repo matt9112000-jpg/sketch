@@ -719,11 +719,10 @@ function frameObject(object, camera, controls, focusMeshes = null){
   controls.autoRotateSpeed = 0.38;
 
   controls.target.copy(center);
-  controls.target.y += radius * 0.08;
 
   const fov = camera.fov * (Math.PI / 180);
   let dist = radius / Math.sin(fov / 2);
-  dist *= 2;
+  dist *= 1.62;
   dist = Math.max(dist, 1.5);
 
   const viewDir = new THREE.Vector3()
@@ -752,7 +751,7 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
   renderer.setSize(w, h, false);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.95;
+  renderer.toneMappingExposure = 0.88;
   containerEl.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
@@ -760,7 +759,7 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
   camera.position.set(0.72, 0.5, 1.05);
 
   const controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true; controls.enablePan = false; controls.enableRotate = true;
+  controls.enableDamping = true; controls.enablePan = true; controls.enableRotate = true;
   controls.minDistance = 0.2;    controls.maxDistance = 5;
   const baseAutoRotateSpeed = 0.38;
   let rotateResumeAt = 0;
@@ -771,8 +770,8 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
     rotateResumeAt = performance.now() + 1000;
   });
 
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x97a3b5, 1.08));
-  scene.add(new THREE.AmbientLight(0xffffff, 0.48));
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x97a3b5, 0.86));
+  scene.add(new THREE.AmbientLight(0xffffff, 0.34));
   const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
   keyLight.position.set(-1.1, 1.4, 1.35);
   scene.add(keyLight);
@@ -868,7 +867,10 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
         setList(parts['2'], pinkMat, true);
         setList(parts['3'], blackMat, partState.showPart3);
         setList(parts.other, metalMat, true);
-        if (partState.part3Node) partState.part3Node.visible = partState.showPart3;
+        if (partState.part3Node){
+          partState.part3Node.visible = partState.showPart3;
+          partState.part3Node.traverse((o)=>{ if (o.isMesh) o.visible = partState.showPart3; });
+        }
       } else {
         setList(parts['1'], metalMat, partState.caseVisible);
         setList(parts['2'], metalMat, true);
@@ -879,14 +881,12 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
     applyParts();
 
     scene.add(root);
-    const focusMeshes = (parts['1'] && parts['1'].length ? parts['1'] : [])
-      .concat(parts['2'] && parts['2'].length ? parts['2'] : []);
-    frameObject(root, camera, controls, focusMeshes.length ? focusMeshes : null);
+    frameObject(root, camera, controls, null);
 
     if (threeCtx){
       threeCtx.partState = partState;
       threeCtx.refreshParts = applyParts;
-      threeCtx.hasPart3 = parts['3'].length > 0;
+      threeCtx.hasPart3 = !!partState.part3Node || parts['3'].length > 0;
       threeCtx.hasCase = parts['1'].length > 0;
     }
   };

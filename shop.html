@@ -196,7 +196,7 @@
         renderer.setSize(mount.clientWidth, mount.clientHeight);
         renderer.outputColorSpace = THREE.SRGBColorSpace;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 0.95;
+        renderer.toneMappingExposure = 1.08;
         mount.appendChild(renderer.domElement);
 
         scene.add(new THREE.HemisphereLight(0xffffff, 0x97a3b5, 1.45));
@@ -222,7 +222,7 @@
 
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
-        controls.enablePan = false;
+        controls.enablePan = true;
         controls.enableRotate = true;
         controls.autoRotate = true;
         controls.autoRotateSpeed = 0.32;
@@ -307,12 +307,12 @@
         }
         const blackMat = new THREE.MeshPhysicalMaterial({
           color: '#111111',
-          metalness: 0.08,
-          roughness: 0.78,
-          clearcoat: 0.08,
-          clearcoatRoughness: 0.7
+          metalness: 0.24,
+          roughness: 0.46,
+          clearcoat: 0.18,
+          clearcoatRoughness: 0.35
         });
-        const modelState = { caseVisible:true, parts:null };
+        const modelState = { caseVisible:true, parts:null, part3Node:null };
         const caseBtn = document.getElementById('case-toggle-btn');
 
         function applyShopParts(){
@@ -322,6 +322,9 @@
           parts['2'].forEach((m)=>{ m.material = silverMat; m.visible = true; });
           parts['3'].forEach((m)=>{ m.material = blackMat; m.visible = true; });
           parts.other.forEach((m)=>{ m.material = silverMat; m.visible = true; });
+          if (modelState.part3Node){
+            modelState.part3Node.traverse((o)=>{ if (o.isMesh) o.material = blackMat; });
+          }
           if (caseBtn){
             caseBtn.textContent = 'Case: ' + (modelState.caseVisible ? 'On' : 'Off');
             if (!parts['1'].length){
@@ -377,6 +380,7 @@
             root.add(caseGltf.scene);
             root.add(panelGltf.scene);
             root.add(part3Gltf.scene);
+            modelState.part3Node = part3Gltf.scene;
 
             const p1 = meshListOf(caseGltf.scene);
             const p2 = meshListOf(panelGltf.scene);
@@ -387,6 +391,7 @@
             finalizeRoot(root, parts);
           } catch (splitErr){
             console.warn('split model load failed, fallback to box.glb', splitErr);
+            modelState.part3Node = null;
             try {
               const gltf = await loadGlb('./box.glb');
               const root = gltf.scene;
