@@ -1101,13 +1101,14 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
     applyParts();
 
     scene.add(root);
-    frameObject(root, camera, controls, null);
     if (mode === 'charm'){
       const snap = lastSnapshot || encodeBoardSnapshot();
       const panelRoot = partState.panelNode || (parts['2'] && parts['2'][0] ? parts['2'][0].parent : null);
       const voxelGroup = makeResultVoxelGroup(snap, panelRoot, cubeTemplateMesh);
       if (voxelGroup && panelRoot) panelRoot.add(voxelGroup);
     }
+    // Center orbit controls on the final visible composition.
+    frameObject(root, camera, controls, null);
 
     if (threeCtx){
       threeCtx.partState = partState;
