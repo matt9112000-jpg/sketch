@@ -187,7 +187,7 @@
         .wrap{ padding:12px 10px; }
         .stage{ min-height: calc(100vh - 24px); }
         .viewer-shell{
-          left:80%;
+          left:60%;
           top:43%;
           width:min(92vw, 420px);
           height:min(54vh, 420px);
@@ -269,6 +269,9 @@
         const topSoft = new THREE.PointLight(0xffffff, 0.1, 6);
         topSoft.position.set(0, 1.8, 0.85);
         scene.add(topSoft);
+        const frontLight = new THREE.DirectionalLight(0xffffff, 0.34);
+        frontLight.position.set(0, 0.3, 2.2);
+        scene.add(frontLight);
 
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;

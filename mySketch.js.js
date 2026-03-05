@@ -1382,7 +1382,7 @@ async function openCharmPreview3D(options = {}){
   threeWrap.parent(ov);
   threeWrap.id('threeWrap');
   threeWrap.style('position','absolute')
-    .style('left', isCompactReward ? '0%' : '49%').style('top', isCompactReward ? '0%' : '32%')
+    .style('left', isCompactReward ? '30%' : '49%').style('top', isCompactReward ? '30%' : '32%')
     .style('transform', fromGameOver
       ? 'translate(-50%, -50%) scale(0.22)'
       : (isCompactReward ? 'translate(-50%, -50%) scale(0.5)' : 'translate(-50%, -50%) scale(0.55)'))
