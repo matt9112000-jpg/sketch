@@ -228,7 +228,7 @@
   <body>
     <main class="wrap">
       <section class="stage" aria-label="Product stage" id="product-stage">
-        <a class="home-btn" href="./index.html">Home</a>
+        <a class="home-btn" href="/index.html" onclick="window.location.href='/index.html'; return false;">Home</a>
         <div class="stage-head">
           <h1>Shop</h1>
           <p>Clean stage preview. Move cursor near model.</p>
@@ -451,12 +451,12 @@
           const box = new THREE.Box3().setFromObject(root);
           const size = box.getSize(new THREE.Vector3());
           const maxDim = Math.max(size.x, size.y, size.z) || 1;
-          root.scale.setScalar(0.94 / maxDim); // shrink a little
+          root.scale.setScalar(0.799 / maxDim); // 15% smaller than previous size
           root.updateWorldMatrix(true, true);
           const centered = new THREE.Box3().setFromObject(root);
           const center = centered.getCenter(new THREE.Vector3());
           root.position.sub(center);
-          root.position.x += 0.2; // move right on canvas
+          root.position.x += 0.23; // 15% more right than previous movement
           root.position.y += 0.0;
           root.updateWorldMatrix(true, true);
           focusControlsOnMeshes(root, parts);
