@@ -187,7 +187,7 @@
         .wrap{ padding:12px 10px; }
         .stage{ min-height: calc(100vh - 24px); }
         .viewer-shell{
-          left:50%;
+          left:-20%;
           top:43%;
           width:min(92vw, 420px);
           height:min(54vh, 420px);
@@ -303,12 +303,12 @@
         }
 
         const silverMat = new THREE.MeshPhysicalMaterial({
-          color: '#c2c8d4',
-          metalness: 0.48,
-          roughness: 0.36,
-          clearcoat: 0.36,
-          clearcoatRoughness: 0.24,
-          envMapIntensity: 0.55
+          color: '#e8ecf4',
+          metalness: 0.72,
+          roughness: 0.22,
+          clearcoat: 0.62,
+          clearcoatRoughness: 0.14,
+          envMapIntensity: 0.95
         });
 
         function getPartIdFromName(name){
