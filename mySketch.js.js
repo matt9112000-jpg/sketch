@@ -580,6 +580,7 @@ function drawIntroPieces(){
 
 /***** Leaderboard *****/
 function renderLeaderboard(){
+  const isCompactLb = IS_MOBILE || innerW < 380;
   background('#ffffff');
   noStroke(); fill(BG_BLUE); rect(BORDER_HALF, BORDER_HALF, innerW, innerH);
   for (let i=0; i<8; i++){
@@ -592,15 +593,18 @@ function renderLeaderboard(){
   fill('#f9f7ff');
   textAlign(CENTER, TOP);
   textStyle(BOLD);
-  textSize(max(20, innerW * 0.062));
-  text('LEADERBOARD', width/2, BORDER_HALF + 8);
+  const titleY = BORDER_HALF + (isCompactLb ? 6 : 8);
+  const titleSize = isCompactLb ? max(16, innerW * 0.05) : max(20, innerW * 0.062);
+  textSize(titleSize);
+  text('LEADERBOARD', width/2, titleY);
   fill('#ffd9f8');
-  textSize(max(12, innerW * 0.025));
-  text('Top survivors in insufficient space', width/2, BORDER_HALF + 58);
+  textSize(isCompactLb ? max(10, innerW * 0.022) : max(12, innerW * 0.025));
+  text('Top survivors in insufficient space', width/2, titleY + titleSize + (isCompactLb ? 4 : 10));
 
-  if (SHOW_CLEAR && !select('#clearBtn')) createStyledButton('clearBtn','Clear', canvasX + 20, canvasY + 20, clearScores);
-  if (!select('#saveBtn')) createStyledButton('saveBtn','Save', canvasX + 20, canvasY + 60, saveLastGamePng);
-  if (!select('#makeCharmBtnLB')) createStyledButton('makeCharmBtnLB','★ Make a Charm', canvasX + 20, canvasY + 100, () => { openCharmPreview3D(); });
+  const btnBaseY = isCompactLb ? 16 : 20;
+  if (SHOW_CLEAR && !select('#clearBtn')) createStyledButton('clearBtn','Clear', canvasX + 12, canvasY + btnBaseY, clearScores);
+  if (!select('#saveBtn')) createStyledButton('saveBtn','Save', canvasX + 12, canvasY + btnBaseY + 36, saveLastGamePng);
+  if (!select('#makeCharmBtnLB')) createStyledButton('makeCharmBtnLB','★ Make a Charm', canvasX + 12, canvasY + btnBaseY + 72, () => { openCharmPreview3D(); });
 
   let source = [];
   if (topScores && topScores.length) source = topScores;
@@ -610,11 +614,11 @@ function renderLeaderboard(){
   }
 
   lbRects = [];
-  const podiumY = BORDER_HALF + innerH * 0.74;
+  const podiumY = BORDER_HALF + innerH * (isCompactLb ? 0.77 : 0.74);
   const cx = BORDER_HALF + innerW/2;
-  const lane = innerW * 0.31;
-  const colW = innerW * 0.20;
-  const colHeights = [innerH * 0.33, innerH * 0.23, innerH * 0.18]; // 1 > 2 > 3
+  const lane = innerW * (isCompactLb ? 0.33 : 0.31);
+  const colW = innerW * (isCompactLb ? 0.18 : 0.20);
+  const colHeights = isCompactLb ? [innerH * 0.30, innerH * 0.20, innerH * 0.16] : [innerH * 0.33, innerH * 0.23, innerH * 0.18]; // 1 > 2 > 3
   const colX = [cx - colW/2, cx - lane - colW/2, cx + lane - colW/2];
   const colY = [podiumY - colHeights[0], podiumY - colHeights[1], podiumY - colHeights[2]];
   const medalColors = ['#ffd530','#9fe7ff','#ff8fda'];
@@ -637,13 +641,13 @@ function renderLeaderboard(){
     }
   }
 
-  const maxCardW = innerW * 0.30;
-  const cellSmall = max(3, floor((maxCardW * 0.70) / cols));
+  const maxCardW = innerW * (isCompactLb ? 0.26 : 0.30);
+  const cellSmall = max(3, floor((maxCardW * (isCompactLb ? 0.64 : 0.70)) / cols));
   const cellBig = floor(cellSmall * 1.18);
   const dims = [
-    { cell:cellBig, title:max(26, LB_SIZES[0]*1.14), x:cx, y:colY[0] - innerH*0.20, rank:1 },
-    { cell:cellSmall, title:max(16, LB_SIZES[1]*0.95), x:cx - lane, y:colY[1] - innerH*0.16, rank:2 },
-    { cell:cellSmall, title:max(16, LB_SIZES[2]*0.95), x:cx + lane, y:colY[2] - innerH*0.16, rank:3 }
+    { cell:cellBig, title:max(isCompactLb ? 20 : 26, LB_SIZES[0]*(isCompactLb ? 1.0 : 1.14)), x:cx, y:colY[0] - innerH*(isCompactLb ? 0.17 : 0.20), rank:1 },
+    { cell:cellSmall, title:max(isCompactLb ? 13 : 16, LB_SIZES[1]*(isCompactLb ? 0.8 : 0.95)), x:cx - lane, y:colY[1] - innerH*(isCompactLb ? 0.13 : 0.16), rank:2 },
+    { cell:cellSmall, title:max(isCompactLb ? 13 : 16, LB_SIZES[2]*(isCompactLb ? 0.8 : 0.95)), x:cx + lane, y:colY[2] - innerH*(isCompactLb ? 0.13 : 0.16), rank:3 }
   ];
 
   const items=[];
@@ -683,11 +687,11 @@ function renderLeaderboard(){
       strokeWeight(2);
       rect(bx-8, by-6, bw+16, bh+14, 12);
 
-      const nameSize = max(15, titleSize * 0.72);
-      const scoreSize = max(13, titleSize * 0.48);
+      const nameSize = max(isCompactLb ? 11 : 15, titleSize * 0.72);
+      const scoreSize = max(isCompactLb ? 10 : 13, titleSize * 0.48);
       const nameY = lineY + 4;
       const scoreY = nameY + nameSize + 6;
-      const displayName = String(rec.name || '').slice(0, 12);
+      const displayName = String(rec.name || '').slice(0, isCompactLb ? 8 : 12);
       noStroke();
       fill(rankColor);
       textSize(nameSize);
@@ -700,10 +704,10 @@ function renderLeaderboard(){
 
       // Medal badge
       fill(rankColor);
-      circle(bx + bw - 22, by + 18, 24);
+      circle(bx + bw - 22, by + 18, isCompactLb ? 20 : 24);
       fill('#10131f');
       textAlign(CENTER, CENTER);
-      textSize(14);
+      textSize(isCompactLb ? 12 : 14);
       text(String(rank), bx + bw - 22, by + 18);
 
       if (rec.snapshot){
@@ -1193,6 +1197,7 @@ function disposeThreeViewer(){
 async function openCharmPreview3D(options = {}){
   closeCharmPreview3D();
   const fromGameOver = !!options.fromGameOver;
+  const isCompactReward = windowWidth <= 700;
   charmCloseHook = (typeof options.onClose === 'function') ? options.onClose : null;
 
   const ov = createDiv('');
@@ -1223,7 +1228,8 @@ async function openCharmPreview3D(options = {}){
       .style('overflow','hidden');
 
     const shapeKeys = Object.keys(SHAPES);
-    for (let i=0; i<38; i++){
+    const tetriCount = isCompactReward ? 22 : 38;
+    for (let i=0; i<tetriCount; i++){
       const key = shapeKeys[i % shapeKeys.length];
       const mat = SHAPES[key];
       const unit = 8 + (i % 4) * 2;
@@ -1266,14 +1272,14 @@ async function openCharmPreview3D(options = {}){
     const boom = createDiv('MERCH UNLOCKED');
     boom.parent(ov);
     boom.style('position','absolute')
-      .style('left','50%').style('top','12%')
+      .style('left','50%').style('top', isCompactReward ? '8%' : '12%')
       .style('transform','translateX(-50%) rotate(-8deg)')
       .style('z-index','10058')
       .style('pointer-events','none')
       .style('font-family',"Montserrat, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', Arial, sans-serif")
       .style('font-weight','900')
-      .style('font-size','clamp(26px, 4.3vw, 58px)')
-      .style('letter-spacing','2px')
+      .style('font-size', isCompactReward ? 'clamp(20px, 7.2vw, 34px)' : 'clamp(26px, 4.3vw, 58px)')
+      .style('letter-spacing', isCompactReward ? '1px' : '2px')
       .style('color','#fff34f')
       .style('text-shadow','-3px 3px 0 #15151c, 0 0 18px rgba(255,244,84,0.75)')
       .style('animation','rewardPopOut 620ms cubic-bezier(0.16, 1, 0.3, 1)');
@@ -1287,11 +1293,17 @@ async function openCharmPreview3D(options = {}){
     const infoWrap = createDiv('');
     infoWrap.parent(ov);
     infoWrap.style('position','absolute')
-      .style('right','max(16px, 3.4vw)')
-      .style('top','max(72px, 12vh)')
+      .style('right', isCompactReward ? 'auto' : 'max(16px, 3.4vw)')
+      .style('left', isCompactReward ? '50%' : 'auto')
+      .style('top', isCompactReward ? 'auto' : 'max(72px, 12vh)')
+      .style('bottom', isCompactReward ? '84px' : 'auto')
+      .style('transform', isCompactReward ? 'translateX(-50%)' : 'none')
       .style('display','flex')
-      .style('flex-direction','column')
-      .style('gap','10px')
+      .style('flex-direction', isCompactReward ? 'row' : 'column')
+      .style('flex-wrap', isCompactReward ? 'wrap' : 'nowrap')
+      .style('justify-content', isCompactReward ? 'center' : 'flex-start')
+      .style('gap', isCompactReward ? '8px' : '10px')
+      .style('width', isCompactReward ? 'min(92vw, 420px)' : 'auto')
       .style('z-index','10061')
       .style('pointer-events','none');
     chips.forEach((chip)=>{
@@ -1300,9 +1312,9 @@ async function openCharmPreview3D(options = {}){
       card.style('display','flex')
         .style('align-items','baseline')
         .style('justify-content','space-between')
-        .style('gap','12px')
-        .style('min-width','190px')
-        .style('padding','8px 12px')
+        .style('gap', isCompactReward ? '8px' : '12px')
+        .style('min-width', isCompactReward ? '120px' : '190px')
+        .style('padding', isCompactReward ? '6px 9px' : '8px 12px')
         .style('border-radius','12px')
         .style('background','rgba(7,9,16,0.68)')
         .style('border',`1px solid ${chip.color}`)
@@ -1357,13 +1369,15 @@ async function openCharmPreview3D(options = {}){
 
   charm3D.texFront = buildCharmTexture(420*0.82, Math.floor(420*(8/6))*0.82);
 
-  const canvasW = Math.min(460, Math.floor((windowWidth-70)*0.9));
+  const canvasW = isCompactReward ? Math.min(360, Math.floor(windowWidth - 24)) : Math.min(460, Math.floor((windowWidth-70)*0.9));
   const threeWrap = createDiv('');
   threeWrap.parent(ov);
   threeWrap.id('threeWrap');
   threeWrap.style('position','absolute')
-    .style('left','50%').style('top','34%')
-    .style('transform', fromGameOver ? 'translate(calc(-50% - 50px), calc(-50% - 50px)) scale(0.18)' : 'translate(calc(-50% - 50px), calc(-50% - 50px)) scale(0.55)')
+    .style('left','50%').style('top', isCompactReward ? '38%' : '34%')
+    .style('transform', fromGameOver
+      ? (isCompactReward ? 'translate(-50%, -50%) scale(0.22)' : 'translate(calc(-50% - 50px), calc(-50% - 50px)) scale(0.18)')
+      : (isCompactReward ? 'translate(-50%, -50%) scale(0.64)' : 'translate(calc(-50% - 50px), calc(-50% - 50px)) scale(0.55)'))
     .style('width', canvasW+'px')
     .style('height', Math.floor(canvasW*(8/6))+'px')
     .style('z-index','10055')
@@ -1377,9 +1391,10 @@ async function openCharmPreview3D(options = {}){
   const footer = createDiv('');
   footer.parent(ov);
   footer.style('position','absolute').style('left','50%')
-        .style('bottom','18px')
+        .style('bottom', isCompactReward ? '10px' : '18px')
         .style('transform','translateX(-50%)')
-        .style('display','flex').style('gap','10px').style('flex-wrap','wrap').style('justify-content','center')
+        .style('display','flex').style('gap', isCompactReward ? '6px' : '10px').style('flex-wrap','wrap').style('justify-content','center')
+        .style('max-width', isCompactReward ? '95vw' : 'none')
         .style('z-index','10060').style('pointer-events','auto');
   charmFS.footer = footer;
 
@@ -1420,11 +1435,11 @@ async function openCharmPreview3D(options = {}){
   tip.parent(ov);
   tip.style('position','absolute')
      .style('left','50%')
-     .style('top','22px')
+     .style('top', isCompactReward ? '14px' : '22px')
      .style('transform','translateX(-50%)')
      .style('font-family',"Montserrat, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', Arial, sans-serif")
-     .style('font-size','16px').style('font-weight','800')
-     .style('letter-spacing','2px').style('color', PINK)
+     .style('font-size', isCompactReward ? '13px' : '16px').style('font-weight','800')
+     .style('letter-spacing', isCompactReward ? '1px' : '2px').style('color', PINK)
      .style('z-index','10060');
 
   await ensureThreeScripts();
@@ -1445,13 +1460,13 @@ async function openCharmPreview3D(options = {}){
     requestAnimationFrame(()=>{
       threeWrap.style('opacity','1');
       threeWrap.style('transform', fromGameOver
-        ? 'translate(calc(-50% - 50px), calc(-50% - 50px)) scale(1.14)'
-        : 'translate(calc(-50% - 50px), calc(-50% - 50px)) scale(1)');
+        ? (isCompactReward ? 'translate(-50%, -50%) scale(1.08)' : 'translate(calc(-50% - 50px), calc(-50% - 50px)) scale(1.14)')
+        : (isCompactReward ? 'translate(-50%, -50%) scale(1)' : 'translate(calc(-50% - 50px), calc(-50% - 50px)) scale(1)'));
       if (fromGameOver){
         setTimeout(()=>{
           if (charmFS.overlay && threeWrap){
             threeWrap.style('transition','transform 190ms cubic-bezier(0.2, 0.9, 0.2, 1), opacity 180ms ease-out');
-            threeWrap.style('transform','translate(calc(-50% - 50px), calc(-50% - 50px)) scale(1)');
+            threeWrap.style('transform', isCompactReward ? 'translate(-50%, -50%) scale(1)' : 'translate(calc(-50% - 50px), calc(-50% - 50px)) scale(1)');
           }
         }, 210);
       }
