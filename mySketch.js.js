@@ -1377,7 +1377,7 @@ async function openCharmPreview3D(options = {}){
 
   charm3D.texFront = buildCharmTexture(420*0.82, Math.floor(420*(8/6))*0.82);
 
-  const canvasW = isCompactReward ? Math.min(336, Math.floor(windowWidth - 30)) : Math.min(460, Math.floor((windowWidth-70)*0.9));
+  const canvasW = isCompactReward ? Math.min(390, Math.floor(windowWidth - 10)) : Math.min(540, Math.floor((windowWidth-50)*0.94));
   const threeWrap = createDiv('');
   threeWrap.parent(ov);
   threeWrap.id('threeWrap');
