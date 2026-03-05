@@ -1377,12 +1377,14 @@ async function openCharmPreview3D(options = {}){
 
   charm3D.texFront = buildCharmTexture(420*0.82, Math.floor(420*(8/6))*0.82);
 
-  const canvasW = isCompactReward ? Math.min(390, Math.floor(windowWidth - 10)) : Math.min(540, Math.floor((windowWidth-50)*0.94));
+  const canvasW = isCompactReward
+    ? Math.min(Math.floor(windowWidth * 0.92), Math.floor(windowHeight * 0.48))
+    : Math.min(540, Math.floor((windowWidth-50)*0.94));
   const threeWrap = createDiv('');
   threeWrap.parent(ov);
   threeWrap.id('threeWrap');
   threeWrap.style('position','absolute')
-    .style('left', isCompactReward ? '30%' : '49%').style('top', isCompactReward ? '30%' : '32%')
+    .style('left', isCompactReward ? '50%' : '49%').style('top', isCompactReward ? '46%' : '32%')
     .style('transform', fromGameOver
       ? 'translate(-50%, -50%) scale(0.22)'
       : (isCompactReward ? 'translate(-50%, -50%) scale(0.5)' : 'translate(-50%, -50%) scale(0.55)'))
