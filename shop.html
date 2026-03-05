@@ -208,16 +208,16 @@
       }
       @media (max-width: 700px){
         .wrap{ padding:12px 10px; }
-        .stage{ min-height: calc(100vh - 24px); }
+        .stage{ min-height: 86vh; }
         .home-btn{
           top:16px;
           right:14px;
         }
         .viewer-shell{
           left:50%;
-          top:44%;
+          top:46%;
           width:min(94vw, 520px);
-          height:min(46vh, 390px);
+          height:min(40vh, 340px);
           transform: translate(-50%, -50%) scale(0.94);
         }
         .viewer-shell.is-active{
@@ -331,6 +331,11 @@
           const offset = new THREE.Vector3().subVectors(camera.position, controls.target);
           controls.target.copy(center);
           camera.position.copy(center.clone().add(offset));
+          if (isMobile){
+            // Nudge view so model appears more to the right on phone.
+            controls.target.x -= 0.2;
+            camera.position.x -= 0.2;
+          }
           controls.update();
         }
 
