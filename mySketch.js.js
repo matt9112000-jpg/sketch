@@ -326,6 +326,7 @@ function setup(){
            .attribute('autocorrect','off').attribute('autocapitalize','off');
   nameInput.style('position','absolute').style('z-index','10010').style('pointer-events','auto')
            .style('font-weight','600')
+           .style('font-size','16px')
            .style('font-family', "Montserrat, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', Arial, sans-serif")
            .size(220,28);
   centerInput(); nameInput.elt.focus();
@@ -522,35 +523,31 @@ function drawPiece(){
 }
 function drawHintSquares(){
   const spec = [
-    { b:UI_BTN.left,   label:'\u25C0', glow:'#30f5ff' },
-    { b:UI_BTN.down,   label:'\u25BC', glow:'#ffd530' },
-    { b:UI_BTN.right,  label:'\u25B6', glow:'#6dff69' },
-    { b:UI_BTN.rotate, label:'\u21BB', glow:'#ff3bda' }
+    { b:UI_BTN.left,   label:'LEFT',   key:'\u25C0', color:'#62e2ff' },
+    { b:UI_BTN.down,   label:'DOWN',   key:'\u25BC', color:'#ffd530' },
+    { b:UI_BTN.right,  label:'RIGHT',  key:'\u25B6', color:'#78ff82' },
+    { b:UI_BTN.rotate, label:'ROTATE', key:'\u21BB', color:'#ff7be6' }
   ];
-  const pulse = 0.86 + 0.14 * sin(frameCount * 0.08);
   for (const it of spec){
     const b = it.b;
-    const cx = b.x + b.s/2;
-    const cy = b.y + b.s/2;
-    const ring = b.s * 0.62;
     noStroke();
     fill(0, 0, 0, 120);
-    ellipse(cx, cy + b.s * 0.1, b.s * 0.92, b.s * 0.35);
-    fill(18, 24, 40, 215);
-    ellipse(cx, cy, ring * 1.16, ring * 1.16);
+    rect(b.x + 2, b.y + 3, b.s, b.s, 10);
+    fill(20, 25, 44, 220);
+    rect(b.x, b.y, b.s, b.s, 10);
     noFill();
-    const gc = color(it.glow); gc.setAlpha(190 * pulse);
-    stroke(gc); strokeWeight(2.2);
-    ellipse(cx, cy, ring, ring);
-    const gc2 = color(it.glow); gc2.setAlpha(60 * pulse);
-    stroke(gc2); strokeWeight(6);
-    ellipse(cx, cy, ring * 1.05, ring * 1.05);
+    stroke(it.color);
+    strokeWeight(2);
+    rect(b.x, b.y, b.s, b.s, 10);
     noStroke();
-    fill('#f8fbff');
+    fill('#f7f9ff');
     textAlign(CENTER, CENTER);
     textStyle(BOLD);
-    textSize(max(12, b.s * 0.36));
-    text(it.label, cx, cy - 1);
+    textSize(max(10, b.s * 0.22));
+    text(it.label, b.x + b.s/2, b.y + b.s*0.30);
+    fill(it.color);
+    textSize(max(14, b.s * 0.34));
+    text(it.key, b.x + b.s/2, b.y + b.s*0.70);
   }
 }
 
@@ -969,7 +966,7 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
   renderer.setSize(w, h, false);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.76;
+  renderer.toneMappingExposure = 0.86;
   containerEl.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
@@ -988,24 +985,24 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
     rotateResumeAt = performance.now() + 1000;
   });
 
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x97a3b5, 0.56));
-  scene.add(new THREE.AmbientLight(0xffffff, 0.22));
-  const keyLight = new THREE.DirectionalLight(0xffffff, 0.62);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x97a3b5, 0.68));
+  scene.add(new THREE.AmbientLight(0xffffff, 0.3));
+  const keyLight = new THREE.DirectionalLight(0xffffff, 0.78);
   keyLight.position.set(-1.1, 1.4, 1.35);
   scene.add(keyLight);
-  const fillLight = new THREE.DirectionalLight(0xecf3ff, 0.5);
+  const fillLight = new THREE.DirectionalLight(0xecf3ff, 0.62);
   fillLight.position.set(1.4, 0.85, 1.5);
   scene.add(fillLight);
-  const rimLight = new THREE.DirectionalLight(0xffffff, 0.24);
+  const rimLight = new THREE.DirectionalLight(0xffffff, 0.3);
   rimLight.position.set(0.0, 1.0, -1.6);
   scene.add(rimLight);
-  const leftFill = new THREE.DirectionalLight(0xf6f9ff, 0.18);
+  const leftFill = new THREE.DirectionalLight(0xf6f9ff, 0.24);
   leftFill.position.set(-1.8, 0.35, 0.6);
   scene.add(leftFill);
-  const rightFill = new THREE.DirectionalLight(0xf6f9ff, 0.18);
+  const rightFill = new THREE.DirectionalLight(0xf6f9ff, 0.24);
   rightFill.position.set(1.8, 0.35, 0.6);
   scene.add(rightFill);
-  const topSoft = new THREE.PointLight(0xffffff, 0.12, 6);
+  const topSoft = new THREE.PointLight(0xffffff, 0.2, 6);
   topSoft.position.set(0, 1.8, 0.9);
   scene.add(topSoft);
 
@@ -1293,17 +1290,17 @@ async function openCharmPreview3D(options = {}){
     const infoWrap = createDiv('');
     infoWrap.parent(ov);
     infoWrap.style('position','absolute')
-      .style('right', isCompactReward ? 'auto' : 'max(16px, 3.4vw)')
-      .style('left', isCompactReward ? '50%' : 'auto')
-      .style('top', isCompactReward ? 'auto' : 'max(72px, 12vh)')
-      .style('bottom', isCompactReward ? '84px' : 'auto')
-      .style('transform', isCompactReward ? 'translateX(-50%)' : 'none')
+      .style('right', isCompactReward ? 'max(8px, 2.2vw)' : 'max(16px, 3.4vw)')
+      .style('left', 'auto')
+      .style('top', isCompactReward ? 'max(74px, 16vh)' : 'max(72px, 12vh)')
+      .style('bottom', 'auto')
+      .style('transform', 'none')
       .style('display','flex')
-      .style('flex-direction', isCompactReward ? 'row' : 'column')
-      .style('flex-wrap', isCompactReward ? 'wrap' : 'nowrap')
-      .style('justify-content', isCompactReward ? 'center' : 'flex-start')
+      .style('flex-direction', 'column')
+      .style('flex-wrap', 'nowrap')
+      .style('justify-content', 'flex-start')
       .style('gap', isCompactReward ? '8px' : '10px')
-      .style('width', isCompactReward ? 'min(92vw, 420px)' : 'auto')
+      .style('width', isCompactReward ? 'min(45vw, 190px)' : 'auto')
       .style('z-index','10061')
       .style('pointer-events','none');
     chips.forEach((chip)=>{
@@ -1369,12 +1366,12 @@ async function openCharmPreview3D(options = {}){
 
   charm3D.texFront = buildCharmTexture(420*0.82, Math.floor(420*(8/6))*0.82);
 
-  const canvasW = isCompactReward ? Math.min(360, Math.floor(windowWidth - 24)) : Math.min(460, Math.floor((windowWidth-70)*0.9));
+  const canvasW = isCompactReward ? Math.min(336, Math.floor(windowWidth - 30)) : Math.min(460, Math.floor((windowWidth-70)*0.9));
   const threeWrap = createDiv('');
   threeWrap.parent(ov);
   threeWrap.id('threeWrap');
   threeWrap.style('position','absolute')
-    .style('left','50%').style('top', isCompactReward ? '38%' : '34%')
+    .style('left','50%').style('top', isCompactReward ? '50%' : '34%')
     .style('transform', fromGameOver
       ? (isCompactReward ? 'translate(-50%, -50%) scale(0.22)' : 'translate(calc(-50% - 50px), calc(-50% - 50px)) scale(0.18)')
       : (isCompactReward ? 'translate(-50%, -50%) scale(0.64)' : 'translate(calc(-50% - 50px), calc(-50% - 50px)) scale(0.55)'))
@@ -1397,26 +1394,6 @@ async function openCharmPreview3D(options = {}){
         .style('max-width', isCompactReward ? '95vw' : 'none')
         .style('z-index','10060').style('pointer-events','auto');
   charmFS.footer = footer;
-
-  const caseBtn = createButton('Case: On');
-  stylePill(caseBtn);
-  caseBtn.parent(footer);
-  caseBtn.mousePressed(()=>{
-    if (!threeCtx || !threeCtx.partState || !threeCtx.hasCase) return;
-    threeCtx.partState.caseVisible = !threeCtx.partState.caseVisible;
-    if (threeCtx.refreshParts) threeCtx.refreshParts();
-    caseBtn.html('Case: ' + (threeCtx.partState.caseVisible ? 'On' : 'Off'));
-  });
-
-  const part3Btn = createButton('Part 3: On');
-  stylePill(part3Btn);
-  part3Btn.parent(footer);
-  part3Btn.mousePressed(()=>{
-    if (!threeCtx || !threeCtx.partState || !threeCtx.hasPart3) return;
-    threeCtx.partState.showPart3 = !threeCtx.partState.showPart3;
-    if (threeCtx.refreshParts) threeCtx.refreshParts();
-    part3Btn.html('Part 3: ' + (threeCtx.partState.showPart3 ? 'On' : 'Off'));
-  });
 
   const reserve = createButton('Reserve');
   stylePill(reserve, PALETTE[2], PALETTE[3]);
@@ -1449,11 +1426,6 @@ async function openCharmPreview3D(options = {}){
     MODEL_URL,
     { mode:'charm' }
   );
-
-  if (threeCtx){
-    if (!threeCtx.hasCase) caseBtn.attribute('disabled','true').style('opacity','0.55');
-    if (!threeCtx.hasPart3) part3Btn.attribute('disabled','true').style('opacity','0.55');
-  }
 
   // Slide-in + scale-up intro (small → big) after click
   requestAnimationFrame(()=>{
