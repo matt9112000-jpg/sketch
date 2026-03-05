@@ -61,6 +61,24 @@
         right:24px;
         z-index:2;
       }
+      .home-btn{
+        position:absolute;
+        top:24px;
+        right:24px;
+        z-index:3;
+        border:1px solid #d3d7e5;
+        border-radius:10px;
+        background:#ffffff;
+        color:#1a1f30;
+        padding:7px 11px;
+        font-size:11px;
+        font-weight:700;
+        letter-spacing:.04em;
+        text-decoration:none;
+      }
+      .home-btn:hover{
+        border-color:#aeb7d1;
+      }
       h1{
         margin:0 0 8px;
         font-size: clamp(26px, 4vw, 34px);
@@ -186,6 +204,10 @@
       @media (max-width: 700px){
         .wrap{ padding:12px 10px; }
         .stage{ min-height: calc(100vh - 24px); }
+        .home-btn{
+          top:16px;
+          right:14px;
+        }
         .viewer-shell{
           left:50%;
           top:44%;
@@ -206,6 +228,7 @@
   <body>
     <main class="wrap">
       <section class="stage" aria-label="Product stage" id="product-stage">
+        <a class="home-btn" href="./index.html">Home</a>
         <div class="stage-head">
           <h1>Shop</h1>
           <p>Clean stage preview. Move cursor near model.</p>
@@ -428,12 +451,13 @@
           const box = new THREE.Box3().setFromObject(root);
           const size = box.getSize(new THREE.Vector3());
           const maxDim = Math.max(size.x, size.y, size.z) || 1;
-          root.scale.setScalar(1 / maxDim);
+          root.scale.setScalar(0.94 / maxDim); // shrink a little
           root.updateWorldMatrix(true, true);
           const centered = new THREE.Box3().setFromObject(root);
           const center = centered.getCenter(new THREE.Vector3());
           root.position.sub(center);
-          root.position.x += (window.innerWidth <= 700) ? 0.0 : 0.05;
+          root.position.x += 0.2; // move right on canvas
+          root.position.y += 0.0;
           root.updateWorldMatrix(true, true);
           focusControlsOnMeshes(root, parts);
 
