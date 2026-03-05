@@ -1382,10 +1382,10 @@ async function openCharmPreview3D(options = {}){
   threeWrap.parent(ov);
   threeWrap.id('threeWrap');
   threeWrap.style('position','absolute')
-    .style('left', isCompactReward ? '47%' : '49%').style('top', isCompactReward ? '42%' : '32%')
+    .style('left', isCompactReward ? '50%' : '49%').style('top', isCompactReward ? '50%' : '32%')
     .style('transform', fromGameOver
       ? 'translate(-50%, -50%) scale(0.22)'
-      : (isCompactReward ? 'translate(-50%, -50%) scale(0.58)' : 'translate(-50%, -50%) scale(0.55)'))
+      : (isCompactReward ? 'translate(-50%, -50%) scale(0.5)' : 'translate(-50%, -50%) scale(0.55)'))
     .style('width', canvasW+'px')
     .style('height', Math.floor(canvasW*(8/6))+'px')
     .style('z-index','10055')
@@ -1443,7 +1443,7 @@ async function openCharmPreview3D(options = {}){
     requestAnimationFrame(()=>{
       threeWrap.style('opacity','1');
       threeWrap.style('transform', fromGameOver
-        ? (isCompactReward ? 'translate(-50%, -50%) scale(0.98)' : 'translate(-50%, -50%) scale(1.14)')
+        ? (isCompactReward ? 'translate(-50%, -50%) scale(0.88)' : 'translate(-50%, -50%) scale(1.14)')
         : 'translate(-50%, -50%) scale(1)');
       if (fromGameOver){
         setTimeout(()=>{
