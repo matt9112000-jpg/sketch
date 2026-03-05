@@ -183,6 +183,22 @@
         color:var(--muted);
         z-index:2;
       }
+      @media (max-width: 700px){
+        .wrap{ padding:12px 10px; }
+        .stage{ min-height: calc(100vh - 24px); }
+        .viewer-shell{
+          top:43%;
+          width:min(92vw, 420px);
+          height:min(54vh, 420px);
+          transform: translate(-50%, -50%) scale(0.84);
+        }
+        .viewer-shell.is-active{
+          transform: translate(-50%, -50%) scale(0.96);
+        }
+        .product-body{
+          top:72%;
+        }
+      }
     </style>
   </head>
   <body>
@@ -270,7 +286,8 @@
         });
         function focusControlsOnMeshes(root, parts){
           const box = new THREE.Box3();
-          const focus = (parts && parts['1'] ? parts['1'] : []).concat(parts && parts['2'] ? parts['2'] : []);
+          const isMobile = window.innerWidth <= 700;
+          const focus = isMobile ? [] : (parts && parts['1'] ? parts['1'] : []).concat(parts && parts['2'] ? parts['2'] : []);
           if (focus.length){
             focus.forEach((m)=>box.expandByObject(m));
           } else {
@@ -285,12 +302,12 @@
         }
 
         const silverMat = new THREE.MeshPhysicalMaterial({
-          color: '#b6bcc8',
-          metalness: 0.22,
-          roughness: 0.56,
-          clearcoat: 0.12,
-          clearcoatRoughness: 0.4,
-          envMapIntensity: 0.3
+          color: '#c2c8d4',
+          metalness: 0.48,
+          roughness: 0.36,
+          clearcoat: 0.36,
+          clearcoatRoughness: 0.24,
+          envMapIntensity: 0.55
         });
 
         function getPartIdFromName(name){
@@ -411,6 +428,7 @@
           const centered = new THREE.Box3().setFromObject(root);
           const center = centered.getCenter(new THREE.Vector3());
           root.position.sub(center);
+          root.position.x += (window.innerWidth <= 700) ? 0.0 : 0.05;
           root.updateWorldMatrix(true, true);
           focusControlsOnMeshes(root, parts);
 

@@ -523,31 +523,28 @@ function drawPiece(){
 }
 function drawHintSquares(){
   const spec = [
-    { b:UI_BTN.left,   label:'LEFT',   key:'\u25C0', color:'#62e2ff' },
-    { b:UI_BTN.down,   label:'DOWN',   key:'\u25BC', color:'#ffd530' },
-    { b:UI_BTN.right,  label:'RIGHT',  key:'\u25B6', color:'#78ff82' },
-    { b:UI_BTN.rotate, label:'ROTATE', key:'\u21BB', color:'#ff7be6' }
+    { b:UI_BTN.left,   key:'\u25C0', color:'#b8f0ff' },
+    { b:UI_BTN.down,   key:'\u25BC', color:'#ffe27a' },
+    { b:UI_BTN.right,  key:'\u25B6', color:'#bfffc5' },
+    { b:UI_BTN.rotate, key:'\u21BB', color:'#ffc0f2' }
   ];
   for (const it of spec){
     const b = it.b;
     noStroke();
-    fill(0, 0, 0, 120);
-    rect(b.x + 2, b.y + 3, b.s, b.s, 10);
-    fill(20, 25, 44, 220);
-    rect(b.x, b.y, b.s, b.s, 10);
+    fill(0, 0, 0, 90);
+    rect(b.x + 2, b.y + 2, b.s, b.s, 8);
+    fill(24, 30, 52, 205);
+    rect(b.x, b.y, b.s, b.s, 8);
     noFill();
     stroke(it.color);
-    strokeWeight(2);
-    rect(b.x, b.y, b.s, b.s, 10);
+    strokeWeight(1.6);
+    rect(b.x, b.y, b.s, b.s, 8);
     noStroke();
-    fill('#f7f9ff');
+    fill(it.color);
     textAlign(CENTER, CENTER);
     textStyle(BOLD);
-    textSize(max(10, b.s * 0.22));
-    text(it.label, b.x + b.s/2, b.y + b.s*0.30);
-    fill(it.color);
-    textSize(max(14, b.s * 0.34));
-    text(it.key, b.x + b.s/2, b.y + b.s*0.70);
+    textSize(max(15, b.s * 0.4));
+    text(it.key, b.x + b.s/2, b.y + b.s*0.54);
   }
 }
 
@@ -1278,8 +1275,22 @@ async function openCharmPreview3D(options = {}){
       .style('font-size', isCompactReward ? 'clamp(20px, 7.2vw, 34px)' : 'clamp(26px, 4.3vw, 58px)')
       .style('letter-spacing', isCompactReward ? '1px' : '2px')
       .style('color','#fff34f')
-      .style('text-shadow','-3px 3px 0 #15151c, 0 0 18px rgba(255,244,84,0.75)')
+      .style('text-shadow','-3px 3px 0 #15151c, 0 0 24px rgba(255,244,84,0.95), 0 0 46px rgba(255,255,255,0.65)')
       .style('animation','rewardPopOut 620ms cubic-bezier(0.16, 1, 0.3, 1)');
+
+    const shineFx = createDiv('');
+    shineFx.parent(ov);
+    shineFx.style('position','absolute')
+      .style('left','50%').style('top','40%')
+      .style('width', isCompactReward ? '56vmin' : '62vmin')
+      .style('height', isCompactReward ? '56vmin' : '62vmin')
+      .style('transform','translate(-50%, -50%)')
+      .style('z-index','10057')
+      .style('pointer-events','none')
+      .style('border-radius','999px')
+      .style('background','radial-gradient(circle, rgba(255,255,255,0.32) 0%, rgba(255,255,255,0.12) 38%, rgba(255,255,255,0) 72%)')
+      .style('mix-blend-mode','screen')
+      .style('animation','rewardShine 1800ms ease-in-out infinite');
 
     const rewardScore = Math.max(0, 1200 - (lastBlocks || 0) * 20);
     const chips = [
@@ -1315,7 +1326,7 @@ async function openCharmPreview3D(options = {}){
         .style('border-radius','12px')
         .style('background','rgba(7,9,16,0.68)')
         .style('border',`1px solid ${chip.color}`)
-        .style('box-shadow',`0 0 0 1px rgba(255,255,255,0.06) inset, 0 0 18px ${chip.color}55`)
+        .style('box-shadow',`0 0 0 1px rgba(255,255,255,0.08) inset, 0 0 24px ${chip.color}88`)
         .style('font-family',"Montserrat, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', Arial, sans-serif")
         .style('opacity','0')
         .style('transform','translateX(34px) scale(0.88)')
@@ -1371,10 +1382,10 @@ async function openCharmPreview3D(options = {}){
   threeWrap.parent(ov);
   threeWrap.id('threeWrap');
   threeWrap.style('position','absolute')
-    .style('left','50%').style('top', isCompactReward ? '50%' : '34%')
+    .style('left', isCompactReward ? '47%' : '49%').style('top', isCompactReward ? '42%' : '32%')
     .style('transform', fromGameOver
-      ? (isCompactReward ? 'translate(-50%, -50%) scale(0.22)' : 'translate(calc(-50% - 50px), calc(-50% - 50px)) scale(0.18)')
-      : (isCompactReward ? 'translate(-50%, -50%) scale(0.64)' : 'translate(calc(-50% - 50px), calc(-50% - 50px)) scale(0.55)'))
+      ? 'translate(-50%, -50%) scale(0.22)'
+      : (isCompactReward ? 'translate(-50%, -50%) scale(0.58)' : 'translate(-50%, -50%) scale(0.55)'))
     .style('width', canvasW+'px')
     .style('height', Math.floor(canvasW*(8/6))+'px')
     .style('z-index','10055')
@@ -1432,13 +1443,13 @@ async function openCharmPreview3D(options = {}){
     requestAnimationFrame(()=>{
       threeWrap.style('opacity','1');
       threeWrap.style('transform', fromGameOver
-        ? (isCompactReward ? 'translate(-50%, -50%) scale(1.08)' : 'translate(calc(-50% - 50px), calc(-50% - 50px)) scale(1.14)')
-        : (isCompactReward ? 'translate(-50%, -50%) scale(1)' : 'translate(calc(-50% - 50px), calc(-50% - 50px)) scale(1)'));
+        ? (isCompactReward ? 'translate(-50%, -50%) scale(0.98)' : 'translate(-50%, -50%) scale(1.14)')
+        : 'translate(-50%, -50%) scale(1)');
       if (fromGameOver){
         setTimeout(()=>{
           if (charmFS.overlay && threeWrap){
             threeWrap.style('transition','transform 190ms cubic-bezier(0.2, 0.9, 0.2, 1), opacity 180ms ease-out');
-            threeWrap.style('transform', isCompactReward ? 'translate(-50%, -50%) scale(1)' : 'translate(calc(-50% - 50px), calc(-50% - 50px)) scale(1)');
+            threeWrap.style('transform','translate(-50%, -50%) scale(1)');
           }
         }, 210);
       }
@@ -1490,6 +1501,11 @@ if (!document.getElementById('rewardFxStyle')){
       0% { opacity: 0; transform: translate(-50%,-50%) scale(0.2) rotate(0deg); }
       20% { opacity: 1; transform: translate(calc(-50% + var(--dx) * 0.38), calc(-50% + var(--dy) * 0.38)) scale(1) rotate(calc(var(--rot) * 0.45)); }
       100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.9) rotate(var(--rot)); }
+    }
+    @keyframes rewardShine {
+      0% { opacity: 0.42; transform: translate(-50%, -50%) scale(0.92); }
+      50% { opacity: 0.88; transform: translate(-50%, -50%) scale(1.06); }
+      100% { opacity: 0.42; transform: translate(-50%, -50%) scale(0.92); }
     }
   `;
   document.head.appendChild(style);
