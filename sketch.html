@@ -112,6 +112,10 @@
         border-radius:6px;
         color:#ffffff;
       }
+      body.preview-mode .nav,
+      body.preview-mode .rules{
+        display:none !important;
+      }
     </style>
   </head>
   <body>
@@ -135,7 +139,9 @@
     <script src="./mySketch.js.js" type="text/javascript"></script>
     <script>
       (function(){
+        const PREVIEW_MODE = new URLSearchParams(window.location.search).has('preview');
         function enableSoftNav(){
+          if (PREVIEW_MODE) document.body.classList.add('preview-mode');
           document.body.classList.add('is-ready');
           const links = document.querySelectorAll('a[data-soft-nav]');
           links.forEach(link=>{

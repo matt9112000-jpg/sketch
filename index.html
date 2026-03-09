@@ -173,9 +173,13 @@
         border-left:2px solid var(--line);
         background:#070d42;
         opacity:0;
-        transition:opacity .18s linear;
+        transform: translateX(18px) scale(.98);
+        transition:opacity .2s linear, transform .28s cubic-bezier(.2,.9,.2,1);
       }
-      .preview-card.visible{ opacity:1; }
+      .preview-card.visible{
+        opacity:1;
+        transform: translateX(0) scale(1);
+      }
       .preview-frame{
         position:absolute;
         inset:0;
@@ -183,6 +187,7 @@
         height:100%;
         border:none;
         background:#fff;
+        pointer-events:none;
       }
       .preview-overlay{
         position:absolute;
@@ -284,18 +289,25 @@
           title.textContent = row.dataset.previewTitle || 'Project';
           desc.textContent = row.dataset.previewDesc || '';
           const href = row.getAttribute('href') || './sketch.html';
-          if (frame && frame.getAttribute('src') !== href){
-            frame.setAttribute('src', href);
+          const previewHref = href + (href.includes('?') ? '&' : '?') + 'preview=1';
+          if (frame && frame.getAttribute('src') !== previewHref){
+            frame.setAttribute('src', previewHref);
           }
+          document.getElementById('preview-grid').style.opacity = '0';
           card.classList.add('visible');
+        }
+        function closePreview(){
+          document.getElementById('preview-grid').style.opacity = '1';
+          card.classList.remove('visible');
+          rows.forEach(r => r.classList.remove('active'));
         }
 
         rows.forEach((row)=>{
           row.addEventListener('mouseenter', ()=>setPreview(row));
+          row.addEventListener('mouseleave', closePreview);
           row.addEventListener('focus', ()=>setPreview(row));
           row.addEventListener('touchstart', ()=>setPreview(row), { passive:true });
         });
-        if (rows[0]) setPreview(rows[0]);
 
         document.body.classList.add('is-ready');
         document.querySelectorAll('a[data-soft-nav]').forEach(link=>{

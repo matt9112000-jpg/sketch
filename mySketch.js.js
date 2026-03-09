@@ -26,6 +26,7 @@ const MODEL_CASE_URL = './box_case.glb';
 const MODEL_PANEL_URL = './box_panel.glb';
 const MODEL_PART3_URL = './box_part3.glb';
 const CUBE_MODEL_URL = './cube.glb';
+const PREVIEW_MODE = new URLSearchParams(window.location.search).has('preview');
 /***** Three.js（非 ESM 版） *****/
 const THREE_CDNS = [
   'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js',
@@ -409,7 +410,7 @@ function draw(){
     text(safePlayerName, BORDER_HALF+6, BORDER_HALF+4);
     handleDrop();
     push(); translate(BORDER_HALF, BORDER_HALF); drawBoard(); drawPiece(); pop();
-    drawHintSquares();
+    if (!PREVIEW_MODE) drawHintSquares();
     return;
   }
   if (gameState === 'endedWait'){
@@ -486,6 +487,7 @@ function spawnPiece(){
 let touchStartTime = 0;
 function pointInRect(px, py, r){ return px >= r.x && px <= r.x + r.s && py >= r.y && py <= r.y + r.s; }
 function touchStarted(){
+  if (PREVIEW_MODE) return true;
   if (gameState === 'input') return true;
   if (gameState === 'leaderboard'){
     if (touches.length){ const t=touches[0]; updateLbHover(t.x,t.y); if (lbHover>=0){ lbActive=lbHover; lbActiveUntil=millis()+250; } }
@@ -505,6 +507,7 @@ function touchStarted(){
 }
 function touchEnded(){ return true; }
 function keyPressed(){
+  if (PREVIEW_MODE) return;
   if (gameState === 'leaderboard') return;
   if (!inputComplete || gameState!=='playing') return;
   if (keyCode===LEFT_ARROW && isValid(currentPiece,-1,0)) currentPiece.x--;
