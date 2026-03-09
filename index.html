@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,800&family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@1,6..96,700;1,6..96,800&family=Playfair+Display:ital,wght@1,800&family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap"
       rel="stylesheet"
     />
     <style>
@@ -22,6 +22,8 @@
         --font-sans:'Syne', sans-serif;
         --font-mono:'Space Mono', monospace;
         --font-serif:'Playfair Display', serif;
+        --font-gaylon:'Gaylon','Syne',sans-serif;
+        --font-didot:'Didot','Bodoni Moda','Playfair Display',serif;
       }
       *{ box-sizing:border-box; margin:0; padding:0; }
       html,body{ height:100%; }
@@ -101,6 +103,9 @@
         position:relative;
         display:inline-block;
         min-width:.8ch;
+        font-family:var(--font-gaylon);
+        font-weight:800;
+        letter-spacing:-.022em;
         transform-origin:left center;
         will-change:transform, opacity;
       }
@@ -132,8 +137,9 @@
         100%{ transform:scale(var(--sx,1.16), var(--sy,1.24)) translateY(var(--ty,-0.03em)); }
       }
       .title em{
-        font-family:var(--font-serif);
+        font-family:var(--font-didot);
         font-style:italic;
+        font-weight:800;
         color:var(--accent2);
       }
       .word-space{
@@ -537,6 +543,13 @@
         const heroTitle = document.getElementById('hero-title');
         const bannerLinks = document.getElementById('banner-links');
         if (!ins || !space || !burst || !sub || !heroTitle || !bannerLinks) return;
+        const INTRO_PLAYED_KEY = 'insufficient_space_intro_played_once_v1';
+        const hasPlayedIntro = ()=>{
+          try { return localStorage.getItem(INTRO_PLAYED_KEY) === '1'; } catch (_err) { return false; }
+        };
+        const markIntroPlayed = ()=>{
+          try { localStorage.setItem(INTRO_PLAYED_KEY, '1'); } catch (_err) {}
+        };
         const showFinalHeroState = ()=>{
           ins.textContent = 'INSUFFICIENT';
           space.classList.remove('is-covering');
@@ -564,9 +577,10 @@
         const introFromLink = params.get('intro') === '1';
         if (reduce){
           showFinalHeroState();
+          markIntroPlayed();
           return;
         }
-        if (!introFromLink){
+        if (!introFromLink || hasPlayedIntro()){
           showFinalHeroState();
           return;
         }
@@ -623,6 +637,7 @@
           bannerLinks.classList.remove('intro-glass');
           await sleep(260);
           document.body.classList.add('intro-done');
+          markIntroPlayed();
         }
 
         runHeroIntro();
