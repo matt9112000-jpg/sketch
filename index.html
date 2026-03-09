@@ -137,8 +137,24 @@
         transform:translateY(16px) scale(.78);
         filter:blur(3px);
       }
+      .word-space.is-covering{
+        position:absolute;
+        left:0;
+        top:0;
+        z-index:2;
+        opacity:1;
+        filter:none;
+        transform-origin:left center;
+        animation:spaceCoverSweep .86s cubic-bezier(.2,.88,.22,1) forwards;
+      }
       .word-space.is-visible{
         animation:spaceReveal .55s cubic-bezier(.2,.9,.18,1) forwards;
+      }
+      @keyframes spaceCoverSweep{
+        0%{ transform:translateX(116%) scale(1.05,.94); opacity:0; }
+        40%{ transform:translateX(24%) scale(1.42,1.04); opacity:1; }
+        78%{ transform:translateX(4%) scale(1.28,1.02); opacity:1; }
+        100%{ transform:translateX(0) scale(1.12,1.01); opacity:1; }
       }
       @keyframes spaceReveal{
         0%{ opacity:0; transform:translateY(16px) scale(.78); filter:blur(3px); }
@@ -209,6 +225,16 @@
         display:flex;
         gap:8px;
         align-items:center;
+        transition:background .22s ease, border-color .22s ease, box-shadow .22s ease;
+      }
+      .banner-links.intro-glass{
+        background:rgba(17, 27, 117, .44);
+        border:1px solid rgba(192, 204, 255, .24);
+        border-radius:12px;
+        padding:6px;
+        box-shadow:0 8px 22px rgba(5, 8, 34, .32);
+        -webkit-backdrop-filter:blur(7px);
+        backdrop-filter:blur(7px);
       }
       .banner-btn{
         text-decoration:none;
@@ -461,7 +487,7 @@
           </h1>
           <p class="title-sub" id="title-sub">ᴍᴀᴋɪɴɢ ꜱᴘᴀᴄᴇ ꜰᴏʀ ᴛʜᴇ ᴛʜɪɴɢꜱ ᴛʜᴀᴛ ᴍᴀᴛᴛᴇʀ.</p>
         </div>
-        <nav class="banner-links" aria-label="Banner links">
+        <nav class="banner-links" id="banner-links" aria-label="Banner links">
           <a class="banner-btn" href="./shop.html" data-soft-nav>Shop</a>
           <a class="banner-btn" href="mailto:insufficientspace20@gmail.com">Contact</a>
           <a class="banner-btn insta-btn" href="https://www.instagram.com/insufficient__space/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
@@ -507,7 +533,8 @@
         const burst = document.getElementById('title-burst');
         const sub = document.getElementById('title-sub');
         const heroTitle = document.getElementById('hero-title');
-        if (!ins || !space || !burst || !sub || !heroTitle) return;
+        const bannerLinks = document.getElementById('banner-links');
+        if (!ins || !space || !burst || !sub || !heroTitle || !bannerLinks) return;
         const INTRO_SEEN_KEY = 'insufficient_space_home_intro_seen_v1';
         const markIntroSeen = ()=>{
           try { localStorage.setItem(INTRO_SEEN_KEY, '1'); } catch (_err) {}
@@ -517,9 +544,11 @@
         };
         const showFinalHeroState = ()=>{
           ins.textContent = 'INSUFFICIENT';
+          space.classList.remove('is-covering');
           space.classList.add('is-visible');
           sub.classList.add('is-visible');
           heroTitle.classList.add('is-done');
+          bannerLinks.classList.remove('intro-glass');
           document.body.classList.add('intro-done');
         };
 
@@ -537,6 +566,7 @@
         const sleep = (ms)=>new Promise((resolve)=>setTimeout(resolve, ms));
 
         async function runHeroIntro(){
+          bannerLinks.classList.add('intro-glass');
           const text = 'INSUFFICIENT';
           ins.textContent = '';
           ins.classList.add('is-typing');
@@ -563,10 +593,13 @@
           ins.style.transform = '';
           await sleep(170);
 
-          space.classList.add('is-visible');
+          space.classList.add('is-covering');
           await sleep(520);
+          space.classList.remove('is-covering');
+          space.classList.add('is-visible');
           sub.classList.add('is-visible');
           heroTitle.classList.add('is-done');
+          bannerLinks.classList.remove('intro-glass');
           await sleep(260);
           document.body.classList.add('intro-done');
           markIntroSeen();
