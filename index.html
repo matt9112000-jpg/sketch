@@ -546,6 +546,18 @@
           bannerLinks.classList.remove('intro-glass');
           document.body.classList.add('intro-done');
         };
+        const resetHeroIntroState = ()=>{
+          document.body.classList.remove('intro-done');
+          heroTitle.classList.remove('is-done');
+          ins.classList.remove('is-typing', 'letters-stretch');
+          ins.innerHTML = '';
+          ins.style.fontWeight = '';
+          ins.style.transform = '';
+          space.classList.remove('is-covering', 'is-visible');
+          sub.classList.remove('is-visible');
+          burst.classList.remove('play');
+          bannerLinks.classList.remove('intro-glass');
+        };
 
         const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (reduce){
@@ -556,6 +568,7 @@
         const sleep = (ms)=>new Promise((resolve)=>setTimeout(resolve, ms));
 
         async function runHeroIntro(){
+          resetHeroIntroState();
           bannerLinks.classList.add('intro-glass');
           const text = 'INSUFFICIENT';
           const isMobile = window.innerWidth <= 680;
@@ -607,6 +620,12 @@
         }
 
         runHeroIntro();
+        window.addEventListener('pageshow', (ev)=>{
+          if (ev.persisted){
+            if (reduce) showFinalHeroState();
+            else runHeroIntro();
+          }
+        });
       })();
 
       (function(){
