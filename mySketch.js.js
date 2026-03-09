@@ -405,7 +405,8 @@ function draw(){
   }
   if (gameState === 'playing'){
     noStroke(); fill('#FF3BDA'); textSize(max(14, blockSize*0.35)); textAlign(LEFT,TOP); textStyle(BOLD);
-    text(playerName, BORDER_HALF+6, BORDER_HALF+4);
+    const safePlayerName = fitTextToWidth(playerName, innerW - 12);
+    text(safePlayerName, BORDER_HALF+6, BORDER_HALF+4);
     handleDrop();
     push(); translate(BORDER_HALF, BORDER_HALF); drawBoard(); drawPiece(); pop();
     drawHintSquares();
@@ -685,13 +686,17 @@ function renderLeaderboard(){
       const scoreSize = max(isCompactLb ? 10 : 13, titleSize * 0.48);
       const nameY = lineY + 4;
       const scoreY = nameY + nameSize + 6;
-      const displayName = String(rec.name || '').slice(0, isCompactLb ? 8 : 12);
+      const displayName = String(rec.name || '');
       noStroke();
       fill(rankColor);
       textSize(nameSize);
       textAlign(CENTER, TOP);
       textStyle(BOLD);
-      text(isCompactLb ? displayName : `#${rank}  ${displayName}`, bx + bw/2, nameY);
+      const maxNamePx = bw - (isCompactLb ? 18 : 56);
+      const compactName = fitTextToWidth(displayName, maxNamePx);
+      const desktopPrefix = `#${rank}  `;
+      const desktopName = desktopPrefix + fitTextToWidth(displayName, Math.max(24, maxNamePx - textWidth(desktopPrefix)));
+      text(isCompactLb ? compactName : desktopName, bx + bw/2, nameY);
       fill('#f6f8ff');
       textSize(scoreSize);
       text(`Empty Blocks: ${rec.score}`, bx + bw/2, scoreY);
@@ -754,6 +759,16 @@ function removeIfExists(ref){
     try { ref.remove(); } catch(_) {}
   }
   return null;
+}
+function fitTextToWidth(value, maxPx){
+  const suffix = '...';
+  let s = String(value || '');
+  if (maxPx <= 0) return '';
+  if (textWidth(s) <= maxPx) return s;
+  while (s.length > 1 && textWidth(s + suffix) > maxPx){
+    s = s.slice(0, -1);
+  }
+  return s + suffix;
 }
 
 /***** 跑馬燈 *****/
