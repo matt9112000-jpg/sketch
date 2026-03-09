@@ -337,14 +337,6 @@ function setup(){
       inputComplete = true; gameState = 'playing'; nameInput.hide(); spawnPiece();
     }
   });
-  if (PREVIEW_MODE){
-    // Home-page iframe preview: skip IG entry and keep it non-interactive.
-    playerName = 'PREVIEW';
-    inputComplete = true;
-    gameState = 'playing';
-    nameInput.hide();
-    spawnPiece();
-  }
 }
 function windowResized(){ calculateLayout(); if(!inputComplete) centerInput(); positionMarquees(); clearButtons(); }
 function centerInput(){
@@ -407,9 +399,13 @@ function draw(){
 
   if (gameState === 'input'){
     push(); translate(BORDER_HALF, BORDER_HALF); updateIntroPieces(); drawIntroPieces(); pop();
-    noStroke(); fill('#FF3BDA'); textAlign(CENTER,CENTER); textSize(14); textStyle(BOLD);
-    text('Enter your IG and press Enter', width/2, height/2);
-    nameInput.show(); nameInput.elt.focus();
+    if (!PREVIEW_MODE){
+      noStroke(); fill('#FF3BDA'); textAlign(CENTER,CENTER); textSize(14); textStyle(BOLD);
+      text('Enter your IG and press Enter', width/2, height/2);
+      nameInput.show(); nameInput.elt.focus();
+    } else {
+      nameInput.hide();
+    }
     return;
   }
   if (gameState === 'playing'){
