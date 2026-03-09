@@ -136,9 +136,11 @@
         font:700 13px/1 var(--font-mono);
       }
       .row .name{
-        font:800 clamp(1.25rem, 3.2vw, 2.9rem)/.95 var(--font-sans);
+        font:800 clamp(1rem, 2.6vw, 2.3rem)/.95 var(--font-sans);
         text-transform:uppercase;
         letter-spacing:-.02em;
+        overflow-wrap:anywhere;
+        word-break:break-word;
       }
       .row .meta{
         text-align:right;
@@ -155,7 +157,7 @@
       .preview-grid{
         position:absolute;
         inset:-8%;
-        display:grid;
+        display:none;
         grid-template-columns:repeat(6,1fr);
         gap:14px;
         transform:skewY(-8deg);
@@ -181,22 +183,6 @@
       .preview-card.visible{
         opacity:1;
         transform: translateX(0) scale(1);
-      }
-      .preview-side.is-closed .preview-card{
-        opacity:0;
-        transform: translateY(-14px) scale(.98);
-        clip-path: inset(0 0 100% 0);
-      }
-      .preview-side.is-closed{
-        align-self:start;
-        min-height:12px;
-        height:12px;
-        background:transparent;
-        border-top:2px solid var(--line);
-      }
-      .preview-side.is-closed .preview-grid{
-        opacity:0 !important;
-        display:none;
       }
       .preview-frame{
         position:absolute;
@@ -237,12 +223,20 @@
           border-bottom:2px solid var(--line);
           order:-1;
         }
-        .preview-side.is-closed{
-          min-height:10px;
-          height:10px;
-          border-bottom:2px solid var(--line);
-        }
         .index-side{ border-right:none; }
+      }
+      @media (max-width: 680px){
+        .row{
+          grid-template-columns:44px minmax(0,1fr) 82px;
+          padding:.85rem .7rem;
+        }
+        .row .name{
+          font-size:clamp(.95rem, 7vw, 1.45rem);
+          letter-spacing:-.01em;
+        }
+        .row .meta{
+          font-size:10px;
+        }
       }
     </style>
   </head>
@@ -317,14 +311,10 @@
           if (frame && frame.getAttribute('src') !== previewHref){
             frame.setAttribute('src', previewHref);
           }
-          document.getElementById('preview-grid').style.opacity = '0';
-          previewSide && previewSide.classList.remove('is-closed');
           card.classList.add('visible');
         }
         function closePreview(){
-          document.getElementById('preview-grid').style.opacity = '1';
           card.classList.remove('visible');
-          previewSide && previewSide.classList.add('is-closed');
           rows.forEach(r => r.classList.remove('active'));
         }
 
@@ -334,7 +324,7 @@
           row.addEventListener('focus', ()=>setPreview(row));
           row.addEventListener('touchstart', ()=>setPreview(row), { passive:true });
         });
-        if (previewSide) previewSide.classList.add('is-closed');
+        if (rows[0]) setPreview(rows[0]);
 
         document.body.classList.add('is-ready');
         document.querySelectorAll('a[data-soft-nav]').forEach(link=>{
