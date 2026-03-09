@@ -12,12 +12,12 @@
     />
     <style>
       :root{
-        --bg:#f4f4f8;
-        --text:#101018;
-        --muted:#73738a;
-        --accent:#ff1744;
-        --ring: rgba(255,23,68,.35);
-        --border:#e0e0ea;
+        --bg:#000e51;
+        --text:#f4f6ff;
+        --muted:#b8beff;
+        --accent:#ee00b8;
+        --ring: rgba(238,0,184,.35);
+        --border:#3340a8;
       }
       *{ box-sizing:border-box; }
       html, body{ height:100%; }
@@ -41,7 +41,7 @@
       .stage{
         width:min(980px, 100%);
         min-height:640px;
-        background:#ffffff;
+        background:#0f1b75;
         border-radius:24px;
         border:1px solid var(--border);
         position:relative;
@@ -51,7 +51,9 @@
         content:"";
         position:absolute;
         inset:0;
-        background: radial-gradient(800px 240px at 50% 100%, rgba(26,38,255,.05), transparent 60%);
+        background:
+          radial-gradient(800px 260px at 50% 100%, rgba(255,59,218,.14), transparent 62%),
+          radial-gradient(500px 220px at 8% 8%, rgba(26,38,255,.22), transparent 70%);
         pointer-events:none;
       }
       .stage-head{
@@ -66,10 +68,10 @@
         top:24px;
         right:24px;
         z-index:3;
-        border:1px solid #d3d7e5;
+        border:1px solid #4a56be;
         border-radius:10px;
-        background:#ffffff;
-        color:#1a1f30;
+        background:#1a247f;
+        color:#f4f6ff;
         padding:7px 11px;
         font-size:11px;
         font-weight:700;
@@ -77,12 +79,12 @@
         text-decoration:none;
       }
       .home-btn:hover{
-        border-color:#aeb7d1;
+        border-color:#7784ff;
       }
       .home-btn:active,
       .home-btn:focus-visible{
-        border-color:#aeb7d1;
-        background:#f4f6fb;
+        border-color:#a5adff;
+        background:#2a35a1;
       }
       h1{
         margin:0 0 8px;
@@ -125,7 +127,7 @@
         transform: translate(-50%, 26px);
         opacity:0;
         transition: transform 440ms cubic-bezier(.2,.9,.2,1), opacity 280ms ease;
-        background: rgba(255,255,255,.92);
+        background: rgba(8,12,46,.76);
         border:1px solid var(--border);
         border-radius:14px;
         padding:12px 14px 14px;
@@ -154,9 +156,9 @@
         justify-content:center;
         padding:4px 8px;
         border-radius:999px;
-        border:1px solid #f2c65f;
-        background:#fff6dc;
-        color:#7a5713;
+        border:1px solid #ff99e8;
+        background:rgba(238,0,184,.18);
+        color:#ffd3f4;
         font-size:11px;
         font-weight:800;
         letter-spacing:.05em;
@@ -173,10 +175,10 @@
         gap:8px;
       }
       .product-actions button{
-        border:1px solid #d3d7e5;
+        border:1px solid #4a56be;
         border-radius:10px;
-        background:#ffffff;
-        color:#1a1f30;
+        background:#162070;
+        color:#f4f6ff;
         padding:7px 10px;
         font-size:11px;
         font-weight:700;
@@ -184,16 +186,16 @@
         cursor:pointer;
       }
       .product-actions button:hover{
-        border-color:#aeb7d1;
+        border-color:#7784ff;
       }
       #add-cart-btn{
-        background:#121827;
-        border-color:#121827;
+        background:#ee00b8;
+        border-color:#ee00b8;
         color:#ffffff;
       }
       #add-cart-btn:hover{
-        border-color:#2b3755;
-        background:#1a2440;
+        border-color:#ff61e3;
+        background:#ff3bda;
       }
       .hint{
         position:absolute;
@@ -233,7 +235,7 @@
   <body>
     <main class="wrap">
       <section class="stage" aria-label="Product stage" id="product-stage">
-        <a class="home-btn" href="./index.html">Home</a>
+        <a class="home-btn" href="./index.html" data-soft-nav>Home</a>
         <div class="stage-head">
           <h1>Shop</h1>
           <p>Clean stage preview. Move cursor near model.</p>
@@ -260,7 +262,20 @@
     <script>
       (function(){
         const PREVIEW_MODE = new URLSearchParams(window.location.search).has('preview');
-        document.body.classList.add('is-ready');
+        function enableSoftNav(){
+          document.body.classList.add('is-ready');
+          document.querySelectorAll('a[data-soft-nav]').forEach((link)=>{
+            link.addEventListener('click', (ev)=>{
+              const href = link.getAttribute('href');
+              const target = link.getAttribute('target');
+              if (!href || href.startsWith('#') || target === '_blank') return;
+              ev.preventDefault();
+              document.body.classList.add('is-exiting');
+              setTimeout(()=>{ window.location.href = href; }, 190);
+            });
+          });
+        }
+        enableSoftNav();
         const stage = document.getElementById('product-stage');
         const shell = document.getElementById('viewer-shell');
         const info = document.getElementById('product-info');
