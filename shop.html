@@ -447,7 +447,7 @@
 
         // Stage-like floor glow and soft shadow catcher.
         const stageGlow = new THREE.Mesh(
-          new THREE.CircleGeometry(1.45, 64),
+          new THREE.CircleGeometry(1.28, 64),
           new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.24, depthWrite: false })
         );
         stageGlow.rotation.x = -Math.PI / 2;
@@ -487,12 +487,12 @@
         }
 
         const silverMat = new THREE.MeshPhysicalMaterial({
-          color: '#e8ecf4',
-          metalness: 0.72,
-          roughness: 0.22,
-          clearcoat: 0.62,
-          clearcoatRoughness: 0.14,
-          envMapIntensity: 0.95
+          color: '#bcc3d2',
+          metalness: 0.9,
+          roughness: 0.3,
+          clearcoat: 0.48,
+          clearcoatRoughness: 0.22,
+          envMapIntensity: 1.05
         });
 
         function getPartIdFromName(name){
@@ -608,7 +608,7 @@
           const box = new THREE.Box3().setFromObject(root);
           const size = box.getSize(new THREE.Vector3());
           const maxDim = Math.max(size.x, size.y, size.z) || 1;
-          root.scale.setScalar(0.799 / maxDim); // 15% smaller than previous size
+          root.scale.setScalar(0.92 / maxDim); // make model bigger
           root.updateWorldMatrix(true, true);
           const centered = new THREE.Box3().setFromObject(root);
           const center = centered.getCenter(new THREE.Vector3());
