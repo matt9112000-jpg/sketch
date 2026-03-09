@@ -1167,12 +1167,6 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
     }
     // Center orbit controls on the final visible composition.
     frameObject(root, camera, controls, null);
-    if (mode === 'charm'){
-      const targetOffset = controls.target.clone();
-      camera.position.sub(targetOffset);
-      controls.target.set(0, 0, 0);
-      controls.update();
-    }
 
     if (threeCtx){
       threeCtx.partState = partState;

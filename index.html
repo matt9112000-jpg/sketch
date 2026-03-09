@@ -79,6 +79,7 @@
       .banner-links{
         display:flex;
         gap:8px;
+        align-items:center;
       }
       .banner-btn{
         text-decoration:none;
@@ -93,6 +94,19 @@
       }
       .banner-btn:hover{
         border-color:#7784ff;
+      }
+      .insta-btn{
+        width:34px;
+        height:34px;
+        padding:0;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+      }
+      .insta-btn svg{
+        width:16px;
+        height:16px;
+        display:block;
       }
 
       main{
@@ -136,11 +150,12 @@
         font:700 13px/1 var(--font-mono);
       }
       .row .name{
-        font:800 clamp(1rem, 2.6vw, 2.3rem)/.95 var(--font-sans);
+        font:800 clamp(.92rem, 2.15vw, 1.7rem)/1 var(--font-sans);
         text-transform:uppercase;
         letter-spacing:-.02em;
-        overflow-wrap:anywhere;
-        word-break:break-word;
+        white-space:nowrap;
+        overflow:hidden;
+        text-overflow:ellipsis;
       }
       .row .meta{
         text-align:right;
@@ -231,7 +246,7 @@
           padding:.85rem .7rem;
         }
         .row .name{
-          font-size:clamp(.95rem, 7vw, 1.45rem);
+          font-size:clamp(.86rem, 5.4vw, 1.06rem);
           letter-spacing:-.01em;
         }
         .row .meta{
@@ -253,6 +268,14 @@
         <h1 class="title">Insufficient <em>Space</em></h1>
         <nav class="banner-links" aria-label="Banner links">
           <a class="banner-btn" href="./shop.html" data-soft-nav>Shop</a>
+          <a class="banner-btn" href="mailto:hello@example.com">Contact</a>
+          <a class="banner-btn insta-btn" href="https://instagram.com/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="3.2" y="3.2" width="17.6" height="17.6" rx="5" stroke="#f4f6ff" stroke-width="1.8"></rect>
+              <circle cx="12" cy="12" r="4.3" stroke="#f4f6ff" stroke-width="1.8"></circle>
+              <circle cx="17.7" cy="6.4" r="1.2" fill="#f4f6ff"></circle>
+            </svg>
+          </a>
         </nav>
       </div>
     </header>
