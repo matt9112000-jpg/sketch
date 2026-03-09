@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Insufficient Space - Archive</title>
+    <title>Insufficient Space - Home</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -12,9 +12,13 @@
     />
     <style>
       :root{
-        --mustard:#b3bd51;
-        --cobalt:#3854e4;
-        --ink:#0f1648;
+        --bg:#000e51;
+        --panel:#111b75;
+        --line:#3340a8;
+        --text:#f4f6ff;
+        --muted:#b8beff;
+        --accent:#ee00b8;
+        --accent2:#ff3bda;
         --font-sans:'Syne', sans-serif;
         --font-mono:'Space Mono', monospace;
         --font-serif:'Playfair Display', serif;
@@ -22,8 +26,8 @@
       *{ box-sizing:border-box; margin:0; padding:0; }
       html,body{ height:100%; }
       body{
-        background:var(--mustard);
-        color:var(--cobalt);
+        background:var(--bg);
+        color:var(--text);
         font-family:var(--font-sans);
         opacity:0;
         transition:opacity 220ms ease;
@@ -35,9 +39,9 @@
         width:100%;
         overflow:hidden;
         white-space:nowrap;
-        border-bottom:2px solid var(--cobalt);
-        background:var(--cobalt);
-        color:var(--mustard);
+        border-bottom:2px solid var(--line);
+        background:linear-gradient(90deg, #130956, #2b0f7b, #130956);
+        color:#ffd8f6;
         font:700 12px/1 var(--font-mono);
         letter-spacing:.08em;
         text-transform:uppercase;
@@ -51,20 +55,44 @@
       @keyframes scroll{ from{ transform:translateX(0);} to{ transform:translateX(-50%);} }
 
       header{
-        border-bottom:2px solid var(--cobalt);
+        border-bottom:2px solid var(--line);
         padding:2.1rem 1.5rem 1.7rem;
-        text-align:center;
+      }
+      .header-bar{
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:16px;
       }
       .title{
         font-size:clamp(2.4rem, 8vw, 6.2rem);
         text-transform:uppercase;
         letter-spacing:-.03em;
         line-height:.94;
-        color:var(--cobalt);
+        color:var(--text);
       }
       .title em{
         font-family:var(--font-serif);
         font-style:italic;
+        color:var(--accent2);
+      }
+      .banner-links{
+        display:flex;
+        gap:8px;
+      }
+      .banner-btn{
+        text-decoration:none;
+        border:1px solid #4a56be;
+        background:#1a247f;
+        color:#f4f6ff;
+        border-radius:10px;
+        padding:8px 12px;
+        font:700 12px/1 var(--font-mono);
+        letter-spacing:.08em;
+        text-transform:uppercase;
+      }
+      .banner-btn:hover{
+        border-color:#7784ff;
       }
 
       main{
@@ -74,12 +102,12 @@
       }
 
       .index-side{
-        border-right:2px solid var(--cobalt);
+        border-right:2px solid var(--line);
       }
       .index-head{
         display:grid;
         grid-template-columns:60px minmax(0,1fr) 120px;
-        border-bottom:2px solid var(--cobalt);
+        border-bottom:2px solid var(--line);
         padding:.8rem 1rem;
         font:700 11px/1 var(--font-mono);
         text-transform:uppercase;
@@ -94,15 +122,15 @@
         grid-template-columns:60px minmax(0,1fr) 120px;
         align-items:center;
         gap:.5rem;
-        border-bottom:2px solid var(--cobalt);
+        border-bottom:2px solid var(--line);
         text-decoration:none;
-        color:var(--cobalt);
+        color:var(--text);
         padding:1rem;
         transition:background .12s linear, color .12s linear;
       }
       .row:hover, .row.active{
-        background:var(--cobalt);
-        color:var(--mustard);
+        background:var(--accent);
+        color:#fff8fe;
       }
       .row .num{
         font:700 13px/1 var(--font-mono);
@@ -121,6 +149,7 @@
       .preview-side{
         position:relative;
         overflow:hidden;
+        background:#0a125f;
       }
       .preview-grid{
         position:absolute;
@@ -133,7 +162,7 @@
       }
       .preview-grid i{
         display:block;
-        background:var(--cobalt);
+        background:#243392;
         clip-path:polygon(12% 0,100% 0,88% 100%,0 100%);
         height:42px;
       }
@@ -141,21 +170,29 @@
       .preview-card{
         position:absolute;
         inset:0;
-        display:flex;
-        flex-direction:column;
-        justify-content:flex-end;
-        gap:.5rem;
-        padding:1.2rem;
-        background:
-          linear-gradient(transparent 45%, rgba(0,0,0,.56)),
-          var(--preview-image, linear-gradient(135deg,#1a26ff,#ff3bda));
-        background-size:cover;
-        background-position:center;
-        color:#f3f6ff;
+        border-left:2px solid var(--line);
+        background:#070d42;
         opacity:0;
         transition:opacity .18s linear;
       }
       .preview-card.visible{ opacity:1; }
+      .preview-frame{
+        position:absolute;
+        inset:0;
+        width:100%;
+        height:100%;
+        border:none;
+        background:#fff;
+      }
+      .preview-overlay{
+        position:absolute;
+        left:0;
+        right:0;
+        bottom:0;
+        padding:1rem 1.1rem;
+        background:linear-gradient(transparent, rgba(0,0,0,.78));
+        color:#f3f6ff;
+      }
       .preview-kicker{
         font:700 11px/1 var(--font-mono);
         letter-spacing:.12em;
@@ -174,7 +211,7 @@
         main{ grid-template-columns:1fr; }
         .preview-side{
           height:42vh;
-          border-bottom:2px solid var(--cobalt);
+          border-bottom:2px solid var(--line);
           order:-1;
         }
         .index-side{ border-right:none; }
@@ -190,7 +227,12 @@
     </div>
 
     <header>
-      <h1 class="title">Insufficient <em>Space</em></h1>
+      <div class="header-bar">
+        <h1 class="title">Insufficient <em>Space</em></h1>
+        <nav class="banner-links" aria-label="Banner links">
+          <a class="banner-btn" href="./shop.html" data-soft-nav>Shop</a>
+        </nav>
+      </div>
     </header>
 
     <main>
@@ -202,18 +244,18 @@
           <a class="row active" data-preview-title="Introduction" data-preview-desc="Core game page with leaderboard, charm build, and merch unlock result view." data-preview-image="linear-gradient(130deg,#1a26ff 0%,#ff3bda 60%,#ff4622 100%)" href="./sketch.html" data-soft-nav>
             <span class="num">01</span><span class="name">Introduction</span><span class="meta">Game<br/>Live</span>
           </a>
-          <a class="row" data-preview-title="Shop" data-preview-desc="Product display with metallic model viewer, hover activation, and item card info." data-preview-image="linear-gradient(140deg,#2d3347 0%,#67708d 45%,#c9d0df 100%)" href="./shop.html" data-soft-nav>
-            <span class="num">02</span><span class="name">Shop</span><span class="meta">Viewer<br/>Live</span>
-          </a>
         </div>
       </section>
 
       <section class="preview-side" aria-label="Hover Preview">
         <div class="preview-grid" id="preview-grid"></div>
         <div class="preview-card visible" id="preview-card">
-          <div class="preview-kicker">Hover Preview</div>
-          <div class="preview-title" id="preview-title">Introduction</div>
-          <p class="preview-desc" id="preview-desc">Core game page with leaderboard, charm build, and merch unlock result view.</p>
+          <iframe class="preview-frame" id="preview-frame" title="Page preview" loading="lazy"></iframe>
+          <div class="preview-overlay">
+            <div class="preview-kicker">Inner Page Preview</div>
+            <div class="preview-title" id="preview-title">Introduction</div>
+            <p class="preview-desc" id="preview-desc">Core game page with leaderboard, charm build, and merch unlock result view.</p>
+          </div>
         </div>
       </section>
     </main>
@@ -232,6 +274,7 @@
       (function(){
         const rows = Array.from(document.querySelectorAll('.row'));
         const card = document.getElementById('preview-card');
+        const frame = document.getElementById('preview-frame');
         const title = document.getElementById('preview-title');
         const desc = document.getElementById('preview-desc');
 
@@ -240,7 +283,10 @@
           row.classList.add('active');
           title.textContent = row.dataset.previewTitle || 'Project';
           desc.textContent = row.dataset.previewDesc || '';
-          card.style.setProperty('--preview-image', row.dataset.previewImage || 'linear-gradient(135deg,#1a26ff,#ff3bda)');
+          const href = row.getAttribute('href') || './sketch.html';
+          if (frame && frame.getAttribute('src') !== href){
+            frame.setAttribute('src', href);
+          }
           card.classList.add('visible');
         }
 
@@ -249,6 +295,7 @@
           row.addEventListener('focus', ()=>setPreview(row));
           row.addEventListener('touchstart', ()=>setPreview(row), { passive:true });
         });
+        if (rows[0]) setPreview(rows[0]);
 
         document.body.classList.add('is-ready');
         document.querySelectorAll('a[data-soft-nav]').forEach(link=>{
