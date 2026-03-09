@@ -767,6 +767,40 @@ function removeIfExists(ref){
   }
   return null;
 }
+function openCheckoutConfirmModal(itemName, totalText){
+  return new Promise((resolve)=>{
+    const mask = createDiv('');
+    mask.style('position','fixed').style('inset','0')
+      .style('z-index','10080')
+      .style('background','rgba(4,8,36,.58)')
+      .style('display','flex').style('align-items','center').style('justify-content','center')
+      .style('padding','18px');
+    const card = createDiv('');
+    card.parent(mask);
+    card.style('width','min(420px, 94vw)')
+      .style('border','1px solid #4a56be')
+      .style('border-radius','14px')
+      .style('background','#0f1b75')
+      .style('color','#f4f6ff')
+      .style('padding','14px 14px 12px')
+      .style('font-family',"Montserrat, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', Arial, sans-serif");
+    card.elt.innerHTML = `
+      <h3 style="margin:0 0 8px;font-size:16px;letter-spacing:.01em;">Confirm Checkout</h3>
+      <div style="display:flex;justify-content:space-between;gap:10px;margin:6px 0;font-size:13px;color:#d7ddff;"><span>Item</span><strong>${itemName}</strong></div>
+      <div style="display:flex;justify-content:space-between;gap:10px;margin:6px 0;font-size:13px;color:#d7ddff;"><span>Qty</span><strong>1</strong></div>
+      <div style="display:flex;justify-content:space-between;gap:10px;margin:6px 0;font-size:13px;color:#d7ddff;"><span>Total</span><strong>${totalText}</strong></div>
+      <div style="margin-top:12px;display:flex;justify-content:flex-end;gap:8px;">
+        <button type="button" data-cancel style="border:1px solid #4a56be;border-radius:10px;background:#162070;color:#f4f6ff;padding:7px 10px;font-size:11px;font-weight:700;letter-spacing:.04em;cursor:pointer;">Continue</button>
+        <button type="button" data-go style="border:1px solid #ee00b8;border-radius:10px;background:#ee00b8;color:#ffffff;padding:7px 10px;font-size:11px;font-weight:700;letter-spacing:.04em;cursor:pointer;">Checkout</button>
+      </div>`;
+    const cleanup = (ok)=>{ if (mask) mask.remove(); resolve(ok); };
+    mask.elt.addEventListener('click', (e)=>{ if (e.target === mask.elt) cleanup(false); });
+    const cancelBtn = card.elt.querySelector('[data-cancel]');
+    const goBtn = card.elt.querySelector('[data-go]');
+    if (cancelBtn) cancelBtn.addEventListener('click', ()=>cleanup(false));
+    if (goBtn) goBtn.addEventListener('click', ()=>cleanup(true));
+  });
+}
 function fitTextToWidth(value, maxPx){
   const suffix = '...';
   let s = String(value || '');
@@ -1133,6 +1167,12 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
     }
     // Center orbit controls on the final visible composition.
     frameObject(root, camera, controls, null);
+    if (mode === 'charm'){
+      const targetOffset = controls.target.clone();
+      camera.position.sub(targetOffset);
+      controls.target.set(0, 0, 0);
+      controls.update();
+    }
 
     if (threeCtx){
       threeCtx.partState = partState;
@@ -1217,6 +1257,7 @@ async function openCharmPreview3D(options = {}){
   closeCharmPreview3D();
   const fromGameOver = !!options.fromGameOver;
   const isCompactReward = windowWidth <= 700;
+  const CHECKOUT_URL = window.CHECKOUT_URL || '';
   charmCloseHook = (typeof options.onClose === 'function') ? options.onClose : null;
 
   const ov = createDiv('');
@@ -1411,7 +1452,7 @@ async function openCharmPreview3D(options = {}){
   threeWrap.parent(ov);
   threeWrap.id('threeWrap');
   threeWrap.style('position','absolute')
-    .style('left', isCompactReward ? '30%' : '49%').style('top', isCompactReward ? '30%' : '32%')
+    .style('left', '50%').style('top', isCompactReward ? '50%' : '50%')
     .style('transform', fromGameOver
       ? 'translate(-50%, -50%) scale(0.22)'
       : (isCompactReward ? 'translate(-50%, -50%) scale(0.5)' : 'translate(-50%, -50%) scale(0.55)'))
@@ -1435,11 +1476,16 @@ async function openCharmPreview3D(options = {}){
         .style('z-index','10060').style('pointer-events','auto');
   charmFS.footer = footer;
 
-  const reserve = createButton('Reserve');
-  stylePill(reserve, PALETTE[2], PALETTE[3]);
-  reserve.parent(footer);
-  reserve.mousePressed(()=> {
-    window.open('https://docs.google.com/forms/d/e/1FAIpQLSc0DjE-GiOGggB6dNLWPGMjIxLlhDZUpVJs-JjiY58JEKUbtQ/viewform?usp=header', '_blank');
+  const addCart = createButton('Add Cart');
+  stylePill(addCart, PALETTE[2], PALETTE[3]);
+  addCart.parent(footer);
+  addCart.mousePressed(async ()=> {
+    if (!CHECKOUT_URL){
+      alert('Checkout URL not set. Please set CHECKOUT_URL.');
+      return;
+    }
+    const ok = await openCheckoutConfirmModal('001 — CCC', '$120');
+    if (ok) window.location.href = CHECKOUT_URL;
   });
 
   const closeBtn = createButton('Close');

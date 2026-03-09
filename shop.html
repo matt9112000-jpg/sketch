@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Playfair+Display:ital,wght@1,700;1,800&display=swap"
       rel="stylesheet"
     />
     <style>
@@ -141,14 +141,32 @@
       }
       .product-title{
         margin:0;
-        font-size:15px;
+        font-size:16px;
         font-weight:800;
+        letter-spacing:.01em;
       }
       .product-top{
         display:flex;
         align-items:center;
+        justify-content:space-between;
+        gap:12px;
+        flex-wrap:wrap;
+      }
+      .product-left{
+        display:flex;
+        align-items:center;
         gap:10px;
         flex-wrap:wrap;
+      }
+      .product-price{
+        font-family:'Playfair Display', serif;
+        font-style:italic;
+        font-weight:800;
+        font-size:clamp(21px, 3.2vw, 30px);
+        line-height:1;
+        color:#ff8be9;
+        letter-spacing:.01em;
+        text-shadow:0 0 14px rgba(238,0,184,.24);
       }
       .limited-badge{
         display:inline-flex;
@@ -165,7 +183,7 @@
         text-transform:uppercase;
       }
       .product-meta{
-        margin-top:6px;
+        margin-top:8px;
         font-size:12px;
         color:var(--muted);
       }
@@ -196,6 +214,58 @@
       #add-cart-btn:hover{
         border-color:#ff61e3;
         background:#ff3bda;
+      }
+      .checkout-modal{
+        position:fixed;
+        inset:0;
+        z-index:99999;
+        background:rgba(4,8,36,.58);
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        padding:18px;
+      }
+      .checkout-card{
+        width:min(420px, 94vw);
+        border:1px solid #4a56be;
+        border-radius:14px;
+        background:#0f1b75;
+        color:#f4f6ff;
+        padding:14px 14px 12px;
+      }
+      .checkout-card h3{
+        margin:0 0 8px;
+        font-size:16px;
+        letter-spacing:.01em;
+      }
+      .checkout-row{
+        display:flex;
+        justify-content:space-between;
+        gap:10px;
+        margin:6px 0;
+        font-size:13px;
+        color:#d7ddff;
+      }
+      .checkout-actions{
+        margin-top:12px;
+        display:flex;
+        justify-content:flex-end;
+        gap:8px;
+      }
+      .checkout-actions button{
+        border:1px solid #4a56be;
+        border-radius:10px;
+        background:#162070;
+        color:#f4f6ff;
+        padding:7px 10px;
+        font-size:11px;
+        font-weight:700;
+        letter-spacing:.04em;
+        cursor:pointer;
+      }
+      .checkout-actions .go{
+        border-color:#ee00b8;
+        background:#ee00b8;
       }
       .hint{
         position:absolute;
@@ -245,8 +315,11 @@
         </div>
         <div class="product-body" id="product-info">
           <div class="product-top">
-            <h2 class="product-title">001 — CCC  $120</h2>
-            <span class="limited-badge">25 Limited</span>
+            <div class="product-left">
+              <h2 class="product-title">001 — CCC</h2>
+              <span class="limited-badge">25 Limited</span>
+            </div>
+            <div class="product-price">$120</div>
           </div>
           <p class="product-meta">Material : 3D Printing</p>
           <div class="product-actions">
@@ -265,6 +338,28 @@
         // Set your payment/checkout endpoint here.
         // You can also set window.CHECKOUT_URL before this script runs.
         const CHECKOUT_URL = window.CHECKOUT_URL || '';
+        function openCheckoutConfirm(titleText, priceText){
+          return new Promise((resolve)=>{
+            const modal = document.createElement('div');
+            modal.className = 'checkout-modal';
+            modal.innerHTML = `
+              <div class="checkout-card" role="dialog" aria-modal="true" aria-label="Confirm checkout">
+                <h3>Confirm Checkout</h3>
+                <div class="checkout-row"><span>Item</span><strong>${titleText}</strong></div>
+                <div class="checkout-row"><span>Qty</span><strong>1</strong></div>
+                <div class="checkout-row"><span>Total</span><strong style="font-size:19px;color:#ff9ced;font-family:'Playfair Display',serif;font-style:italic;">${priceText}</strong></div>
+                <div class="checkout-actions">
+                  <button type="button" class="stay">Continue</button>
+                  <button type="button" class="go">Checkout</button>
+                </div>
+              </div>`;
+            document.body.appendChild(modal);
+            const cleanup = (ok)=>{ modal.remove(); resolve(ok); };
+            modal.querySelector('.stay').addEventListener('click', ()=>cleanup(false));
+            modal.querySelector('.go').addEventListener('click', ()=>cleanup(true));
+            modal.addEventListener('click', (e)=>{ if (e.target === modal) cleanup(false); });
+          });
+        }
         function enableSoftNav(){
           document.body.classList.add('is-ready');
           document.querySelectorAll('a[data-soft-nav]').forEach((link)=>{
@@ -285,12 +380,13 @@
         const mount = document.getElementById('box-viewer');
         const addCartBtn = document.getElementById('add-cart-btn');
         if (addCartBtn){
-          addCartBtn.addEventListener('click', ()=>{
+          addCartBtn.addEventListener('click', async ()=>{
             if (!CHECKOUT_URL){
               alert('Checkout URL not set. Please set CHECKOUT_URL in shop.html.');
               return;
             }
-            window.location.href = CHECKOUT_URL;
+            const ok = await openCheckoutConfirm('001 — CCC', '$120');
+            if (ok) window.location.href = CHECKOUT_URL;
           });
         }
         if (!mount || !stage || !shell || !info || !window.THREE || !THREE.GLTFLoader || !THREE.OrbitControls) return;
