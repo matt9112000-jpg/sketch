@@ -65,23 +65,118 @@
         gap:16px;
       }
       .title{
+        position:relative;
+        display:flex;
+        align-items:flex-end;
+        gap:.24em;
         font-size:clamp(2.4rem, 8vw, 6.2rem);
         text-transform:uppercase;
         letter-spacing:-.03em;
         line-height:.94;
         color:var(--text);
       }
+      .word-ins{
+        position:relative;
+        display:inline-block;
+        min-width:.8ch;
+        transform-origin:left center;
+        will-change:transform, opacity;
+      }
+      .word-ins.is-typing::after{
+        content:'';
+        position:absolute;
+        right:-.05em;
+        top:.06em;
+        width:.06em;
+        height:.86em;
+        background:#ffd5f6;
+        animation:caretBlink .72s steps(1,end) infinite;
+      }
+      @keyframes caretBlink{
+        50%{ opacity:0; }
+      }
+      .word-ins.is-stretching{
+        animation:insStretch .62s cubic-bezier(.22,.9,.15,1) forwards;
+      }
+      @keyframes insStretch{
+        0%{ transform:scale(1,1); }
+        52%{ transform:scale(2.25,1.6); }
+        100%{ transform:scale(3.15,2.55); opacity:1; }
+      }
       .title em{
         font-family:var(--font-serif);
         font-style:italic;
         color:var(--accent2);
       }
+      .word-space{
+        opacity:0;
+        transform:translateY(16px) scale(.78);
+        filter:blur(3px);
+      }
+      .word-space.is-visible{
+        animation:spaceReveal .55s cubic-bezier(.2,.9,.18,1) forwards;
+      }
+      @keyframes spaceReveal{
+        0%{ opacity:0; transform:translateY(16px) scale(.78); filter:blur(3px); }
+        65%{ opacity:1; transform:translateY(-4px) scale(1.08); filter:blur(.2px); }
+        100%{ opacity:1; transform:translateY(0) scale(1); filter:blur(0); }
+      }
+      .title-burst{
+        position:absolute;
+        left:20%;
+        top:56%;
+        width:18px;
+        height:18px;
+        border-radius:50%;
+        pointer-events:none;
+        opacity:0;
+        transform:translate(-50%, -50%) scale(.2);
+        background:radial-gradient(circle, rgba(255,255,255,.95) 0%, rgba(255,59,218,.92) 44%, rgba(255,59,218,0) 74%);
+      }
+      .title-burst::before,
+      .title-burst::after{
+        content:'';
+        position:absolute;
+        inset:0;
+        border-radius:50%;
+      }
+      .title-burst::before{
+        border:2px solid rgba(255,214,250,.9);
+      }
+      .title-burst::after{
+        box-shadow:
+          0 -56px 0 -6px rgba(255,214,250,.92),
+          40px -40px 0 -8px rgba(255,214,250,.85),
+          56px 0 0 -7px rgba(255,214,250,.88),
+          40px 40px 0 -8px rgba(255,214,250,.84),
+          0 56px 0 -6px rgba(255,214,250,.86),
+          -40px 40px 0 -8px rgba(255,214,250,.85),
+          -56px 0 0 -7px rgba(255,214,250,.88),
+          -40px -40px 0 -8px rgba(255,214,250,.86);
+        opacity:.9;
+      }
+      .title-burst.play{
+        animation:burstFx .58s cubic-bezier(.2,.92,.22,1) forwards;
+      }
+      @keyframes burstFx{
+        0%{ opacity:0; transform:translate(-50%, -50%) scale(.2); }
+        22%{ opacity:1; transform:translate(-50%, -50%) scale(1); }
+        100%{ opacity:0; transform:translate(-50%, -50%) scale(2.9); }
+      }
       .title-sub{
-        margin-top:.7rem;
-        font:700 12px/1.4 var(--font-mono);
-        letter-spacing:.09em;
-        text-transform:uppercase;
-        color:#d8ddff;
+        margin-top:.82rem;
+        max-width:44ch;
+        font:700 clamp(.9rem, 1.8vw, 1.2rem)/1.45 var(--font-sans);
+        letter-spacing:.015em;
+        color:#e3e8ff;
+        text-wrap:balance;
+        opacity:0;
+        transform:translateY(10px);
+        transition:opacity .4s ease, transform .4s ease;
+      }
+      .title-sub.is-visible{
+        opacity:1;
+        transform:translateY(0);
       }
       .banner-links{
         display:flex;
@@ -248,6 +343,23 @@
         .index-side{ border-right:none; }
       }
       @media (max-width: 680px){
+        .title{
+          gap:.2em;
+        }
+        .word-ins.is-stretching{
+          animation:insStretchMobile .55s cubic-bezier(.22,.9,.15,1) forwards;
+        }
+        @keyframes insStretchMobile{
+          0%{ transform:scale(1,1); }
+          52%{ transform:scale(1.72,1.45); }
+          100%{ transform:scale(2.2,1.88); opacity:1; }
+        }
+        .title-sub{
+          margin-top:.62rem;
+          max-width:92%;
+          font-size:clamp(.92rem, 3.9vw, 1.02rem);
+          line-height:1.4;
+        }
         .row{
           grid-template-columns:44px minmax(0,1fr) 82px;
           padding:.85rem .7rem;
@@ -273,8 +385,12 @@
     <header>
       <div class="header-bar">
         <div>
-          <h1 class="title">Insufficient <em>Space</em></h1>
-          <p class="title-sub">ᴍᴀᴋɪɴɢ ꜱᴘᴀᴄᴇ ꜰᴏʀ ᴛʜᴇ ᴛʜɪɴɢꜱ ᴛʜᴀᴛ ᴍᴀᴛᴛᴇʀ.</p>
+          <h1 class="title" id="hero-title">
+            <span class="word-ins" id="word-ins"></span>
+            <em class="word-space" id="word-space">Space</em>
+            <span class="title-burst" id="title-burst" aria-hidden="true"></span>
+          </h1>
+          <p class="title-sub" id="title-sub">ᴍᴀᴋɪɴɢ ꜱᴘᴀᴄᴇ ꜰᴏʀ ᴛʜᴇ ᴛʜɪɴɢꜱ ᴛʜᴀᴛ ᴍᴀᴛᴛᴇʀ.</p>
         </div>
         <nav class="banner-links" aria-label="Banner links">
           <a class="banner-btn" href="./shop.html" data-soft-nav>Shop</a>
@@ -316,6 +432,57 @@
     </main>
 
     <script>
+      (function(){
+        const ins = document.getElementById('word-ins');
+        const space = document.getElementById('word-space');
+        const burst = document.getElementById('title-burst');
+        const sub = document.getElementById('title-sub');
+        if (!ins || !space || !burst || !sub) return;
+
+        const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduce){
+          ins.textContent = 'INSUFFICIENT';
+          space.classList.add('is-visible');
+          sub.classList.add('is-visible');
+          return;
+        }
+
+        const sleep = (ms)=>new Promise((resolve)=>setTimeout(resolve, ms));
+
+        async function runHeroIntro(){
+          const text = 'INSUFFICIENT';
+          ins.textContent = '';
+          ins.classList.add('is-typing');
+          for (let i = 0; i < text.length; i++){
+            ins.textContent += text[i];
+            await sleep(84);
+          }
+          await sleep(140);
+          ins.classList.remove('is-typing');
+
+          for (let i = 0; i < 8; i++){
+            ins.style.fontWeight = i % 2 === 0 ? '400' : '800';
+            await sleep(92);
+          }
+          ins.style.fontWeight = '800';
+          await sleep(90);
+
+          ins.classList.add('is-stretching');
+          await sleep(520);
+          burst.classList.add('play');
+          await sleep(140);
+          ins.classList.remove('is-stretching');
+          ins.style.transform = '';
+          await sleep(110);
+
+          space.classList.add('is-visible');
+          await sleep(380);
+          sub.classList.add('is-visible');
+        }
+
+        runHeroIntro();
+      })();
+
       (function(){
         const grid = document.getElementById('preview-grid');
         for (let i = 0; i < 84; i++){
