@@ -325,6 +325,11 @@
         const frontLight = new THREE.DirectionalLight(0xffffff, 0.34);
         frontLight.position.set(0, 0.3, 2.2);
         scene.add(frontLight);
+        const spotLight = new THREE.SpotLight(0xffffff, 0.55, 8, Math.PI / 6, 0.35, 1);
+        spotLight.position.set(0.3, 1.7, 1.9);
+        spotLight.target.position.set(0, 0, 0);
+        scene.add(spotLight);
+        scene.add(spotLight.target);
 
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;

@@ -1314,8 +1314,10 @@ async function openCharmPreview3D(options = {}){
       .style('animation','rewardShine 1800ms ease-in-out infinite');
 
     const rewardScore = Math.max(0, 1200 - (lastBlocks || 0) * 20);
+    const rawDesigner = (lastName || playerName || 'PLAYER').toUpperCase();
+    const designerValue = isCompactReward ? rawDesigner.slice(0, 7) : rawDesigner.slice(0, 12);
     const chips = [
-      { label:'DESIGNER', value:(lastName || playerName || 'PLAYER').toUpperCase(), color:'#44f1ff', delay:80 },
+      { label:'DESIGNER', value:designerValue, color:'#44f1ff', delay:80 },
       { label:'EMPTY BLOCKS', value:String(lastBlocks || 0), color:'#ff6adf', delay:180 },
       { label:'MERCH SCORE', value:String(rewardScore), color:'#83ff4a', delay:280 }
     ];
