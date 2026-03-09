@@ -150,6 +150,7 @@
         position:relative;
         overflow:hidden;
         background:#0a125f;
+        transition:min-height .32s cubic-bezier(.2,.9,.2,1), height .32s cubic-bezier(.2,.9,.2,1), background .2s ease;
       }
       .preview-grid{
         position:absolute;
@@ -185,6 +186,17 @@
         opacity:0;
         transform: translateY(-14px) scale(.98);
         clip-path: inset(0 0 100% 0);
+      }
+      .preview-side.is-closed{
+        align-self:start;
+        min-height:12px;
+        height:12px;
+        background:transparent;
+        border-top:2px solid var(--line);
+      }
+      .preview-side.is-closed .preview-grid{
+        opacity:0 !important;
+        display:none;
       }
       .preview-frame{
         position:absolute;
@@ -224,6 +236,11 @@
           height:42vh;
           border-bottom:2px solid var(--line);
           order:-1;
+        }
+        .preview-side.is-closed{
+          min-height:10px;
+          height:10px;
+          border-bottom:2px solid var(--line);
         }
         .index-side{ border-right:none; }
       }
