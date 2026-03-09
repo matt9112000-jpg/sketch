@@ -490,7 +490,7 @@
           const centered = new THREE.Box3().setFromObject(root);
           const center = centered.getCenter(new THREE.Vector3());
           root.position.sub(center);
-          root.position.x += 1.08; // 100% more right than previous movement
+          root.position.x += (window.innerWidth <= 700) ? 0.0 : 1.08;
           root.position.y += 0.0;
           root.updateWorldMatrix(true, true);
           focusControlsOnMeshes(root, parts);

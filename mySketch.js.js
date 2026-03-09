@@ -337,6 +337,14 @@ function setup(){
       inputComplete = true; gameState = 'playing'; nameInput.hide(); spawnPiece();
     }
   });
+  if (PREVIEW_MODE){
+    // Home-page iframe preview: skip IG entry and keep it non-interactive.
+    playerName = 'PREVIEW';
+    inputComplete = true;
+    gameState = 'playing';
+    nameInput.hide();
+    spawnPiece();
+  }
 }
 function windowResized(){ calculateLayout(); if(!inputComplete) centerInput(); positionMarquees(); clearButtons(); }
 function centerInput(){
