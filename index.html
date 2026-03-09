@@ -174,11 +174,17 @@
         background:#070d42;
         opacity:0;
         transform: translateX(18px) scale(.98);
-        transition:opacity .2s linear, transform .28s cubic-bezier(.2,.9,.2,1);
+        clip-path: inset(0 0 0 0);
+        transition:opacity .2s linear, transform .28s cubic-bezier(.2,.9,.2,1), clip-path .34s cubic-bezier(.2,.9,.2,1);
       }
       .preview-card.visible{
         opacity:1;
         transform: translateX(0) scale(1);
+      }
+      .preview-side.is-closed .preview-card{
+        opacity:0;
+        transform: translateY(-14px) scale(.98);
+        clip-path: inset(0 0 100% 0);
       }
       .preview-frame{
         position:absolute;
@@ -278,6 +284,7 @@
 
       (function(){
         const rows = Array.from(document.querySelectorAll('.row'));
+        const previewSide = document.querySelector('.preview-side');
         const card = document.getElementById('preview-card');
         const frame = document.getElementById('preview-frame');
         const title = document.getElementById('preview-title');
@@ -294,11 +301,13 @@
             frame.setAttribute('src', previewHref);
           }
           document.getElementById('preview-grid').style.opacity = '0';
+          previewSide && previewSide.classList.remove('is-closed');
           card.classList.add('visible');
         }
         function closePreview(){
           document.getElementById('preview-grid').style.opacity = '1';
           card.classList.remove('visible');
+          previewSide && previewSide.classList.add('is-closed');
           rows.forEach(r => r.classList.remove('active'));
         }
 
@@ -308,6 +317,7 @@
           row.addEventListener('focus', ()=>setPreview(row));
           row.addEventListener('touchstart', ()=>setPreview(row), { passive:true });
         });
+        if (previewSide) previewSide.classList.add('is-closed');
 
         document.body.classList.add('is-ready');
         document.querySelectorAll('a[data-soft-nav]').forEach(link=>{
