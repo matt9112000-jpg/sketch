@@ -560,7 +560,13 @@
         };
 
         const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const params = new URLSearchParams(window.location.search);
+        const introFromLink = params.get('intro') === '1';
         if (reduce){
+          showFinalHeroState();
+          return;
+        }
+        if (!introFromLink){
           showFinalHeroState();
           return;
         }
@@ -620,12 +626,6 @@
         }
 
         runHeroIntro();
-        window.addEventListener('pageshow', (ev)=>{
-          if (ev.persisted){
-            if (reduce) showFinalHeroState();
-            else runHeroIntro();
-          }
-        });
       })();
 
       (function(){
