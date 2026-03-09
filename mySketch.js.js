@@ -593,7 +593,7 @@ function renderLeaderboard(){
   text('LEADERBOARD', width/2, titleY);
   fill('#ffd9f8');
   textSize(isCompactLb ? max(10, innerW * 0.022) : max(12, innerW * 0.025));
-  text('Top survivors in insufficient space', width/2, titleY + titleSize + (isCompactLb ? 4 : 10));
+  text('Top survivors in insufficient space', width/2, titleY + titleSize + (isCompactLb ? 12 : 14));
 
   const btnBaseY = isCompactLb ? 16 : 20;
   if (SHOW_CLEAR && !select('#clearBtn')) createStyledButton('clearBtn','Clear', canvasX + 12, canvasY + btnBaseY, clearScores);
@@ -691,18 +691,20 @@ function renderLeaderboard(){
       textSize(nameSize);
       textAlign(CENTER, TOP);
       textStyle(BOLD);
-      text(`#${rank}  ${displayName}`, bx + bw/2, nameY);
+      text(isCompactLb ? displayName : `#${rank}  ${displayName}`, bx + bw/2, nameY);
       fill('#f6f8ff');
       textSize(scoreSize);
       text(`Empty Blocks: ${rec.score}`, bx + bw/2, scoreY);
 
       // Medal badge
-      fill(rankColor);
-      circle(bx + bw - 22, by + 18, isCompactLb ? 20 : 24);
-      fill('#10131f');
-      textAlign(CENTER, CENTER);
-      textSize(isCompactLb ? 12 : 14);
-      text(String(rank), bx + bw - 22, by + 18);
+      if (!isCompactLb){
+        fill(rankColor);
+        circle(bx + bw - 22, by + 18, 24);
+        fill('#10131f');
+        textAlign(CENTER, CENTER);
+        textSize(14);
+        text(String(rank), bx + bw - 22, by + 18);
+      }
 
       if (rec.snapshot){
         drawSnapshot(rec.snapshot, tx, ty, cell);

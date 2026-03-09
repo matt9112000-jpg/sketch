@@ -331,11 +331,6 @@
           const offset = new THREE.Vector3().subVectors(camera.position, controls.target);
           controls.target.copy(center);
           camera.position.copy(center.clone().add(offset));
-          if (isMobile){
-            // Nudge view so model appears more to the right on phone.
-            controls.target.x -= 0.2;
-            camera.position.x -= 0.2;
-          }
           controls.update();
         }
 
