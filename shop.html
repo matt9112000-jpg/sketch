@@ -262,6 +262,9 @@
     <script>
       (function(){
         const PREVIEW_MODE = new URLSearchParams(window.location.search).has('preview');
+        // Set your payment/checkout endpoint here.
+        // You can also set window.CHECKOUT_URL before this script runs.
+        const CHECKOUT_URL = window.CHECKOUT_URL || '';
         function enableSoftNav(){
           document.body.classList.add('is-ready');
           document.querySelectorAll('a[data-soft-nav]').forEach((link)=>{
@@ -280,6 +283,16 @@
         const shell = document.getElementById('viewer-shell');
         const info = document.getElementById('product-info');
         const mount = document.getElementById('box-viewer');
+        const addCartBtn = document.getElementById('add-cart-btn');
+        if (addCartBtn){
+          addCartBtn.addEventListener('click', ()=>{
+            if (!CHECKOUT_URL){
+              alert('Checkout URL not set. Please set CHECKOUT_URL in shop.html.');
+              return;
+            }
+            window.location.href = CHECKOUT_URL;
+          });
+        }
         if (!mount || !stage || !shell || !info || !window.THREE || !THREE.GLTFLoader || !THREE.OrbitControls) return;
         if (PREVIEW_MODE){
           const homeBtn = document.querySelector('.home-btn');
@@ -300,16 +313,12 @@
         renderer.outputColorSpace = THREE.SRGBColorSpace;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = 0.86;
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         mount.appendChild(renderer.domElement);
 
         scene.add(new THREE.HemisphereLight(0xffffff, 0x97a3b5, 0.92));
         scene.add(new THREE.AmbientLight(0xffffff, 0.42));
         const key = new THREE.DirectionalLight(0xffffff, 0.58);
         key.position.set(-1.1, 1.35, 1.3);
-        key.castShadow = true;
-        key.shadow.mapSize.set(1024, 1024);
         scene.add(key);
         const fill = new THREE.DirectionalLight(0xecf3ff, 0.42);
         fill.position.set(1.35, 0.8, 1.45);
@@ -332,9 +341,6 @@
         const spotLight = new THREE.SpotLight(0xffffff, 1.2, 10, Math.PI / 7, 0.55, 1.1);
         spotLight.position.set(0.2, 2.35, 1.25);
         spotLight.target.position.set(0, 0, 0);
-        spotLight.castShadow = true;
-        spotLight.shadow.mapSize.set(1024, 1024);
-        spotLight.shadow.bias = -0.0002;
         scene.add(spotLight);
         scene.add(spotLight.target);
         const rimSpot = new THREE.SpotLight(0xb9c8ff, 0.36, 9, Math.PI / 8, 0.45, 1.2);
@@ -351,14 +357,6 @@
         stageGlow.rotation.x = -Math.PI / 2;
         stageGlow.position.set(0.0, -0.56, 0.02);
         scene.add(stageGlow);
-        const shadowCatcher = new THREE.Mesh(
-          new THREE.PlaneGeometry(4.2, 4.2),
-          new THREE.ShadowMaterial({ opacity: 0.22 })
-        );
-        shadowCatcher.rotation.x = -Math.PI / 2;
-        shadowCatcher.position.set(0, -0.57, 0);
-        shadowCatcher.receiveShadow = true;
-        scene.add(shadowCatcher);
 
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
@@ -515,17 +513,14 @@
           const size = box.getSize(new THREE.Vector3());
           const maxDim = Math.max(size.x, size.y, size.z) || 1;
           root.scale.setScalar(0.799 / maxDim); // 15% smaller than previous size
-          root.traverse((o)=>{
-            if (!o.isMesh) return;
-            o.castShadow = true;
-            o.receiveShadow = true;
-          });
           root.updateWorldMatrix(true, true);
           const centered = new THREE.Box3().setFromObject(root);
           const center = centered.getCenter(new THREE.Vector3());
           root.position.sub(center);
           root.position.x += (window.innerWidth <= 700) ? 0.0 : 1.08;
           root.position.y += 0.0;
+          stageGlow.position.x = root.position.x;
+          stageGlow.position.z = root.position.z;
           root.updateWorldMatrix(true, true);
           focusControlsOnMeshes(root, parts);
 
