@@ -3,343 +3,263 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Home</title>
+    <title>Insufficient Space - Archive</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,800&family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap"
       rel="stylesheet"
     />
     <style>
       :root{
-        --bg:#f4f4f8;
-        --text:#101018;
-        --muted:#73738a;
-        --accent:#ff1744;
-        --ring: rgba(255,23,68,.35);
-        --border:#e0e0ea;
+        --mustard:#b3bd51;
+        --cobalt:#3854e4;
+        --ink:#0f1648;
+        --font-sans:'Syne', sans-serif;
+        --font-mono:'Space Mono', monospace;
+        --font-serif:'Playfair Display', serif;
       }
-      *{ box-sizing:border-box; }
-      html, body{ height:100%; }
+      *{ box-sizing:border-box; margin:0; padding:0; }
+      html,body{ height:100%; }
       body{
-        margin:0;
-        font-family: Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-        color: var(--text);
-        background: var(--bg);
+        background:var(--mustard);
+        color:var(--cobalt);
+        font-family:var(--font-sans);
+        opacity:0;
+        transition:opacity 220ms ease;
+      }
+      body.is-ready{ opacity:1; }
+      body.is-exiting{ opacity:0; }
+
+      .marquee-wrap{
+        width:100%;
         overflow:hidden;
-        opacity:0;
-        transition: opacity 260ms ease-out;
+        white-space:nowrap;
+        border-bottom:2px solid var(--cobalt);
+        background:var(--cobalt);
+        color:var(--mustard);
+        font:700 12px/1 var(--font-mono);
+        letter-spacing:.08em;
+        text-transform:uppercase;
+        padding:.45rem 0;
       }
-      body.is-ready{
-        opacity:1;
+      .marquee{
+        display:inline-block;
+        animation:scroll 18s linear infinite;
       }
-      body.is-exiting{
-        opacity:0;
-      }
-      .page{
-        min-height:100%;
-        max-width:1040px;
-        margin:0 auto;
-        padding: 32px 18px 40px;
-      }
+      .marquee span{ margin-right:2.2rem; }
+      @keyframes scroll{ from{ transform:translateX(0);} to{ transform:translateX(-50%);} }
+
       header{
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        margin-bottom:20px;
-        gap:10px;
+        border-bottom:2px solid var(--cobalt);
+        padding:2.1rem 1.5rem 1.7rem;
+        text-align:center;
       }
-      .logo{
-        font-weight:800;
-        letter-spacing:.18em;
+      .title{
+        font-size:clamp(2.4rem, 8vw, 6.2rem);
         text-transform:uppercase;
-        font-size:12px;
+        letter-spacing:-.03em;
+        line-height:.94;
+        color:var(--cobalt);
       }
-      .nav-links{
-        display:flex;
-        gap:12px;
-        font-size:12px;
+      .title em{
+        font-family:var(--font-serif);
+        font-style:italic;
+      }
+
+      main{
+        display:grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        min-height:calc(100vh - 126px);
+      }
+
+      .index-side{
+        border-right:2px solid var(--cobalt);
+      }
+      .index-head{
+        display:grid;
+        grid-template-columns:60px minmax(0,1fr) 120px;
+        border-bottom:2px solid var(--cobalt);
+        padding:.8rem 1rem;
+        font:700 11px/1 var(--font-mono);
         text-transform:uppercase;
-        letter-spacing:.16em;
+        letter-spacing:.08em;
       }
-      .nav-links a{
-        text-decoration:none;
-        color:var(--muted);
-      }
-      .nav-links a:hover{
-        color:var(--text);
-      }
-      .hero-title{
-        font-size: clamp(30px, 5vw, 46px);
-        font-weight:800;
-        letter-spacing:-0.04em;
-        margin: 4px 0 4px;
-      }
-      .hero-sub{
-        margin:0;
-        color:var(--muted);
-        max-width:36rem;
-        font-size:14px;
-      }
-      .list{
-        margin-top:26px;
-        border-top:1px solid var(--border);
+      .rows{
+        display:flex;
+        flex-direction:column;
       }
       .row{
         display:grid;
-        grid-template-columns: 120px 54px minmax(0,1fr);
+        grid-template-columns:60px minmax(0,1fr) 120px;
         align-items:center;
-        gap:10px;
-        padding: 14px 12px;
-        border:1px solid var(--border);
-        border-radius:16px;
-        margin-top:12px;
+        gap:.5rem;
+        border-bottom:2px solid var(--cobalt);
+        text-decoration:none;
+        color:var(--cobalt);
+        padding:1rem;
+        transition:background .12s linear, color .12s linear;
+      }
+      .row:hover, .row.active{
+        background:var(--cobalt);
+        color:var(--mustard);
+      }
+      .row .num{
+        font:700 13px/1 var(--font-mono);
+      }
+      .row .name{
+        font:800 clamp(1.25rem, 3.2vw, 2.9rem)/.95 var(--font-sans);
+        text-transform:uppercase;
+        letter-spacing:-.02em;
+      }
+      .row .meta{
+        text-align:right;
+        font:700 11px/1.35 var(--font-mono);
+        text-transform:uppercase;
+      }
+
+      .preview-side{
         position:relative;
         overflow:hidden;
       }
-      .row:hover{
-        background:#ffffff;
-      }
-      .row-introduction{
-        background:
-          radial-gradient(280px 120px at 92% 12%, rgba(26,38,255,.13), transparent 70%),
-          radial-gradient(240px 130px at 8% 92%, rgba(255,70,34,.12), transparent 70%),
-          #ffffff;
-      }
-      .row-introduction::before{
-        content:"";
+      .preview-grid{
         position:absolute;
-        left:0;
-        top:0;
-        bottom:0;
-        width:5px;
-        background: linear-gradient(180deg, #1A26FF, #FF3BDA, #FF4622);
+        inset:-8%;
+        display:grid;
+        grid-template-columns:repeat(6,1fr);
+        gap:14px;
+        transform:skewY(-8deg);
+        transition:opacity .22s ease;
       }
-      .row-index{
-        font-size:11px;
-        color:var(--muted);
-        letter-spacing:.16em;
-        text-transform:uppercase;
+      .preview-grid i{
+        display:block;
+        background:var(--cobalt);
+        clip-path:polygon(12% 0,100% 0,88% 100%,0 100%);
+        height:42px;
       }
-      .row-main{
-        display:flex;
-        flex-direction:column;
-        gap:3px;
-      }
-      .row-title{
-        font-weight:700;
-        font-size:15px;
-        line-height:1.2;
-      }
-      .row-meta{
-        font-size:12px;
-        color:var(--muted);
-      }
-      .pill{
-        display:inline-block;
-        padding: 5px 9px;
-        border-radius:999px;
-        font-size:10px;
-        letter-spacing:.18em;
-        text-transform:uppercase;
-        border:1px solid var(--border);
-        color:var(--text);
-        background:#fff;
-      }
-      .pill-live{
-        border-color:var(--accent);
-        color:var(--accent);
-      }
-      .row-vibe{
-        margin-top:5px;
-      }
-      .row-link{
+
+      .preview-card{
         position:absolute;
         inset:0;
+        display:flex;
+        flex-direction:column;
+        justify-content:flex-end;
+        gap:.5rem;
+        padding:1.2rem;
+        background:
+          linear-gradient(transparent 45%, rgba(0,0,0,.56)),
+          var(--preview-image, linear-gradient(135deg,#1a26ff,#ff3bda));
+        background-size:cover;
+        background-position:center;
+        color:#f3f6ff;
+        opacity:0;
+        transition:opacity .18s linear;
       }
-      .row-wrap{
-        position:relative;
+      .preview-card.visible{ opacity:1; }
+      .preview-kicker{
+        font:700 11px/1 var(--font-mono);
+        letter-spacing:.12em;
+        text-transform:uppercase;
       }
-      .thumb3d{
-        width:120px;
-        height:80px;
-        border-radius:12px;
-        border:1px solid var(--border);
-        background:#ffffff;
-        overflow:hidden;
+      .preview-title{
+        font:800 clamp(1.6rem, 4vw, 3rem)/.95 var(--font-sans);
+        text-transform:uppercase;
       }
-      .thumb3d canvas{
-        width:100%;
-        height:100%;
-        display:block;
+      .preview-desc{
+        font:400 13px/1.45 var(--font-sans);
+        max-width:34ch;
       }
-      @media (max-width: 680px){
-        .row{
-          grid-template-columns: 84px 36px minmax(0,1fr);
-          gap:8px;
-          padding:10px 10px;
+
+      @media (max-width: 920px){
+        main{ grid-template-columns:1fr; }
+        .preview-side{
+          height:42vh;
+          border-bottom:2px solid var(--cobalt);
+          order:-1;
         }
-        .thumb3d{
-          width:84px;
-          height:56px;
-        }
-        .row-title{
-          font-size:13px;
-        }
+        .index-side{ border-right:none; }
       }
     </style>
   </head>
   <body>
-    <div class="page">
-      <header>
-        <div class="logo">INSUFFICIENT&nbsp;SPACE</div>
-        <nav class="nav-links" aria-label="Global">
-          <a href="./shop.html" data-soft-nav>Shop</a>
-          <a href="mailto:">Contact</a>
-        </nav>
-      </header>
-
-      <section aria-label="Intro">
-        <h1 class="hero-title">Experiments, games &amp; other bad ideas.</h1>
-        <p class="hero-sub">
-          A small file of interactive projects. Things may be broken, weird, or both.
-        </p>
-      </section>
-
-      <section class="list" aria-label="Projects">
-        <div class="row-wrap" data-project-row>
-          <div class="row row-introduction">
-            <div class="thumb3d" data-project-3d></div>
-            <div class="row-index">001</div>
-            <div class="row-main">
-              <div class="row-title">INTRODUCTION</div>
-              <div class="row-vibe"><span class="pill">Arcade / Metallic / Neon</span></div>
-            </div>
-          </div>
-          <a class="row-link" href="./sketch.html" data-soft-nav aria-label="Open Insufficient Space"></a>
-        </div>
-        <!-- Add more rows here later -->
-      </section>
-
+    <div class="marquee-wrap">
+      <div class="marquee">
+        <span>Archive index online</span><span>*</span><span>Insufficient Space project file</span><span>*</span><span>Hover to preview</span><span>*</span>
+        <span>Archive index online</span><span>*</span><span>Insufficient Space project file</span><span>*</span><span>Hover to preview</span><span>*</span>
+      </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+    <header>
+      <h1 class="title">Insufficient <em>Space</em></h1>
+    </header>
+
+    <main>
+      <section class="index-side" aria-label="Project Index">
+        <div class="index-head">
+          <span>ID</span><span>Project</span><span style="text-align:right;">Type</span>
+        </div>
+        <div class="rows" id="rows">
+          <a class="row active" data-preview-title="Introduction" data-preview-desc="Core game page with leaderboard, charm build, and merch unlock result view." data-preview-image="linear-gradient(130deg,#1a26ff 0%,#ff3bda 60%,#ff4622 100%)" href="./sketch.html" data-soft-nav>
+            <span class="num">01</span><span class="name">Introduction</span><span class="meta">Game<br/>Live</span>
+          </a>
+          <a class="row" data-preview-title="Shop" data-preview-desc="Product display with metallic model viewer, hover activation, and item card info." data-preview-image="linear-gradient(140deg,#2d3347 0%,#67708d 45%,#c9d0df 100%)" href="./shop.html" data-soft-nav>
+            <span class="num">02</span><span class="name">Shop</span><span class="meta">Viewer<br/>Live</span>
+          </a>
+        </div>
+      </section>
+
+      <section class="preview-side" aria-label="Hover Preview">
+        <div class="preview-grid" id="preview-grid"></div>
+        <div class="preview-card visible" id="preview-card">
+          <div class="preview-kicker">Hover Preview</div>
+          <div class="preview-title" id="preview-title">Introduction</div>
+          <p class="preview-desc" id="preview-desc">Core game page with leaderboard, charm build, and merch unlock result view.</p>
+        </div>
+      </section>
+    </main>
+
     <script>
       (function(){
-        function enableSoftNav(){
-          document.body.classList.add('is-ready');
-          const links = document.querySelectorAll('a[data-soft-nav]');
-          links.forEach(link=>{
-            link.addEventListener('click', (ev)=>{
-              const href = link.getAttribute('href');
-              const target = link.getAttribute('target');
-              if (!href || href.startsWith('#') || target === '_blank') return;
-              ev.preventDefault();
-              document.body.classList.add('is-exiting');
-              setTimeout(()=>{ window.location.href = href; }, 240);
-            });
-          });
-        }
-        if (document.readyState === 'loading'){
-          document.addEventListener('DOMContentLoaded', enableSoftNav);
-        } else {
-          enableSoftNav();
+        const grid = document.getElementById('preview-grid');
+        for (let i = 0; i < 84; i++){
+          const el = document.createElement('i');
+          if (i % 5 === 0) el.style.height = '56px';
+          if (i % 7 === 0) el.style.transform = 'translateX(12%)';
+          grid.appendChild(el);
         }
       })();
 
       (function(){
-        if (!window.THREE) return;
-        const previews = [];
+        const rows = Array.from(document.querySelectorAll('.row'));
+        const card = document.getElementById('preview-card');
+        const title = document.getElementById('preview-title');
+        const desc = document.getElementById('preview-desc');
 
-        function createPreview(el){
-          const width = el.clientWidth || 120;
-          const height = el.clientHeight || 80;
-          const scene = new THREE.Scene();
-          scene.background = new THREE.Color(0xffffff);
+        function setPreview(row){
+          rows.forEach(r => r.classList.remove('active'));
+          row.classList.add('active');
+          title.textContent = row.dataset.previewTitle || 'Project';
+          desc.textContent = row.dataset.previewDesc || '';
+          card.style.setProperty('--preview-image', row.dataset.previewImage || 'linear-gradient(135deg,#1a26ff,#ff3bda)');
+          card.classList.add('visible');
+        }
 
-          const camera = new THREE.PerspectiveCamera(35, width/height, 0.1, 100);
-          camera.position.set(2.2, 2.0, 3.5);
-          camera.lookAt(0,0,0);
+        rows.forEach((row)=>{
+          row.addEventListener('mouseenter', ()=>setPreview(row));
+          row.addEventListener('focus', ()=>setPreview(row));
+          row.addEventListener('touchstart', ()=>setPreview(row), { passive:true });
+        });
 
-          const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:false });
-          renderer.setSize(width, height);
-          renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-          el.innerHTML = '';
-          el.appendChild(renderer.domElement);
-
-          const light1 = new THREE.DirectionalLight(0xffffff, 0.9);
-          light1.position.set(3,4,5);
-          scene.add(light1);
-          const light2 = new THREE.DirectionalLight(0xffffff, 0.5);
-          light2.position.set(-2,-3,-4);
-          scene.add(light2);
-          scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-
-          const group = new THREE.Group();
-          const colors = [0xFCC730,0x1A26FF,0xFF4622,0xFF3BDA,0x6DFF69,0xFF99B1];
-          const shape = [
-            [0,0],[1,0],[0,1],[1,1]
-          ];
-          const geo = new THREE.BoxGeometry(0.7,0.35,0.7);
-          shape.forEach(([x,y], idx)=>{
-            const mat = new THREE.MeshStandardMaterial({ color: colors[idx % colors.length] });
-            const m = new THREE.Mesh(geo, mat);
-            m.position.set((x-0.5)*0.9, (y-0.5)*0.9, 0);
-            group.add(m);
+        document.body.classList.add('is-ready');
+        document.querySelectorAll('a[data-soft-nav]').forEach(link=>{
+          link.addEventListener('click', (ev)=>{
+            const href = link.getAttribute('href');
+            if (!href || href.startsWith('#')) return;
+            ev.preventDefault();
+            document.body.classList.add('is-exiting');
+            setTimeout(()=>{ window.location.href = href; }, 190);
           });
-          scene.add(group);
-
-          const preview = {
-            el,
-            scene,
-            camera,
-            renderer,
-            group,
-            t: Math.random()*10,
-            hover:false
-          };
-          previews.push(preview);
-
-          const row = el.closest('[data-project-row]');
-          if (row){
-            row.addEventListener('mouseenter', ()=>{ preview.hover = true; });
-            row.addEventListener('mouseleave', ()=>{ preview.hover = false; });
-          }
-        }
-
-        function animate(){
-          requestAnimationFrame(animate);
-          previews.forEach(p=>{
-            p.t += p.hover ? 0.08 : 0.03;
-            const baseRot = p.hover ? 0.9 : 0.4;
-            p.group.rotation.x = p.t * baseRot * 0.6;
-            p.group.rotation.y = p.t * baseRot;
-            p.group.position.y = Math.sin(p.t*1.4)*0.25;
-            p.renderer.render(p.scene, p.camera);
-          });
-        }
-
-        function init(){
-          document.querySelectorAll('[data-project-3d]').forEach(el=>createPreview(el));
-          if (previews.length){
-            animate();
-            window.addEventListener('resize', ()=>{
-              previews.forEach(p=>{
-                const w = p.el.clientWidth || 120;
-                const h = p.el.clientHeight || 80;
-                p.camera.aspect = w/h;
-                p.camera.updateProjectionMatrix();
-                p.renderer.setSize(w,h);
-              });
-            });
-          }
-        }
-
-        if (document.readyState === 'loading'){
-          document.addEventListener('DOMContentLoaded', init);
-        } else {
-          init();
-        }
+        });
       })();
     </script>
   </body>
