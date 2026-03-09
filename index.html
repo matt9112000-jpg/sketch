@@ -104,6 +104,11 @@
         transform-origin:left center;
         will-change:transform, opacity;
       }
+      .ins-letter{
+        display:inline-block;
+        transform-origin:50% 100%;
+        will-change:transform;
+      }
       .word-ins.is-typing::after{
         content:'';
         position:absolute;
@@ -117,13 +122,14 @@
       @keyframes caretBlink{
         50%{ opacity:0; }
       }
-      .word-ins.is-stretching{
-        animation:insStretch .62s cubic-bezier(.22,.9,.15,1) forwards;
+      .word-ins.letters-stretch .ins-letter{
+        animation:insLetterStretch .78s cubic-bezier(.2,.92,.24,1) forwards;
+        animation-delay:calc(var(--i, 0) * 34ms);
       }
-      @keyframes insStretch{
-        0%{ transform:scale(1,1); }
-        52%{ transform:scale(1.7,1.35); }
-        100%{ transform:scale(2.15,1.78); opacity:1; }
+      @keyframes insLetterStretch{
+        0%{ transform:scale(1,1) translateY(0); }
+        62%{ transform:scale(var(--sx,1.16), var(--sy,1.24)) translateY(var(--ty,-0.03em)); }
+        100%{ transform:scale(var(--sx,1.16), var(--sy,1.24)) translateY(var(--ty,-0.03em)); }
       }
       .title em{
         font-family:var(--font-serif);
@@ -441,13 +447,9 @@
           left:54%;
           top:24%;
         }
-        .word-ins.is-stretching{
-          animation:insStretchMobile .55s cubic-bezier(.22,.9,.15,1) forwards;
-        }
-        @keyframes insStretchMobile{
-          0%{ transform:scale(1,1); }
-          52%{ transform:scale(1.2,1.12); }
-          100%{ transform:scale(1.42,1.3); opacity:1; }
+        .word-ins.letters-stretch .ins-letter{
+          animation-duration:.68s;
+          animation-delay:calc(var(--i, 0) * 28ms);
         }
         .title-sub{
           margin-top:.62rem;
@@ -535,13 +537,6 @@
         const heroTitle = document.getElementById('hero-title');
         const bannerLinks = document.getElementById('banner-links');
         if (!ins || !space || !burst || !sub || !heroTitle || !bannerLinks) return;
-        const INTRO_SEEN_KEY = 'insufficient_space_home_intro_seen_v1';
-        const markIntroSeen = ()=>{
-          try { localStorage.setItem(INTRO_SEEN_KEY, '1'); } catch (_err) {}
-        };
-        const hasSeenIntro = ()=>{
-          try { return localStorage.getItem(INTRO_SEEN_KEY) === '1'; } catch (_err) { return false; }
-        };
         const showFinalHeroState = ()=>{
           ins.textContent = 'INSUFFICIENT';
           space.classList.remove('is-covering');
@@ -555,11 +550,6 @@
         const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (reduce){
           showFinalHeroState();
-          markIntroSeen();
-          return;
-        }
-        if (hasSeenIntro()){
-          showFinalHeroState();
           return;
         }
 
@@ -568,10 +558,22 @@
         async function runHeroIntro(){
           bannerLinks.classList.add('intro-glass');
           const text = 'INSUFFICIENT';
-          ins.textContent = '';
+          const isMobile = window.innerWidth <= 680;
+          const stretchProfiles = isMobile
+            ? [[1.08,1.14,-0.01],[1.12,1.18,-0.02],[1.1,1.24,-0.03],[1.14,1.2,-0.01],[1.09,1.28,-0.03],[1.16,1.16,-0.02],[1.11,1.22,-0.02],[1.13,1.17,-0.01],[1.1,1.25,-0.03],[1.14,1.19,-0.02],[1.09,1.23,-0.03],[1.12,1.17,-0.01]]
+            : [[1.14,1.24,-0.02],[1.2,1.34,-0.05],[1.16,1.4,-0.07],[1.24,1.26,-0.03],[1.18,1.48,-0.08],[1.26,1.22,-0.03],[1.16,1.38,-0.06],[1.22,1.28,-0.04],[1.17,1.42,-0.06],[1.24,1.24,-0.03],[1.16,1.36,-0.05],[1.2,1.26,-0.04]];
+          ins.innerHTML = '';
           ins.classList.add('is-typing');
           for (let i = 0; i < text.length; i++){
-            ins.textContent += text[i];
+            const letter = document.createElement('span');
+            const [sx, sy, ty] = stretchProfiles[i] || stretchProfiles[stretchProfiles.length - 1];
+            letter.className = 'ins-letter';
+            letter.textContent = text[i];
+            letter.style.setProperty('--i', String(i));
+            letter.style.setProperty('--sx', String(sx));
+            letter.style.setProperty('--sy', String(sy));
+            letter.style.setProperty('--ty', `${ty}em`);
+            ins.appendChild(letter);
             await sleep(176);
           }
           await sleep(260);
@@ -585,11 +587,11 @@
           ins.style.fontWeight = '800';
           await sleep(170);
 
-          ins.classList.add('is-stretching');
-          await sleep(700);
+          ins.classList.add('letters-stretch');
+          await sleep(760);
           burst.classList.add('play');
           await sleep(210);
-          ins.classList.remove('is-stretching');
+          ins.classList.remove('letters-stretch');
           ins.style.transform = '';
           await sleep(170);
 
@@ -602,7 +604,6 @@
           bannerLinks.classList.remove('intro-glass');
           await sleep(260);
           document.body.classList.add('intro-done');
-          markIntroSeen();
         }
 
         runHeroIntro();

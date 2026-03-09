@@ -408,7 +408,7 @@
         renderer.setSize(mount.clientWidth, mount.clientHeight);
         renderer.outputColorSpace = THREE.SRGBColorSpace;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1.22;
+        renderer.toneMappingExposure = 1.34;
         mount.appendChild(renderer.domElement);
 
         scene.add(new THREE.HemisphereLight(0xffffff, 0x97a3b5, 1.35));
@@ -487,12 +487,12 @@
         }
 
         const silverMat = new THREE.MeshPhysicalMaterial({
-          color: '#bcc3d2',
-          metalness: 0.96,
-          roughness: 0.16,
-          clearcoat: 0.72,
-          clearcoatRoughness: 0.08,
-          envMapIntensity: 1.32
+          color: '#eef3ff',
+          metalness: 0.94,
+          roughness: 0.12,
+          clearcoat: 0.82,
+          clearcoatRoughness: 0.06,
+          envMapIntensity: 1.62
         });
 
         function getPartIdFromName(name){
