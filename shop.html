@@ -517,20 +517,16 @@
         });
         const stickerTex = new THREE.TextureLoader().load('./sticker-shop001.png');
         stickerTex.colorSpace = THREE.SRGBColorSpace;
-        stickerTex.flipY = false;
-        stickerTex.wrapS = THREE.RepeatWrapping;
-        stickerTex.wrapT = THREE.RepeatWrapping;
-        stickerTex.repeat.set(1, 1);
-        stickerTex.offset.set(0, 0);
+        // Use direct image mapping for maximum visibility on sticker mesh.
+        stickerTex.flipY = true;
+        stickerTex.wrapS = THREE.ClampToEdgeWrapping;
+        stickerTex.wrapT = THREE.ClampToEdgeWrapping;
         stickerTex.rotation = 0;
-        const stickerMat = new THREE.MeshPhysicalMaterial({
+        stickerTex.needsUpdate = true;
+        const stickerMat = new THREE.MeshBasicMaterial({
           map: stickerTex,
           color: '#ffffff',
-          metalness: 0.2,
-          roughness: 0.34,
-          clearcoat: 0.42,
-          clearcoatRoughness: 0.18,
-          envMapIntensity: 1.2,
+          transparent: true,
           side: THREE.DoubleSide
         });
 
