@@ -1112,7 +1112,7 @@ function makeResultVoxelGroup(snapshot, panelRoot, cubeTemplate){
   }
   group.rotation.set(Math.PI / 2, Math.PI, 0);
   group.position.y += z + panelBox.max.y + cell * 0.12;
-  group.position.add(new THREE.Vector3(45, -105, -18));
+  group.position.add(new THREE.Vector3(45, -107, -18));
   return group.children.length ? group : null;
 }
 
@@ -1294,7 +1294,7 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
     root.position.sub(postCenter);
     if (mode === 'charm'){
       const isMobileShift = windowWidth <= 700;
-      root.position.y += postSize.y * (isMobileShift ? -0.15 : 0.00);
+      root.position.y += postSize.y * (isMobileShift ? -0.23 : -0.08);
     }
 
     let parts = forcedParts || { '1':[], '2':[], '3':[], other:[] };
