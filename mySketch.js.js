@@ -5,6 +5,7 @@ const BORDER_THICK = 12, BORDER_HALF = BORDER_THICK/2;
 let cols = 6, rows = 8;
 let blockSize, innerW, innerH;
 let board, currentPiece;
+let emptyCells = cols * rows;
 let dropCounter = 0, dropInterval = 800, lastTime = 0;
 
 let canvasX = 0, canvasY = 0;
@@ -125,7 +126,6 @@ let charmCloseHook = null;
 const PLAYED_KEY = 'tetris_played_count';
 let playedCount = 0;
 let cloudPlayedCount = null;
-let activityFeed = [];
 let lastActivityState = '';
 let lastActivityAt = 0;
 let lastProgressPublishAt = 0;
@@ -168,21 +168,6 @@ async function publishActivity(state, extra = {}){
     }, { merge:true });
   }catch(e){ console.warn('publishActivity failed', e); }
 }
-function subscribeActivityFeed(){
-  if (!db || !PREVIEW_MODE) return;
-  db.collection('activity').orderBy('updatedAt','desc').limit(8).onSnapshot((snap)=>{
-    const arr = [];
-    snap.forEach((d)=>{
-      const r = d.data() || {};
-      arr.push({
-        name: (r.name || 'Guest').slice(0,20),
-        state: r.state || 'playing',
-        score: typeof r.score === 'number' ? r.score : null
-      });
-    });
-    activityFeed = arr;
-  }, (err)=>console.warn('activity subscribe error', err));
-}
 
 /***** ====== 小工具 ====== *****/
 function stylePill(btn, base="#FF5722", hover="#FF784E"){
@@ -193,7 +178,10 @@ function stylePill(btn, base="#FF5722", hover="#FF784E"){
   btn.mouseOver(()=>{ btn.style('border-color','rgba(255,255,255,.28)'); });
   btn.mouseOut(()=>{ btn.style('border-color','rgba(255,255,255,.14)'); });
 }
-function createBoard(){ return Array.from({ length: rows }, () => Array(cols).fill(null)); }
+function createBoard(){
+  emptyCells = rows * cols;
+  return Array.from({ length: rows }, () => Array(cols).fill(null));
+}
 function isValid(p, dx, dy, mat = p.matrix) {
   if (!p || !mat) return false;
   for (let y=0; y<mat.length; y++){
@@ -260,7 +248,16 @@ function saveLastGamePng(){
 }
 function lockPiece(){
   const m=currentPiece.matrix;
-  for (let y=0;y<m.length;y++){ for (let x=0;x<m[y].length;x++){ if (m[y][x]) board[currentPiece.y+y][currentPiece.x+x]=currentPiece.cidx; } } }
+  for (let y=0;y<m.length;y++){
+    for (let x=0;x<m[y].length;x++){
+      if (!m[y][x]) continue;
+      const by = currentPiece.y + y;
+      const bx = currentPiece.x + x;
+      if (board[by][bx] === null) emptyCells--;
+      board[by][bx] = currentPiece.cidx;
+    }
+  }
+}
 
 /***** 本地備援排行榜（同名只留最佳） *****/
 function updateLocalTopScores(name, score, snapshot) {
@@ -297,7 +294,6 @@ function initFirebase(){
     db = firebase.firestore(); firebase.firestore().enablePersistence().catch(()=>{});
     subscribeLeaderboard();
     subscribePlayedCount();
-    subscribeActivityFeed();
   }catch(e){ FIREBASE_ENABLED=false; console.warn('Firebase init failed:', e); }
 }
 function subscribeLeaderboard(){
@@ -435,8 +431,12 @@ function calculateLayout(){
   if (cw * ASPECT_H > ch * ASPECT_W) cw = ch * ASPECT_W / ASPECT_H; else ch = cw * ASPECT_H / ASPECT_W;
   blockSize = floor(min(cw/cols, ch/rows)); innerW = cols * blockSize; innerH = rows * blockSize;
   const w = innerW + BORDER_THICK, h = innerH + BORDER_THICK;
-  mainCanvas = createCanvas(w, h);
-  mainCanvas.style('z-index','1');
+  if (!mainCanvas){
+    mainCanvas = createCanvas(w, h);
+    mainCanvas.style('z-index','1');
+  } else {
+    resizeCanvas(w, h);
+  }
   canvasX = (windowWidth - w) / 2; canvasY = (windowHeight - h) / 2;
   mainCanvas.position(canvasX, canvasY);
 
@@ -454,8 +454,6 @@ function draw(){
   background('#ffffff');
   noStroke(); fill(BG_BLUE); rect(BORDER_HALF, BORDER_HALF, innerW, innerH);
   stroke(PINK); strokeWeight(BORDER_THICK); noFill(); rect(0,0,width,height);
-
-  if (PREVIEW_MODE) drawPreviewActivityFeed();
 
   if (gameState === 'input'){
     push(); translate(BORDER_HALF, BORDER_HALF); updateIntroPieces(); drawIntroPieces(); pop();
@@ -477,8 +475,7 @@ function draw(){
       const now = millis ? millis() : Date.now();
       if (now - lastProgressPublishAt > 3200){
         lastProgressPublishAt = now;
-        const liveBlocks = board.flat().filter(c=>c===null).length;
-        publishActivity('playing', { score: liveBlocks });
+        publishActivity('playing', { score: emptyCells });
       }
     }
     push(); translate(BORDER_HALF, BORDER_HALF); drawBoard(); drawPiece(); pop();
@@ -495,7 +492,7 @@ function draw(){
     return;
   }
   if (gameState === 'gameover'){
-    endBlocks = board.flat().filter(c=>c===null).length;
+    endBlocks = emptyCells;
     if (!select('#savedFlag')){
       const snap = encodeBoardSnapshot();
       lastSnapshot = snap; lastName = playerName; lastBlocks = endBlocks;
@@ -575,72 +572,6 @@ function drawPlayedBadge(){
   textAlign(CENTER, CENTER);
   textSize(13);
   text(num, x + w - numW / 2 - 4, y + h / 2 + 0.5);
-}
-
-function drawPreviewActivityFeed(){
-  const panelW = min(176, innerW * 0.5);
-  const panelX = width - BORDER_HALF - panelW - 8;
-  const panelY = BORDER_HALF + 8;
-  const rowH = 15;
-  const rowsMax = 7;
-  const panelH = 34 + rowH * rowsMax;
-  const list = activityFeed && activityFeed.length ? activityFeed : [];
-
-  noStroke();
-  fill(7, 13, 62, 224);
-  rect(panelX, panelY, panelW, panelH, 9);
-  fill(255, 59, 218, 210);
-  rect(panelX, panelY, panelW, 16, 9, 9, 0, 0);
-  stroke(255, 209, 246, 190);
-  strokeWeight(1.1);
-  noFill();
-  rect(panelX, panelY, panelW, panelH, 9);
-
-  noStroke();
-  fill('#fff6ff');
-  textAlign(LEFT, CENTER);
-  textStyle(BOLD);
-  textSize(8);
-  text('LIVE / BROADCAST', panelX + 7, panelY + 8.5);
-  fill('#d6ddff');
-  textSize(8);
-  text('PLAYER PROCESS', panelX + panelW - 70, panelY + 8.5);
-
-  for (let i = 0; i < rowsMax; i++){
-    const y = panelY + 20 + i * rowH;
-    const r = list[i];
-    noStroke();
-    fill(i % 2 ? color(22, 28, 102, 170) : color(16, 22, 90, 140));
-    rect(panelX + 4, y - 1, panelW - 8, rowH - 2, 4);
-
-    if (!r) continue;
-    const state = (r.state || 'playing').toUpperCase();
-    const chip =
-      state === 'PLAYING' ? '#5ee4ff' :
-      state === 'GAMEOVER' ? '#ff9ed4' :
-      state === 'LEADERBOARD' ? '#ffe173' : '#c7d2ff';
-    const scoreTxt = (typeof r.score === 'number') ? String(r.score) : '--';
-
-    fill(chip);
-    rect(panelX + 7, y + 2, 40, rowH - 6, 4);
-    fill('#0b1354');
-    textAlign(CENTER, CENTER);
-    textStyle(BOLD);
-    textSize(7);
-    text(state.slice(0,4), panelX + 27, y + rowH/2);
-
-    fill('#f4f7ff');
-    textAlign(LEFT, CENTER);
-    textStyle(NORMAL);
-    textSize(8);
-    text(fitTextToWidth((r.name || 'Guest').toUpperCase(), panelW - 108), panelX + 52, y + rowH/2);
-
-    fill('#ffcff5');
-    textAlign(RIGHT, CENTER);
-    textStyle(BOLD);
-    textSize(8);
-    text(scoreTxt, panelX + panelW - 8, y + rowH/2);
-  }
 }
 
 /***** 遊戲流程 *****/
@@ -1192,7 +1123,7 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
   renderer.setSize(w, h, false);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.86;
+  renderer.toneMappingExposure = 1.12;
   containerEl.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
@@ -1211,26 +1142,80 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
     rotateResumeAt = performance.now() + 1000;
   });
 
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x97a3b5, 0.68));
-  scene.add(new THREE.AmbientLight(0xffffff, 0.3));
-  const keyLight = new THREE.DirectionalLight(0xffffff, 0.78);
-  keyLight.position.set(-1.1, 1.4, 1.35);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x97a3b5, 1.15));
+  scene.add(new THREE.AmbientLight(0xffffff, 0.72));
+  const keyLight = new THREE.DirectionalLight(0xffffff, 1.05);
+  keyLight.position.set(-1.1, 1.35, 1.3);
   scene.add(keyLight);
-  const fillLight = new THREE.DirectionalLight(0xecf3ff, 0.62);
-  fillLight.position.set(1.4, 0.85, 1.5);
+  const fillLight = new THREE.DirectionalLight(0xecf3ff, 0.9);
+  fillLight.position.set(1.35, 0.8, 1.45);
   scene.add(fillLight);
-  const rimLight = new THREE.DirectionalLight(0xffffff, 0.3);
-  rimLight.position.set(0.0, 1.0, -1.6);
+  const rimLight = new THREE.DirectionalLight(0xffffff, 0.5);
+  rimLight.position.set(0.0, 1.0, -1.55);
   scene.add(rimLight);
-  const leftFill = new THREE.DirectionalLight(0xf6f9ff, 0.24);
+  const leftFill = new THREE.DirectionalLight(0xf6f9ff, 0.42);
   leftFill.position.set(-1.8, 0.35, 0.6);
   scene.add(leftFill);
-  const rightFill = new THREE.DirectionalLight(0xf6f9ff, 0.24);
+  const rightFill = new THREE.DirectionalLight(0xf6f9ff, 0.42);
   rightFill.position.set(1.8, 0.35, 0.6);
   scene.add(rightFill);
-  const topSoft = new THREE.PointLight(0xffffff, 0.2, 6);
-  topSoft.position.set(0, 1.8, 0.9);
+  const topSoft = new THREE.PointLight(0xffffff, 0.34, 8);
+  topSoft.position.set(0, 1.8, 0.85);
   scene.add(topSoft);
+  const frontLight = new THREE.DirectionalLight(0xffffff, 0.82);
+  frontLight.position.set(0, 0.3, 2.2);
+  scene.add(frontLight);
+  const spotLight = new THREE.SpotLight(0xffffff, 1.8, 12, Math.PI / 7, 0.55, 1.0);
+  spotLight.position.set(0.2, 2.35, 1.25);
+  spotLight.target.position.set(0, 0, 0);
+  scene.add(spotLight);
+  scene.add(spotLight.target);
+  const rimSpot = new THREE.SpotLight(0xb9c8ff, 0.75, 11, Math.PI / 8, 0.45, 1.1);
+  rimSpot.position.set(-1.3, 1.35, -1.8);
+  rimSpot.target.position.set(0, 0, 0);
+  scene.add(rimSpot);
+  scene.add(rimSpot.target);
+
+  // Stage wash and hover accent logic shared with shop.
+  const stageGlow = new THREE.Mesh(
+    new THREE.CircleGeometry(1.45, 64),
+    new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.16, depthWrite: false })
+  );
+  stageGlow.rotation.x = -Math.PI / 2;
+  stageGlow.position.set(0, -0.56, 0.02);
+  scene.add(stageGlow);
+  const hoverTopLightL = new THREE.SpotLight(0xff8ae8, 0, 10, Math.PI / 5.6, 0.72, 1.2);
+  hoverTopLightL.position.set(-0.65, 2.7, 0.52);
+  hoverTopLightL.target.position.set(0, 0, 0);
+  scene.add(hoverTopLightL);
+  scene.add(hoverTopLightL.target);
+  const hoverTopLightR = new THREE.SpotLight(0xff8ae8, 0, 10, Math.PI / 5.6, 0.72, 1.2);
+  hoverTopLightR.position.set(0.65, 2.7, 0.52);
+  hoverTopLightR.target.position.set(0, 0, 0);
+  scene.add(hoverTopLightR);
+  scene.add(hoverTopLightR.target);
+  const hoverAreaWash = new THREE.Mesh(
+    new THREE.CircleGeometry(1.95, 80),
+    new THREE.MeshBasicMaterial({ color: 0xff78e5, transparent: true, opacity: 0.0, depthWrite: false })
+  );
+  hoverAreaWash.rotation.x = -Math.PI / 2;
+  hoverAreaWash.position.set(0, -0.558, 0.02);
+  scene.add(hoverAreaWash);
+
+  let hoverActive = false;
+  function setHoverActive(v){
+    if (hoverActive === v) return;
+    hoverActive = v;
+    hoverTopLightL.intensity = hoverActive ? 1.95 : 0;
+    hoverTopLightR.intensity = hoverActive ? 1.95 : 0;
+    hoverAreaWash.material.opacity = hoverActive ? 0.19 : 0.0;
+  }
+  const onHoverMove = ()=>setHoverActive(true);
+  const onHoverLeave = ()=>setHoverActive(false);
+  const onHoverDown = ()=>setHoverActive(true);
+  containerEl.addEventListener('pointermove', onHoverMove);
+  containerEl.addEventListener('pointerleave', onHoverLeave);
+  containerEl.addEventListener('pointerdown', onHoverDown);
 
   // 材質
   const FRAME_COLOR = '#f1f4fb'; // polished silver tone
@@ -1299,6 +1284,13 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
     const postBox = new THREE.Box3().setFromObject(root);
     const postCenter = postBox.getCenter(new THREE.Vector3());
     root.position.sub(postCenter);
+    stageGlow.position.x = root.position.x;
+    stageGlow.position.z = root.position.z;
+    hoverAreaWash.position.x = root.position.x;
+    hoverAreaWash.position.z = root.position.z;
+    const lightAim = new THREE.Vector3(root.position.x, root.position.y + 0.02, root.position.z);
+    hoverTopLightL.target.position.copy(lightAim);
+    hoverTopLightR.target.position.copy(lightAim);
 
     let parts = forcedParts || { '1':[], '2':[], '3':[], other:[] };
     if (!forcedParts){
@@ -1393,7 +1385,7 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
     renderer.render(scene, camera);
     threeCtx && (threeCtx.rafId = requestAnimationFrame(tick));
   }
-  threeCtx = { renderer, scene, camera, controls, containerEl, rafId:null, onResize:null, partState:null, refreshParts:null, hasPart3:false, hasCase:false };
+  threeCtx = { renderer, scene, camera, controls, containerEl, rafId:null, onResize:null, onHoverMove, onHoverLeave, onHoverDown, partState:null, refreshParts:null, hasPart3:false, hasCase:false };
   tick();
 
   // resize
@@ -1411,6 +1403,11 @@ function disposeThreeViewer(){
   if (!threeCtx) return;
   if (threeCtx.rafId) cancelAnimationFrame(threeCtx.rafId);
   if (threeCtx.onResize) window.removeEventListener('resize', threeCtx.onResize);
+  if (threeCtx.containerEl && threeCtx.onHoverMove){
+    threeCtx.containerEl.removeEventListener('pointermove', threeCtx.onHoverMove);
+    threeCtx.containerEl.removeEventListener('pointerleave', threeCtx.onHoverLeave);
+    threeCtx.containerEl.removeEventListener('pointerdown', threeCtx.onHoverDown);
+  }
   if (threeCtx.renderer) threeCtx.renderer.dispose();
   if (threeCtx.containerEl && threeCtx.containerEl.firstChild){
     threeCtx.containerEl.removeChild(threeCtx.containerEl.firstChild);
