@@ -12,10 +12,12 @@
     />
     <style>
       :root{
-        --glass-bg: rgba(0,0,0,.30);
-        --glass-border: rgba(255,255,255,.14);
-        --glass-border-hover: rgba(255,255,255,.28);
+        --glass-bg: rgba(6, 15, 82, .46);
+        --glass-bg-strong: rgba(8, 18, 100, .62);
+        --glass-border: rgba(214,224,255,.22);
+        --glass-border-hover: rgba(255,255,255,.34);
         --glass-focus: rgba(238,0,184,.45);
+        --txt-dim: #c7d1ff;
       }
       html, body { height: 100%; }
       body {
@@ -33,78 +35,77 @@
       body.is-exiting{
         opacity:0;
       }
-      .nav {
+      .ui-dock{
         position: fixed;
-        top: 12px;
-        left: 12px;
+        top: 14px;
+        left: 14px;
         z-index: 9999;
-        display: flex;
+        width: min(380px, calc(100vw - 28px));
+        display: grid;
         gap: 10px;
-        align-items: center;
       }
-      .nav a {
+      .hud-bar{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:10px;
+        padding:8px;
+        border-radius:14px;
+        border:1px solid var(--glass-border);
+        background: var(--glass-bg-strong);
+        backdrop-filter: blur(10px);
+      }
+      .hud-title{
+        font-size:10px;
+        font-weight:800;
+        letter-spacing:.18em;
+        text-transform:uppercase;
+        color:var(--txt-dim);
+        white-space:nowrap;
+      }
+      .hud-actions{
+        display:flex;
+        align-items:center;
+        gap:8px;
+      }
+      .hud-btn {
         text-decoration: none;
         color: #ffffff;
         background: var(--glass-bg);
         border: 1px solid var(--glass-border);
-        padding: 10px 12px;
-        border-radius: 12px;
+        padding: 8px 12px;
+        border-radius: 10px;
         font-weight: 800;
+        font-size: 12px;
         letter-spacing: .01em;
-        backdrop-filter: blur(8px);
+        backdrop-filter: blur(10px);
+        cursor:pointer;
       }
-      .nav a:hover { border-color: var(--glass-border-hover); }
-      .nav a:focus-visible { outline: 3px solid var(--glass-focus); outline-offset: 2px; }
-      .rules {
-        position: fixed;
-        right: 12px;
-        bottom: 12px;
-        max-width: 260px;
+      .hud-btn:hover { border-color: var(--glass-border-hover); }
+      .hud-btn:focus-visible { outline: 3px solid var(--glass-focus); outline-offset: 2px; }
+      .hud-card{
         background: var(--glass-bg);
         border-radius: 14px;
         border: 1px solid var(--glass-border);
-        padding: 10px 12px 9px;
-        font-size: 11px;
-        line-height: 1.4;
-        color:#e9ebff;
-        backdrop-filter: blur(14px);
-        z-index: 9999;
-        touch-action: none;
-        transform: translateX(0);
-        transition: transform 420ms cubic-bezier(0.2, 0.9, 0.2, 1), border-color 140ms ease;
+        padding: 11px 12px 10px;
+        backdrop-filter: blur(12px);
       }
-      .rules:hover{
-        border-color: var(--glass-border-hover);
-      }
-      .rules.is-collapsed{
-        transform: translateX(calc(100% - 44px));
-      }
-      .rules.is-collapsed ul{
-        display:none;
-      }
-      .rules.is-collapsed h2{
-        margin:0;
-      }
-      .rules h2{
-        margin:0 0 4px;
+      .hud-card h2{
+        margin:0 0 6px;
         font-size:10px;
         text-transform:uppercase;
         letter-spacing:.18em;
-        opacity:.8;
-        cursor: grab;
-        user-select: none;
+        color:var(--txt-dim);
       }
-      .rules.is-dragging h2{
-        cursor: grabbing;
-      }
-      .rules ul{
+      .controls-list{
         margin:0;
         padding-left:16px;
+        font-size:11px;
+        line-height:1.42;
+        color:#e9ebff;
       }
-      .rules li{
-        margin:2px 0;
-      }
-      .rules code{
+      .controls-list li{ margin:2px 0; }
+      .controls-list code{
         font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
         font-size:.9em;
         background: rgba(0,0,0,.35);
@@ -112,24 +113,73 @@
         border-radius:6px;
         color:#ffffff;
       }
-      body.preview-mode .nav,
-      body.preview-mode .rules{
+      .controls-card{
+        transition: opacity .2s ease, transform .2s ease;
+      }
+      .controls-card.is-hidden{
+        opacity:0;
+        transform:translateY(-8px);
+        pointer-events:none;
+      }
+      .desc-card p{
+        margin:0;
+        color:#eff2ff;
+        font-size:11px;
+        line-height:1.5;
+      }
+      .desc-note{
+        margin-top:8px !important;
+        font-size:10px !important;
+        color:var(--txt-dim) !important;
+        letter-spacing:.02em;
+      }
+      @media (max-width: 700px){
+        .ui-dock{
+          width:min(340px, calc(100vw - 18px));
+          top:9px;
+          left:9px;
+          gap:8px;
+        }
+        .hud-title{
+          font-size:9px;
+          letter-spacing:.14em;
+        }
+        .hud-btn{
+          padding:7px 10px;
+          font-size:11px;
+        }
+        .hud-card{
+          padding:9px 10px 8px;
+        }
+      }
+      body.preview-mode .ui-dock{
         display:none !important;
       }
     </style>
   </head>
   <body>
-    <nav class="nav" aria-label="Primary">
-      <a href="./index.html" data-soft-nav>Home</a>
-    </nav>
-    <section class="rules" aria-label="How to play">
-      <h2>Controls</h2>
-      <ul>
-        <li><code>←</code> / <code>→</code>: move</li>
-        <li><code>↓</code>: soft drop</li>
-        <li><code>↑</code>: rotate</li>
-        <li>On mobile: use the on-screen buttons</li>
-      </ul>
+    <section class="ui-dock" aria-label="Game HUD">
+      <div class="hud-bar">
+        <div class="hud-title">Insufficient Space</div>
+        <div class="hud-actions">
+          <a class="hud-btn" href="./index.html" data-soft-nav>Home</a>
+          <button class="hud-btn" type="button" id="controls-toggle" aria-expanded="true" aria-controls="controls-card">Controls</button>
+        </div>
+      </div>
+      <section class="hud-card controls-card" id="controls-card" aria-label="How to play">
+        <h2>Controls</h2>
+        <ul class="controls-list">
+          <li><code>←</code> / <code>→</code>: move</li>
+          <li><code>↓</code>: soft drop</li>
+          <li><code>↑</code>: rotate</li>
+          <li>On mobile: use the on-screen buttons</li>
+        </ul>
+      </section>
+      <section class="hud-card desc-card" aria-label="Game description">
+        <h2>Why I Made This Game</h2>
+        <p>[Edit this description later: share your story, idea, and message behind this project.]</p>
+        <p class="desc-note">Tip: you can replace this text anytime in `sketch.html`.</p>
+      </section>
     </section>
 
     <!-- Libraries first, then the sketch -->
@@ -163,121 +213,13 @@
       })();
 
       (function(){
-        const panel = document.querySelector('.rules');
-        if (!panel) return;
-        const KEY = 'intro_controls_panel_pos_v2';
-        const TAB_VISIBLE_W = 44;
-
-        function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
-        function getPanelSize(){
-          return { w: panel.offsetWidth || 260, h: panel.offsetHeight || 80 };
-        }
-        function applyPos(x, y){
-          panel.style.left = x + 'px';
-          panel.style.top = y + 'px';
-          panel.style.right = 'auto';
-          panel.style.bottom = 'auto';
-        }
-        function toggleCollapsed(){
-          const isCollapsed = panel.classList.toggle('is-collapsed');
-          const rect = panel.getBoundingClientRect();
-          const { w, h } = getPanelSize();
-
-          // Save expanded position so we can restore it.
-          const state = (()=>{ try{ return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch { return null; } })() || {};
-
-          if (isCollapsed){
-            state.expanded = state.expanded || { x: rect.left, y: rect.top };
-            const x = clamp(window.innerWidth - w - 8, 8, window.innerWidth - TAB_VISIBLE_W - 8);
-            const y = clamp(rect.top, 8, window.innerHeight - h - 8);
-            applyPos(x, y);
-          } else if (state.expanded && typeof state.expanded.x === 'number' && typeof state.expanded.y === 'number'){
-            const x = clamp(state.expanded.x, 8, window.innerWidth - w - 8);
-            const y = clamp(state.expanded.y, 8, window.innerHeight - h - 8);
-            applyPos(x, y);
-          }
-
-          state.collapsed = isCollapsed;
-          try{
-            const current = panel.getBoundingClientRect();
-            if (!isCollapsed) state.expanded = { x: current.left, y: current.top };
-            localStorage.setItem(KEY, JSON.stringify(state));
-          } catch {}
-        }
-
-        try{
-          const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
-          if (saved && saved.expanded && typeof saved.expanded.x === 'number' && typeof saved.expanded.y === 'number'){
-            const { w, h } = getPanelSize();
-            const x = clamp(saved.expanded.x, 8, window.innerWidth - w - 8);
-            const y = clamp(saved.expanded.y, 8, window.innerHeight - h - 8);
-            applyPos(x, y);
-          }
-          if (saved && saved.collapsed) panel.classList.add('is-collapsed');
-        } catch {}
-
-        let drag = null;
-        panel.addEventListener('pointerdown', (e)=>{
-          // Only drag when starting on the title area.
-          const h2 = e.target && e.target.closest && e.target.closest('.rules h2');
-          if (!h2) return;
-
-          const rect = panel.getBoundingClientRect();
-          panel.setPointerCapture(e.pointerId);
-          panel.classList.add('is-dragging');
-          drag = {
-            pointerId: e.pointerId,
-            offX: e.clientX - rect.left,
-            offY: e.clientY - rect.top,
-            startX: e.clientX,
-            startY: e.clientY,
-            moved: false
-          };
-          e.preventDefault();
-        });
-
-        panel.addEventListener('pointermove', (e)=>{
-          if (!drag || e.pointerId !== drag.pointerId) return;
-          const dx = e.clientX - drag.startX;
-          const dy = e.clientY - drag.startY;
-          if (!drag.moved && (Math.abs(dx) + Math.abs(dy)) > 6) drag.moved = true;
-          const { w, h } = getPanelSize();
-          const x = clamp(e.clientX - drag.offX, 8, window.innerWidth - w - 8);
-          const y = clamp(e.clientY - drag.offY, 8, window.innerHeight - h - 8);
-          applyPos(x, y);
-        });
-
-        function endDrag(e){
-          if (!drag || (e.pointerId != null && e.pointerId !== drag.pointerId)) return;
-          panel.classList.remove('is-dragging');
-          if (!drag.moved){
-            toggleCollapsed();
-          } else {
-            const rect = panel.getBoundingClientRect();
-            try{
-              const saved = JSON.parse(localStorage.getItem(KEY) || 'null') || {};
-              if (!panel.classList.contains('is-collapsed')){
-                saved.expanded = { x: rect.left, y: rect.top };
-              }
-              saved.collapsed = panel.classList.contains('is-collapsed');
-              localStorage.setItem(KEY, JSON.stringify(saved));
-            } catch {}
-          }
-          drag = null;
-        }
-
-        panel.addEventListener('pointerup', endDrag);
-        panel.addEventListener('pointercancel', endDrag);
-
-        window.addEventListener('resize', ()=>{
-          const rect = panel.getBoundingClientRect();
-          const { w, h } = getPanelSize();
-          const xMax = panel.classList.contains('is-collapsed')
-            ? (window.innerWidth - TAB_VISIBLE_W - 8)
-            : (window.innerWidth - w - 8);
-          const x = clamp(rect.left, 8, xMax);
-          const y = clamp(rect.top, 8, window.innerHeight - h - 8);
-          applyPos(x, y);
+        const toggle = document.getElementById('controls-toggle');
+        const panel = document.getElementById('controls-card');
+        if (!toggle || !panel) return;
+        toggle.addEventListener('click', ()=>{
+          const willHide = !panel.classList.contains('is-hidden');
+          panel.classList.toggle('is-hidden', willHide);
+          toggle.setAttribute('aria-expanded', String(!willHide));
         });
       })();
     </script>

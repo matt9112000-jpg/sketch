@@ -108,6 +108,19 @@
         letter-spacing:-.022em;
         transform-origin:left center;
         will-change:transform, opacity;
+        transition:font-family .12s ease, letter-spacing .12s ease;
+      }
+      .word-ins.transfer-syne{
+        font-family:var(--font-sans);
+        letter-spacing:-.012em;
+      }
+      .word-ins.transfer-serif{
+        font-family:var(--font-didot);
+        letter-spacing:.005em;
+      }
+      .word-ins.transfer-back{
+        font-family:var(--font-gaylon);
+        letter-spacing:-.03em;
       }
       .ins-letter{
         display:inline-block;
@@ -169,9 +182,30 @@
         100%{ transform:translateX(0) scale(1.12,1.01); opacity:1; }
       }
       @keyframes spaceReveal{
-        0%{ opacity:0; transform:translateY(16px) scale(.78); filter:blur(3px); }
-        65%{ opacity:1; transform:translateY(-4px) scale(1.08); filter:blur(.2px); }
-        100%{ opacity:1; transform:translateY(0) scale(1); filter:blur(0); }
+        0%{
+          opacity:0;
+          transform:translate3d(18px, 12px, 0) scale(.72, .92) skewX(-18deg);
+          filter:blur(11px);
+          text-shadow:0 0 28px rgba(255, 109, 233, .8);
+        }
+        44%{
+          opacity:1;
+          transform:translate3d(-6px, -3px, 0) scale(1.14, 1.03) skewX(-6deg);
+          filter:blur(4px);
+          text-shadow:0 0 18px rgba(255, 109, 233, .62);
+        }
+        72%{
+          opacity:1;
+          transform:translate3d(2px, 0, 0) scale(1.05, 1.01) skewX(2deg);
+          filter:blur(1.1px);
+          text-shadow:0 0 8px rgba(255, 109, 233, .4);
+        }
+        100%{
+          opacity:1;
+          transform:translate3d(0, 0, 0) scale(1,1) skewX(0);
+          filter:blur(0);
+          text-shadow:none;
+        }
       }
       .title-burst{
         position:absolute;
@@ -552,6 +586,7 @@
         };
         const showFinalHeroState = ()=>{
           ins.textContent = 'INSUFFICIENT';
+          ins.classList.remove('transfer-syne', 'transfer-serif', 'transfer-back');
           space.classList.remove('is-covering');
           space.classList.add('is-visible');
           sub.classList.add('is-visible');
@@ -562,7 +597,7 @@
         const resetHeroIntroState = ()=>{
           document.body.classList.remove('intro-done');
           heroTitle.classList.remove('is-done');
-          ins.classList.remove('is-typing', 'letters-stretch');
+          ins.classList.remove('is-typing', 'letters-stretch', 'transfer-syne', 'transfer-serif', 'transfer-back');
           ins.innerHTML = '';
           ins.style.fontWeight = '';
           ins.style.transform = '';
@@ -615,9 +650,21 @@
           const weightSteps = ['300','850','400','900','500','820','380','900','460','860','420','900'];
           for (let i = 0; i < weightSteps.length; i++){
             ins.style.fontWeight = weightSteps[i];
+            if (i >= 2 && i <= 4){
+              ins.classList.add('transfer-syne');
+              ins.classList.remove('transfer-serif', 'transfer-back');
+            } else if (i >= 5 && i <= 8){
+              ins.classList.add('transfer-serif');
+              ins.classList.remove('transfer-syne', 'transfer-back');
+            } else if (i >= 9){
+              ins.classList.add('transfer-back');
+              ins.classList.remove('transfer-syne', 'transfer-serif');
+            }
             await sleep(128);
           }
           ins.style.fontWeight = '800';
+          ins.classList.remove('transfer-syne', 'transfer-serif');
+          ins.classList.add('transfer-back');
           await sleep(170);
 
           ins.classList.add('letters-stretch');
