@@ -1268,7 +1268,11 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
     root.updateWorldMatrix(true, true);
     const postBox = new THREE.Box3().setFromObject(root);
     const postCenter = postBox.getCenter(new THREE.Vector3());
+    const postSize = postBox.getSize(new THREE.Vector3());
     root.position.sub(postCenter);
+    if (mode === 'charm'){
+      root.position.y += postSize.y * 0.2;
+    }
 
     let parts = forcedParts || { '1':[], '2':[], '3':[], other:[] };
     if (!forcedParts){
@@ -1587,10 +1591,10 @@ async function openCharmPreview3D(options = {}){
   threeWrap.parent(ov);
   threeWrap.id('threeWrap');
   threeWrap.style('position','absolute')
-    .style('left', isCompactReward ? '20%' : '25%').style('top', '0%')
+    .style('left', isCompactReward ? '20%' : '25%').style('top', '5%')
     .style('transform', fromGameOver
-      ? 'translate(-50%, -80%) scale(0.22)'
-      : (isCompactReward ? 'translate(-50%, -80%) scale(0.5)' : 'translate(-50%, -80%) scale(0.55)'))
+      ? 'translate(-50%, -50%) scale(0.22)'
+      : (isCompactReward ? 'translate(-50%, -50%) scale(0.5)' : 'translate(-50%, -50%) scale(0.55)'))
     .style('width', canvasW+'px')
     .style('height', Math.floor(canvasW*(8/6))+'px')
     .style('z-index','10055')
@@ -1669,13 +1673,13 @@ async function openCharmPreview3D(options = {}){
     requestAnimationFrame(()=>{
       threeWrap.style('opacity','1');
       threeWrap.style('transform', fromGameOver
-        ? (isCompactReward ? 'translate(-50%, -80%) scale(0.88)' : 'translate(-50%, -80%) scale(1.14)')
-        : 'translate(-50%, -80%) scale(1)');
+        ? (isCompactReward ? 'translate(-50%, -50%) scale(0.88)' : 'translate(-50%, -50%) scale(1.14)')
+        : 'translate(-50%, -50%) scale(1)');
       if (fromGameOver){
         setTimeout(()=>{
           if (charmFS.overlay && threeWrap){
             threeWrap.style('transition','transform 190ms cubic-bezier(0.2, 0.9, 0.2, 1), opacity 180ms ease-out');
-            threeWrap.style('transform','translate(-50%, -80%) scale(1)');
+            threeWrap.style('transform','translate(-50%, -50%) scale(1)');
           }
         }, 210);
       }
