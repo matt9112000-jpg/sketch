@@ -37,36 +37,20 @@
       }
       .ui-dock{
         position: fixed;
-        top: 14px;
-        left: 14px;
+        inset:0;
         z-index: 9999;
-        width: min(380px, calc(100vw - 28px));
-        display: grid;
-        gap: 10px;
+        pointer-events:none;
       }
-      .hud-bar{
+      .hud-actions{
+        position:absolute;
+        top:14px;
+        left:14px;
+        right:14px;
         display:flex;
         align-items:center;
         justify-content:space-between;
-        gap:10px;
-        padding:8px;
-        border-radius:14px;
-        border:1px solid var(--glass-border);
-        background: var(--glass-bg-strong);
-        backdrop-filter: blur(10px);
-      }
-      .hud-title{
-        font-size:10px;
-        font-weight:800;
-        letter-spacing:.18em;
-        text-transform:uppercase;
-        color:var(--txt-dim);
-        white-space:nowrap;
-      }
-      .hud-actions{
-        display:flex;
-        align-items:center;
-        gap:8px;
+        gap:14px;
+        pointer-events:none;
       }
       .hud-actions.is-game{
         gap:0;
@@ -83,6 +67,7 @@
         letter-spacing: .01em;
         backdrop-filter: blur(10px);
         cursor:pointer;
+        pointer-events:auto;
       }
       .hud-btn:hover { border-color: var(--glass-border-hover); }
       .hud-btn:focus-visible { outline: 3px solid var(--glass-focus); outline-offset: 2px; }
@@ -183,14 +168,12 @@
       }
       @media (max-width: 700px){
         .ui-dock{
-          width:min(340px, calc(100vw - 18px));
-          top:9px;
-          left:9px;
-          gap:8px;
+          inset:0;
         }
-        .hud-title{
-          font-size:9px;
-          letter-spacing:.14em;
+        .hud-actions{
+          top:10px;
+          left:10px;
+          right:10px;
         }
         .hud-btn{
           padding:7px 10px;
@@ -211,12 +194,9 @@
   </head>
   <body>
     <section class="ui-dock" aria-label="Game HUD">
-      <div class="hud-bar">
-        <div class="hud-title">Insufficient Space</div>
-        <div class="hud-actions" id="hud-actions">
-          <a class="hud-btn" href="./index.html" data-soft-nav>Home</a>
-          <button class="hud-btn" type="button" id="info-toggle" aria-expanded="false" aria-controls="info-sheet">Info</button>
-        </div>
+      <div class="hud-actions" id="hud-actions">
+        <a class="hud-btn" href="./index.html" data-soft-nav>Home</a>
+        <button class="hud-btn" type="button" id="info-toggle" aria-expanded="false" aria-controls="info-sheet">Info</button>
       </div>
     </section>
     <div class="info-overlay" id="info-overlay" aria-hidden="true"></div>

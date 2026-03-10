@@ -175,6 +175,13 @@
       .word-space.is-visible{
         animation:spaceReveal .55s cubic-bezier(.2,.9,.18,1) forwards;
       }
+      .word-space.is-static{
+        opacity:1;
+        transform:none;
+        filter:none;
+        text-shadow:none;
+        animation:none !important;
+      }
       @keyframes spaceCoverSweep{
         0%{ transform:translateX(116%) scale(1.05,.94); opacity:0; }
         40%{ transform:translateX(24%) scale(1.42,1.04); opacity:1; }
@@ -263,6 +270,11 @@
       .title-sub.is-visible{
         opacity:1;
         transform:translateY(0);
+      }
+      .title-sub.is-static{
+        opacity:1;
+        transform:translateY(0);
+        transition:none;
       }
       .banner-links{
         position:relative;
@@ -587,9 +599,11 @@
         const showFinalHeroState = ()=>{
           ins.textContent = 'INSUFFICIENT';
           ins.classList.remove('transfer-syne', 'transfer-serif', 'transfer-back');
+          space.classList.remove('is-visible');
           space.classList.remove('is-covering');
-          space.classList.add('is-visible');
-          sub.classList.add('is-visible');
+          space.classList.add('is-static');
+          sub.classList.remove('is-visible');
+          sub.classList.add('is-static');
           heroTitle.classList.add('is-done');
           bannerLinks.classList.remove('intro-glass');
           document.body.classList.add('intro-done');
@@ -602,7 +616,9 @@
           ins.style.fontWeight = '';
           ins.style.transform = '';
           space.classList.remove('is-covering', 'is-visible');
+          space.classList.remove('is-static');
           sub.classList.remove('is-visible');
+          sub.classList.remove('is-static');
           burst.classList.remove('play');
           bannerLinks.classList.remove('intro-glass');
         };
