@@ -1272,7 +1272,7 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
     root.position.sub(postCenter);
     if (mode === 'charm'){
       const isMobileShift = windowWidth <= 700;
-      root.position.y += postSize.y * (isMobileShift ? 0.05 : 0.15);
+      root.position.y += postSize.y * (isMobileShift ? -0.10 : 0.05);
     }
 
     let parts = forcedParts || { '1':[], '2':[], '3':[], other:[] };
