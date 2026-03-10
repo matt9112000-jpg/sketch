@@ -444,6 +444,11 @@
         rimSpot.target.position.set(0, 0, 0);
         scene.add(rimSpot);
         scene.add(rimSpot.target);
+        const hoverTopLight = new THREE.SpotLight(0xffffff, 0, 10, Math.PI / 8, 0.35, 1.15);
+        hoverTopLight.position.set(0, 2.7, 0.35);
+        hoverTopLight.target.position.set(0, 0, 0);
+        scene.add(hoverTopLight);
+        scene.add(hoverTopLight.target);
 
         // Stage-like floor glow and soft shadow catcher.
         const stageGlow = new THREE.Mesh(
@@ -664,6 +669,7 @@
           active = v;
           shell.classList.toggle('is-active', active);
           info.classList.toggle('is-active', active);
+          hoverTopLight.intensity = active ? 1.45 : 0;
         }
 
         function checkProximity(clientX, clientY){

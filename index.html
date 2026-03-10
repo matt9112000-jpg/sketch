@@ -589,13 +589,6 @@
         const heroTitle = document.getElementById('hero-title');
         const bannerLinks = document.getElementById('banner-links');
         if (!ins || !space || !burst || !sub || !heroTitle || !bannerLinks) return;
-        const INTRO_PLAYED_KEY = 'insufficient_space_intro_played_once_v1';
-        const hasPlayedIntro = ()=>{
-          try { return localStorage.getItem(INTRO_PLAYED_KEY) === '1'; } catch (_err) { return false; }
-        };
-        const markIntroPlayed = ()=>{
-          try { localStorage.setItem(INTRO_PLAYED_KEY, '1'); } catch (_err) {}
-        };
         const showFinalHeroState = ()=>{
           ins.textContent = 'INSUFFICIENT';
           ins.classList.remove('transfer-syne', 'transfer-serif', 'transfer-back');
@@ -624,14 +617,7 @@
         };
 
         const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        const params = new URLSearchParams(window.location.search);
-        const introFromLink = params.get('intro') === '1';
         if (reduce){
-          showFinalHeroState();
-          markIntroPlayed();
-          return;
-        }
-        if (!introFromLink || hasPlayedIntro()){
           showFinalHeroState();
           return;
         }
@@ -700,7 +686,6 @@
           bannerLinks.classList.remove('intro-glass');
           await sleep(260);
           document.body.classList.add('intro-done');
-          markIntroPlayed();
         }
 
         runHeroIntro();
