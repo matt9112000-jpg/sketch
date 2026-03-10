@@ -1112,7 +1112,7 @@ function makeResultVoxelGroup(snapshot, panelRoot, cubeTemplate){
   }
   group.rotation.set(Math.PI / 2, Math.PI, 0);
   group.position.y += z + panelBox.max.y + cell * 0.12;
-  group.position.add(new THREE.Vector3(-10, -7, -18));
+  group.position.add(new THREE.Vector3(-10, -20, -18));
   return group.children.length ? group : null;
 }
 
@@ -1163,7 +1163,7 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
   renderer.setSize(w, h, false);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.86;
+  renderer.toneMappingExposure = 0.98;
   containerEl.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
@@ -1232,13 +1232,23 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
   const blackMat = new THREE.MeshPhysicalMaterial({
     color:'#2f3138', metalness:0.08, roughness:0.58, clearcoat:0.12, clearcoatRoughness:0.42
   });
+  const cartridgeGreyMat = new THREE.MeshPhysicalMaterial({
+    color: '#aeb4c0',
+    metalness: 0.74,
+    roughness: 0.34,
+    clearcoat: 0.34,
+    clearcoatRoughness: 0.2,
+    envMapIntensity: 1.08
+  });
 
   const mode = options.mode || 'charm'; // charm | shop
   const partState = {
     caseVisible: true,   // item 1 (box case)
     showPart3: true,     // item 3 optional (charm mode)
     part3Node: null,     // explicit node visibility control for split file
-    panelNode: null      // panel node for placing result voxels
+    panelNode: null,     // panel node for placing result voxels
+    stickerMeshes: [],
+    cartridgeMeshes: []
   };
 
   // 載入 GLB（優先三件式；失敗則回退單檔）
@@ -1292,6 +1302,12 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
         setList(parts['2'], pinkMat, true);
         setList(parts['3'], blackMat, partState.showPart3);
         setList(parts.other, metalMat, true);
+        if (partState.stickerMeshes && partState.stickerMeshes.length){
+          partState.stickerMeshes.forEach((m)=>{ m.material = cartridgeGreyMat; m.visible = true; });
+        }
+        if (partState.cartridgeMeshes && partState.cartridgeMeshes.length){
+          partState.cartridgeMeshes.forEach((m)=>{ m.material = cartridgeGreyMat; m.visible = true; });
+        }
         if (partState.part3Node){
           partState.part3Node.visible = partState.showPart3;
           partState.part3Node.traverse((o)=>{ if (o.isMesh) o.visible = partState.showPart3; });
@@ -1301,6 +1317,12 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
         setList(parts['2'], metalMat, true);
         setList(parts['3'], blackMat, true);
         setList(parts.other, metalMat, true);
+        if (partState.stickerMeshes && partState.stickerMeshes.length){
+          partState.stickerMeshes.forEach((m)=>{ m.material = cartridgeGreyMat; m.visible = true; });
+        }
+        if (partState.cartridgeMeshes && partState.cartridgeMeshes.length){
+          partState.cartridgeMeshes.forEach((m)=>{ m.material = cartridgeGreyMat; m.visible = true; });
+        }
       }
     };
     applyParts();
@@ -1341,9 +1363,11 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
       root.add(stickerGltf.scene);
       partState.part3Node = part3Gltf.scene;
       partState.panelNode = panelGltf.scene;
+      partState.cartridgeMeshes = meshListOf(bodyGltf.scene);
+      partState.stickerMeshes = meshListOf(stickerGltf.scene);
 
       const p1 = meshListOf(caseGltf.scene).concat(meshListOf(bodyGltf.scene));
-      const p2 = meshListOf(panelGltf.scene).concat(meshListOf(stickerGltf.scene));
+      const p2 = meshListOf(panelGltf.scene);
       const p3 = meshListOf(part3Gltf.scene);
       const used = new Set([].concat(p1, p2, p3));
       const all = meshListOf(root);

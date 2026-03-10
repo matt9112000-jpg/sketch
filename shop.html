@@ -408,7 +408,7 @@
         renderer.setSize(mount.clientWidth, mount.clientHeight);
         renderer.outputColorSpace = THREE.SRGBColorSpace;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1.34;
+        renderer.toneMappingExposure = 1.46;
         mount.appendChild(renderer.domElement);
 
         scene.add(new THREE.HemisphereLight(0xffffff, 0x97a3b5, 1.35));
@@ -515,6 +515,14 @@
           clearcoatRoughness: 0.06,
           envMapIntensity: 1.62
         });
+        const cartridgeGreyMat = new THREE.MeshPhysicalMaterial({
+          color: '#aeb4c0',
+          metalness: 0.74,
+          roughness: 0.34,
+          clearcoat: 0.34,
+          clearcoatRoughness: 0.2,
+          envMapIntensity: 1.08
+        });
 
         function getPartIdFromName(name){
           const n = (name || '').trim();
@@ -568,7 +576,7 @@
           clearcoat: 0.02,
           clearcoatRoughness: 0.9
         });
-        const modelState = { caseVisible:true, showPart3:true, parts:null, part3Node:null };
+        const modelState = { caseVisible:true, showPart3:true, parts:null, part3Node:null, stickerMeshes:[], cartridgeMeshes:[] };
         const caseBtn = document.getElementById('case-toggle-btn');
         const part3Btn = document.getElementById('part3-toggle-btn');
 
@@ -579,6 +587,12 @@
           parts['2'].forEach((m)=>{ m.material = silverMat; m.visible = true; });
           parts['3'].forEach((m)=>{ m.material = blackMat; m.visible = modelState.showPart3; });
           parts.other.forEach((m)=>{ m.material = silverMat; m.visible = true; });
+          if (modelState.stickerMeshes && modelState.stickerMeshes.length){
+            modelState.stickerMeshes.forEach((m)=>{ m.material = cartridgeGreyMat; m.visible = true; });
+          }
+          if (modelState.cartridgeMeshes && modelState.cartridgeMeshes.length){
+            modelState.cartridgeMeshes.forEach((m)=>{ m.material = cartridgeGreyMat; m.visible = true; });
+          }
           if (modelState.part3Node){
             modelState.part3Node.visible = modelState.showPart3;
             modelState.part3Node.traverse((o)=>{ if (o.isMesh){ o.material = blackMat; o.visible = modelState.showPart3; } });
@@ -667,9 +681,11 @@
             root.add(bodyGltf.scene);
             root.add(stickerGltf.scene);
             modelState.part3Node = part3Gltf.scene;
+            modelState.cartridgeMeshes = meshListOf(bodyGltf.scene);
+            modelState.stickerMeshes = meshListOf(stickerGltf.scene);
 
             const p1 = meshListOf(caseGltf.scene).concat(meshListOf(bodyGltf.scene));
-            const p2 = meshListOf(panelGltf.scene).concat(meshListOf(stickerGltf.scene));
+            const p2 = meshListOf(panelGltf.scene);
             const p3 = meshListOf(part3Gltf.scene);
             const used = new Set([].concat(p1, p2, p3));
             const all = meshListOf(root);
