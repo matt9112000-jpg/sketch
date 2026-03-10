@@ -18,6 +18,8 @@ let nameInput;
 
 let endBlocks = 0;
 let gameState = 'input'; // 'input','playing','endedWait','gameover','rewardPreview','leaderboard'
+let NAME_INPUT_W = 232;
+let NAME_INPUT_H = 36;
 
 /***** 本地備援排行榜 *****/
 const STORAGE_KEY = 'tetris_scores';
@@ -382,7 +384,7 @@ function setup(){
            .attribute('autocorrect','off').attribute('autocapitalize','off');
   nameInput.style('position','absolute').style('z-index','10010').style('pointer-events','auto')
            .style('font-weight','600')
-           .style('font-size','16px')
+           .style('font-size', IS_MOBILE ? '17px' : '18px')
            .style('color','#f4f6ff')
            .style('background','rgba(8,14,66,0.86)')
            .style('border','1px solid rgba(255,59,218,0.62)')
@@ -391,7 +393,7 @@ function setup(){
            .style('outline','none')
            .style('box-shadow','0 0 0 1px rgba(255,255,255,0.08) inset, 0 0 16px rgba(255,59,218,0.22)')
            .style('font-family', "Montserrat, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', Arial, sans-serif")
-           .size(220,28);
+           .size(NAME_INPUT_W, NAME_INPUT_H);
   centerInput(); nameInput.elt.focus();
   nameInput.elt.addEventListener('keydown', e=>{
     if (e.key === 'Enter' && nameInput.value().trim()){
@@ -405,7 +407,8 @@ function setup(){
 function windowResized(){ calculateLayout(); if(!inputComplete) centerInput(); positionMarquees(); clearButtons(); }
 function centerInput(){
   const w = innerW + BORDER_THICK, h = innerH + BORDER_THICK;
-  nameInput.position(canvasX + (w - 220)/2, canvasY + (h - 28)/2);
+  nameInput.size(NAME_INPUT_W, NAME_INPUT_H);
+  nameInput.position(canvasX + (w - NAME_INPUT_W)/2, canvasY + (h - NAME_INPUT_H)/2);
 }
 function applyResponsiveUI(){
   IS_MOBILE =
@@ -421,6 +424,8 @@ function applyResponsiveUI(){
     BTN_PAD_LARGE = '8px 14px';
     BTN_FZ_SMALL  = '12px';
     BTN_FZ_LARGE  = '15px';
+    NAME_INPUT_W = 248;
+    NAME_INPUT_H = 40;
   } else {
     // 桌面版
     LB_THUMB_RATIO = 0.30;
@@ -430,6 +435,8 @@ function applyResponsiveUI(){
     BTN_PAD_LARGE = '10px 18px';
     BTN_FZ_SMALL  = '14px';
     BTN_FZ_LARGE  = '18px';
+    NAME_INPUT_W = 280;
+    NAME_INPUT_H = 42;
   }
 }
 
@@ -465,19 +472,20 @@ function draw(){
   if (gameState === 'input'){
     push(); translate(BORDER_HALF, BORDER_HALF); updateIntroPieces(); drawIntroPieces(); pop();
     if (!PREVIEW_MODE){
+      const promptW = max(280, NAME_INPUT_W + 28);
       noStroke();
       fill(7, 13, 58, 210);
-      rect(width/2 - 140, height/2 - 46, 280, 28, 9);
+      rect(width/2 - promptW/2, height/2 - 54, promptW, 30, 9);
       stroke(255, 59, 218, 170);
       strokeWeight(1.2);
       noFill();
-      rect(width/2 - 140, height/2 - 46, 280, 28, 9);
+      rect(width/2 - promptW/2, height/2 - 54, promptW, 30, 9);
       noStroke();
       fill('#ffd6fa');
       textAlign(CENTER,CENTER);
       textSize(12);
       textStyle(BOLD);
-      text('ENTER YOUR IG TO START', width/2, height/2 - 32);
+      text('ENTER YOUR IG TO START', width/2, height/2 - 39);
       nameInput.show(); nameInput.elt.focus();
     } else {
       nameInput.hide();
@@ -487,20 +495,20 @@ function draw(){
   if (gameState === 'playing'){
     const safePlayerName = fitTextToWidth(playerName, innerW - 12);
     const padX = 8;
-    const labelW = max(72, min(innerW - 12, safePlayerName.length * max(8, blockSize * 0.24) + 16));
+    const labelW = max(88, min(innerW - 12, safePlayerName.length * max(9, blockSize * 0.27) + 24));
     noStroke();
     fill(10, 16, 74, 215);
-    rect(BORDER_HALF + 6, BORDER_HALF + 4, labelW, 22, 8);
+    rect(BORDER_HALF + 6, BORDER_HALF + 4, labelW, 26, 8);
     stroke(255, 59, 218, 180);
     strokeWeight(1.1);
     noFill();
-    rect(BORDER_HALF + 6, BORDER_HALF + 4, labelW, 22, 8);
+    rect(BORDER_HALF + 6, BORDER_HALF + 4, labelW, 26, 8);
     noStroke();
     fill('#ffd4f8');
-    textSize(max(12, blockSize*0.30));
+    textSize(max(13, blockSize*0.33));
     textAlign(LEFT,CENTER);
     textStyle(BOLD);
-    text(safePlayerName, BORDER_HALF + 6 + padX, BORDER_HALF + 15);
+    text(safePlayerName, BORDER_HALF + 6 + padX, BORDER_HALF + 17);
     handleDrop();
     if (!PREVIEW_MODE){
       const now = millis ? millis() : Date.now();
@@ -822,7 +830,7 @@ function renderLeaderboard(){
       strokeWeight(2);
       rect(bx-8, by-6, bw+16, bh+14, 12);
 
-      const nameSize = max(isCompactLb ? 11 : 15, titleSize * 0.72);
+      const nameSize = max(isCompactLb ? 12 : 16, titleSize * 0.78);
       const scoreSize = max(isCompactLb ? 10 : 13, titleSize * 0.48);
       const nameY = lineY + 4;
       const scoreY = nameY + nameSize + 6;
@@ -1092,10 +1100,14 @@ function makeResultVoxelGroup(snapshot, panelRoot, cubeTemplate){
         if (!o.isMesh) return;
         o.material = new THREE.MeshPhysicalMaterial({
           color: PALETTE[colorIdx],
-          metalness: 0.14,
-          roughness: 0.18,
-          clearcoat: 0.78,
-          clearcoatRoughness: 0.12
+          metalness: 0.02,
+          roughness: 0.06,
+          clearcoat: 1.0,
+          clearcoatRoughness: 0.03,
+          transmission: 0.55,
+          thickness: 0.45,
+          ior: 1.42,
+          envMapIntensity: 1.35
         });
       });
       group.add(voxel);
@@ -1579,7 +1591,7 @@ async function openCharmPreview3D(options = {}){
   threeWrap.parent(ov);
   threeWrap.id('threeWrap');
   threeWrap.style('position','absolute')
-    .style('left', '50%').style('top', isCompactReward ? '50%' : '50%')
+    .style('left', isCompactReward ? '44%' : '47%').style('top', '50%')
     .style('transform', fromGameOver
       ? 'translate(-50%, -50%) scale(0.22)'
       : (isCompactReward ? 'translate(-50%, -50%) scale(0.5)' : 'translate(-50%, -50%) scale(0.55)'))
