@@ -1100,11 +1100,10 @@ function makeResultVoxelGroup(snapshot, panelRoot, cubeTemplate){
         if (!o.isMesh) return;
         o.material = new THREE.MeshPhysicalMaterial({
           color: PALETTE[colorIdx],
-          metalness: 0.92,
-          roughness: 0.1,
-          clearcoat: 0.9,
-          clearcoatRoughness: 0.06,
-          envMapIntensity: 1.48
+          metalness: 0.14,
+          roughness: 0.18,
+          clearcoat: 0.78,
+          clearcoatRoughness: 0.12
         });
       });
       group.add(voxel);
@@ -1588,7 +1587,7 @@ async function openCharmPreview3D(options = {}){
   threeWrap.parent(ov);
   threeWrap.id('threeWrap');
   threeWrap.style('position','absolute')
-    .style('left', isCompactReward ? '20%' : '25%').style('top', '10%')
+    .style('left', isCompactReward ? '18%' : '22%').style('top', '50%')
     .style('transform', fromGameOver
       ? 'translate(-50%, -50%) scale(0.22)'
       : (isCompactReward ? 'translate(-50%, -50%) scale(0.5)' : 'translate(-50%, -50%) scale(0.55)'))
