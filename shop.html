@@ -652,34 +652,55 @@
 
         (async ()=>{
           try {
-            const [caseGltf, panelGltf, part3Gltf] = await Promise.all([
-              loadGlb('./box_case.glb'),
-              loadGlb('./box_panel.glb'),
-              loadGlb('./box_part3.glb'),
+            // Primary: new cartridge + sticker pair.
+            const [bodyGltf, stickerGltf] = await Promise.all([
+              loadGlb('./cartridge.glb'),
+              loadGlb('./cartridge_sticker.glb'),
             ]);
             const root = new THREE.Group();
-            root.add(caseGltf.scene);
-            root.add(panelGltf.scene);
-            root.add(part3Gltf.scene);
-            modelState.part3Node = part3Gltf.scene;
+            root.add(bodyGltf.scene);
+            root.add(stickerGltf.scene);
+            modelState.part3Node = null;
 
-            const p1 = meshListOf(caseGltf.scene);
-            const p2 = meshListOf(panelGltf.scene);
-            const p3 = meshListOf(part3Gltf.scene);
+            const p1 = meshListOf(bodyGltf.scene);
+            const p2 = meshListOf(stickerGltf.scene);
+            const p3 = [];
             const used = new Set([].concat(p1, p2, p3));
             const all = meshListOf(root);
             const parts = { '1':p1, '2':p2, '3':p3, other: all.filter((m)=>!used.has(m)) };
             finalizeRoot(root, parts);
-          } catch (splitErr){
-            console.warn('split model load failed, fallback to box.glb', splitErr);
-            modelState.part3Node = null;
+          } catch (cartridgeErr){
+            console.warn('cartridge pair load failed, fallback to legacy split', cartridgeErr);
             try {
-              const gltf = await loadGlb('./box.glb');
-              const root = gltf.scene;
-              const parts = collectPartMeshes(root);
+              const [caseGltf, panelGltf, part3Gltf] = await Promise.all([
+                loadGlb('./box_case.glb'),
+                loadGlb('./box_panel.glb'),
+                loadGlb('./box_part3.glb'),
+              ]);
+              const root = new THREE.Group();
+              root.add(caseGltf.scene);
+              root.add(panelGltf.scene);
+              root.add(part3Gltf.scene);
+              modelState.part3Node = part3Gltf.scene;
+
+              const p1 = meshListOf(caseGltf.scene);
+              const p2 = meshListOf(panelGltf.scene);
+              const p3 = meshListOf(part3Gltf.scene);
+              const used = new Set([].concat(p1, p2, p3));
+              const all = meshListOf(root);
+              const parts = { '1':p1, '2':p2, '3':p3, other: all.filter((m)=>!used.has(m)) };
               finalizeRoot(root, parts);
-            } catch (err){
-              mount.innerHTML = '<div style="display:flex;height:100%;align-items:center;justify-content:center;color:#73738a;font-size:12px;">Unable to load split model or box.glb</div>';
+            } catch (splitErr){
+              console.warn('legacy split load failed, fallback to box.glb', splitErr);
+              modelState.part3Node = null;
+              try {
+                const gltf = await loadGlb('./box.glb');
+                const root = gltf.scene;
+                const parts = collectPartMeshes(root);
+                finalizeRoot(root, parts);
+              } catch (err){
+                mount.innerHTML = '<div style="display:flex;height:100%;align-items:center;justify-content:center;color:#73738a;font-size:12px;">Unable to load cartridge models or legacy box models</div>';
+              }
             }
           }
         })();
@@ -690,8 +711,8 @@
           active = v;
           shell.classList.toggle('is-active', active);
           info.classList.toggle('is-active', active);
-          hoverTopLightL.intensity = active ? 2.5 : 0;
-          hoverTopLightR.intensity = active ? 2.5 : 0;
+          hoverTopLightL.intensity = active ? 3.4 : 0;
+          hoverTopLightR.intensity = active ? 3.4 : 0;
           hoverAreaWash.material.opacity = 0.0;
         }
 

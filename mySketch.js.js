@@ -24,7 +24,8 @@ let NAME_INPUT_H = 36;
 /***** 本地備援排行榜 *****/
 const STORAGE_KEY = 'tetris_scores';
 const CLOUD_CACHE_KEY = 'tetris_scores_cache';
-const MODEL_URL = './box.glb';
+const MODEL_URL = './cartridge.glb';
+const MODEL_STICKER_URL = './cartridge_sticker.glb';
 const MODEL_CASE_URL = './box_case.glb';
 const MODEL_PANEL_URL = './box_panel.glb';
 const MODEL_PART3_URL = './box_part3.glb';
@@ -1109,7 +1110,7 @@ function makeResultVoxelGroup(snapshot, panelRoot, cubeTemplate){
       group.add(voxel);
     }
   }
-  group.rotation.set(Math.PI / 2, 0, 0);
+  group.rotation.set(Math.PI / 2, Math.PI, 0);
   group.position.y += z + panelBox.max.y + cell * 0.12;
   group.position.add(new THREE.Vector3(-10, -7, -18));
   return group.children.length ? group : null;
@@ -1324,35 +1325,57 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
 
   (async ()=>{
     try {
-      const [caseGltf, panelGltf, part3Gltf] = await Promise.all([
-        loadGlb(MODEL_CASE_URL),
-        loadGlb(MODEL_PANEL_URL),
-        loadGlb(MODEL_PART3_URL),
+      // Primary: new cartridge + sticker pair.
+      const [bodyGltf, stickerGltf] = await Promise.all([
+        loadGlb(modelPath || MODEL_URL),
+        loadGlb(MODEL_STICKER_URL),
       ]);
       const root = new THREE.Group();
-      root.add(caseGltf.scene);
-      root.add(panelGltf.scene);
-      root.add(part3Gltf.scene);
-      partState.part3Node = part3Gltf.scene;
-      partState.panelNode = panelGltf.scene;
+      root.add(bodyGltf.scene);
+      root.add(stickerGltf.scene);
+      partState.part3Node = null;
+      partState.panelNode = stickerGltf.scene;
 
-      const p1 = meshListOf(caseGltf.scene);
-      const p2 = meshListOf(panelGltf.scene);
-      const p3 = meshListOf(part3Gltf.scene);
+      const p1 = meshListOf(bodyGltf.scene);
+      const p2 = meshListOf(stickerGltf.scene);
+      const p3 = [];
       const used = new Set([].concat(p1, p2, p3));
       const all = meshListOf(root);
       const forcedParts = { '1':p1, '2':p2, '3':p3, other: all.filter((m)=>!used.has(m)) };
       finalizeLoadedRoot(root, forcedParts);
-    } catch (splitErr){
-      console.warn('split model load failed, fallback to single glb', splitErr);
-      partState.part3Node = null;
-      partState.panelNode = null;
+    } catch (cartridgeErr){
+      console.warn('cartridge pair load failed, fallback to legacy box split', cartridgeErr);
       try {
-        const gltf = await loadGlb(modelPath || MODEL_URL);
-        finalizeLoadedRoot(gltf.scene, null);
-      } catch (err){
-        console.error('GLB load failed', err);
-        alert('Unable to load 3D model (box_case/panel/part3.glb or box.glb).');
+        const [caseGltf, panelGltf, part3Gltf] = await Promise.all([
+          loadGlb(MODEL_CASE_URL),
+          loadGlb(MODEL_PANEL_URL),
+          loadGlb(MODEL_PART3_URL),
+        ]);
+        const root = new THREE.Group();
+        root.add(caseGltf.scene);
+        root.add(panelGltf.scene);
+        root.add(part3Gltf.scene);
+        partState.part3Node = part3Gltf.scene;
+        partState.panelNode = panelGltf.scene;
+
+        const p1 = meshListOf(caseGltf.scene);
+        const p2 = meshListOf(panelGltf.scene);
+        const p3 = meshListOf(part3Gltf.scene);
+        const used = new Set([].concat(p1, p2, p3));
+        const all = meshListOf(root);
+        const forcedParts = { '1':p1, '2':p2, '3':p3, other: all.filter((m)=>!used.has(m)) };
+        finalizeLoadedRoot(root, forcedParts);
+      } catch (splitErr){
+        console.warn('legacy split load failed, fallback to single glb', splitErr);
+        partState.part3Node = null;
+        partState.panelNode = null;
+        try {
+          const gltf = await loadGlb(modelPath || MODEL_URL);
+          finalizeLoadedRoot(gltf.scene, null);
+        } catch (err){
+          console.error('GLB load failed', err);
+          alert('Unable to load cartridge models (cartridge/cartridge_sticker) or legacy box models.');
+        }
       }
     }
   })();
