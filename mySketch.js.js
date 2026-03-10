@@ -383,6 +383,13 @@ function setup(){
   nameInput.style('position','absolute').style('z-index','10010').style('pointer-events','auto')
            .style('font-weight','600')
            .style('font-size','16px')
+           .style('color','#f4f6ff')
+           .style('background','rgba(8,14,66,0.86)')
+           .style('border','1px solid rgba(255,59,218,0.62)')
+           .style('border-radius','10px')
+           .style('padding','0 10px')
+           .style('outline','none')
+           .style('box-shadow','0 0 0 1px rgba(255,255,255,0.08) inset, 0 0 16px rgba(255,59,218,0.22)')
            .style('font-family', "Montserrat, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', Arial, sans-serif")
            .size(220,28);
   centerInput(); nameInput.elt.focus();
@@ -458,8 +465,19 @@ function draw(){
   if (gameState === 'input'){
     push(); translate(BORDER_HALF, BORDER_HALF); updateIntroPieces(); drawIntroPieces(); pop();
     if (!PREVIEW_MODE){
-      noStroke(); fill('#FF3BDA'); textAlign(CENTER,CENTER); textSize(14); textStyle(BOLD);
-      text('Enter your IG and press Enter', width/2, height/2);
+      noStroke();
+      fill(7, 13, 58, 210);
+      rect(width/2 - 140, height/2 - 46, 280, 28, 9);
+      stroke(255, 59, 218, 170);
+      strokeWeight(1.2);
+      noFill();
+      rect(width/2 - 140, height/2 - 46, 280, 28, 9);
+      noStroke();
+      fill('#ffd6fa');
+      textAlign(CENTER,CENTER);
+      textSize(12);
+      textStyle(BOLD);
+      text('ENTER YOUR IG TO START', width/2, height/2 - 32);
       nameInput.show(); nameInput.elt.focus();
     } else {
       nameInput.hide();
@@ -467,9 +485,22 @@ function draw(){
     return;
   }
   if (gameState === 'playing'){
-    noStroke(); fill('#FF3BDA'); textSize(max(14, blockSize*0.35)); textAlign(LEFT,TOP); textStyle(BOLD);
     const safePlayerName = fitTextToWidth(playerName, innerW - 12);
-    text(safePlayerName, BORDER_HALF+6, BORDER_HALF+4);
+    const padX = 8;
+    const labelW = max(72, min(innerW - 12, safePlayerName.length * max(8, blockSize * 0.24) + 16));
+    noStroke();
+    fill(10, 16, 74, 215);
+    rect(BORDER_HALF + 6, BORDER_HALF + 4, labelW, 22, 8);
+    stroke(255, 59, 218, 180);
+    strokeWeight(1.1);
+    noFill();
+    rect(BORDER_HALF + 6, BORDER_HALF + 4, labelW, 22, 8);
+    noStroke();
+    fill('#ffd4f8');
+    textSize(max(12, blockSize*0.30));
+    textAlign(LEFT,CENTER);
+    textStyle(BOLD);
+    text(safePlayerName, BORDER_HALF + 6 + padX, BORDER_HALF + 15);
     handleDrop();
     if (!PREVIEW_MODE){
       const now = millis ? millis() : Date.now();
@@ -1565,15 +1596,23 @@ async function openCharmPreview3D(options = {}){
   const footer = createDiv('');
   footer.parent(ov);
   footer.style('position','absolute').style('left','50%')
-        .style('bottom', isCompactReward ? '10px' : '18px')
+        .style('bottom', isCompactReward ? '12px' : '20px')
         .style('transform','translateX(-50%)')
         .style('display','flex').style('gap', isCompactReward ? '6px' : '10px').style('flex-wrap','wrap').style('justify-content','center')
         .style('max-width', isCompactReward ? '95vw' : 'none')
+        .style('padding', isCompactReward ? '8px 10px' : '10px 12px')
+        .style('border','1px solid rgba(255,255,255,0.16)')
+        .style('border-radius','12px')
+        .style('background','rgba(8,12,46,0.66)')
         .style('z-index','10060').style('pointer-events','auto');
   charmFS.footer = footer;
 
   const addCart = createButton('Add Cart');
   stylePill(addCart, PALETTE[2], PALETTE[3]);
+  addCart.style('background','#ee00b8')
+         .style('border-color','#ff61e3')
+         .style('color','#ffffff')
+         .style('font-weight','800');
   addCart.parent(footer);
   addCart.mousePressed(async ()=> {
     if (!CHECKOUT_URL){
@@ -1586,6 +1625,10 @@ async function openCharmPreview3D(options = {}){
 
   const closeBtn = createButton('Close');
   stylePill(closeBtn, '#4C4C4C', '#6A6A6A');
+  closeBtn.style('background','rgba(16,23,86,0.92)')
+          .style('border-color','rgba(157,171,255,0.55)')
+          .style('color','#f3f6ff')
+          .style('font-weight','800');
   closeBtn.parent(footer);
   closeBtn.mousePressed(closeCharmPreview3D);
   charmFS.closeBtn = closeBtn;
@@ -1594,8 +1637,12 @@ async function openCharmPreview3D(options = {}){
   tip.parent(ov);
   tip.style('position','absolute')
      .style('left','50%')
-     .style('top', isCompactReward ? '14px' : '22px')
+     .style('top', isCompactReward ? '12px' : '18px')
      .style('transform','translateX(-50%)')
+     .style('padding', isCompactReward ? '6px 10px' : '7px 12px')
+     .style('border','1px solid rgba(255,59,218,0.45)')
+     .style('border-radius','999px')
+     .style('background','rgba(8,12,46,0.62)')
      .style('font-family',"Montserrat, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', Arial, sans-serif")
      .style('font-size', isCompactReward ? '13px' : '16px').style('font-weight','800')
      .style('letter-spacing', isCompactReward ? '1px' : '2px').style('color', PINK)
