@@ -518,6 +518,11 @@
         const stickerTex = new THREE.TextureLoader().load('./sticker-shop001.png');
         stickerTex.colorSpace = THREE.SRGBColorSpace;
         stickerTex.flipY = false;
+        stickerTex.wrapS = THREE.RepeatWrapping;
+        stickerTex.wrapT = THREE.RepeatWrapping;
+        stickerTex.repeat.set(1, 1);
+        stickerTex.offset.set(0, 0);
+        stickerTex.rotation = 0;
         const stickerMat = new THREE.MeshPhysicalMaterial({
           map: stickerTex,
           color: '#ffffff',
@@ -525,32 +530,9 @@
           roughness: 0.34,
           clearcoat: 0.42,
           clearcoatRoughness: 0.18,
-          envMapIntensity: 1.2
+          envMapIntensity: 1.2,
+          side: THREE.DoubleSide
         });
-        function makeStickerMatFromMesh(mesh){
-          const tex = stickerTex.clone();
-          const srcMap = mesh && mesh.material && mesh.material.map;
-          if (srcMap){
-            tex.wrapS = srcMap.wrapS;
-            tex.wrapT = srcMap.wrapT;
-            tex.repeat.copy(srcMap.repeat);
-            tex.offset.copy(srcMap.offset);
-            tex.center.copy(srcMap.center);
-            tex.rotation = srcMap.rotation;
-            tex.flipY = srcMap.flipY;
-          }
-          tex.colorSpace = THREE.SRGBColorSpace;
-          tex.needsUpdate = true;
-          return new THREE.MeshPhysicalMaterial({
-            map: tex,
-            color: '#ffffff',
-            metalness: 0.2,
-            roughness: 0.34,
-            clearcoat: 0.42,
-            clearcoatRoughness: 0.18,
-            envMapIntensity: 1.2
-          });
-        }
 
         function getPartIdFromName(name){
           const n = (name || '').trim();
@@ -604,7 +586,7 @@
           clearcoat: 0.02,
           clearcoatRoughness: 0.9
         });
-        const modelState = { caseVisible:true, showPart3:true, parts:null, part3Node:null, stickerMeshes:[], stickerMats:[] };
+        const modelState = { caseVisible:true, showPart3:true, parts:null, part3Node:null, stickerMeshes:[] };
         const caseBtn = document.getElementById('case-toggle-btn');
         const part3Btn = document.getElementById('part3-toggle-btn');
 
@@ -616,10 +598,7 @@
           parts['3'].forEach((m)=>{ m.material = blackMat; m.visible = modelState.showPart3; });
           parts.other.forEach((m)=>{ m.material = silverMat; m.visible = true; });
           if (modelState.stickerMeshes && modelState.stickerMeshes.length){
-            modelState.stickerMeshes.forEach((m, i)=>{
-              m.material = modelState.stickerMats[i] || stickerMat;
-              m.visible = true;
-            });
+            modelState.stickerMeshes.forEach((m)=>{ m.material = stickerMat; m.visible = true; });
           }
           if (modelState.part3Node){
             modelState.part3Node.visible = modelState.showPart3;
@@ -710,7 +689,6 @@
             root.add(stickerGltf.scene);
             modelState.part3Node = part3Gltf.scene;
             modelState.stickerMeshes = meshListOf(stickerGltf.scene);
-            modelState.stickerMats = modelState.stickerMeshes.map((m)=>makeStickerMatFromMesh(m));
 
             const p1 = meshListOf(caseGltf.scene).concat(meshListOf(bodyGltf.scene));
             const p2 = meshListOf(panelGltf.scene);
