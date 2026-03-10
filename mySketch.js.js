@@ -1123,7 +1123,7 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
   renderer.setSize(w, h, false);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.12;
+  renderer.toneMappingExposure = 0.86;
   containerEl.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
@@ -1142,80 +1142,26 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
     rotateResumeAt = performance.now() + 1000;
   });
 
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x97a3b5, 1.15));
-  scene.add(new THREE.AmbientLight(0xffffff, 0.72));
-  const keyLight = new THREE.DirectionalLight(0xffffff, 1.05);
-  keyLight.position.set(-1.1, 1.35, 1.3);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x97a3b5, 0.68));
+  scene.add(new THREE.AmbientLight(0xffffff, 0.3));
+  const keyLight = new THREE.DirectionalLight(0xffffff, 0.78);
+  keyLight.position.set(-1.1, 1.4, 1.35);
   scene.add(keyLight);
-  const fillLight = new THREE.DirectionalLight(0xecf3ff, 0.9);
-  fillLight.position.set(1.35, 0.8, 1.45);
+  const fillLight = new THREE.DirectionalLight(0xecf3ff, 0.62);
+  fillLight.position.set(1.4, 0.85, 1.5);
   scene.add(fillLight);
-  const rimLight = new THREE.DirectionalLight(0xffffff, 0.5);
-  rimLight.position.set(0.0, 1.0, -1.55);
+  const rimLight = new THREE.DirectionalLight(0xffffff, 0.3);
+  rimLight.position.set(0.0, 1.0, -1.6);
   scene.add(rimLight);
-  const leftFill = new THREE.DirectionalLight(0xf6f9ff, 0.42);
+  const leftFill = new THREE.DirectionalLight(0xf6f9ff, 0.24);
   leftFill.position.set(-1.8, 0.35, 0.6);
   scene.add(leftFill);
-  const rightFill = new THREE.DirectionalLight(0xf6f9ff, 0.42);
+  const rightFill = new THREE.DirectionalLight(0xf6f9ff, 0.24);
   rightFill.position.set(1.8, 0.35, 0.6);
   scene.add(rightFill);
-  const topSoft = new THREE.PointLight(0xffffff, 0.34, 8);
-  topSoft.position.set(0, 1.8, 0.85);
+  const topSoft = new THREE.PointLight(0xffffff, 0.2, 6);
+  topSoft.position.set(0, 1.8, 0.9);
   scene.add(topSoft);
-  const frontLight = new THREE.DirectionalLight(0xffffff, 0.82);
-  frontLight.position.set(0, 0.3, 2.2);
-  scene.add(frontLight);
-  const spotLight = new THREE.SpotLight(0xffffff, 1.8, 12, Math.PI / 7, 0.55, 1.0);
-  spotLight.position.set(0.2, 2.35, 1.25);
-  spotLight.target.position.set(0, 0, 0);
-  scene.add(spotLight);
-  scene.add(spotLight.target);
-  const rimSpot = new THREE.SpotLight(0xb9c8ff, 0.75, 11, Math.PI / 8, 0.45, 1.1);
-  rimSpot.position.set(-1.3, 1.35, -1.8);
-  rimSpot.target.position.set(0, 0, 0);
-  scene.add(rimSpot);
-  scene.add(rimSpot.target);
-
-  // Stage wash and hover accent logic shared with shop.
-  const stageGlow = new THREE.Mesh(
-    new THREE.CircleGeometry(1.45, 64),
-    new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.16, depthWrite: false })
-  );
-  stageGlow.rotation.x = -Math.PI / 2;
-  stageGlow.position.set(0, -0.56, 0.02);
-  scene.add(stageGlow);
-  const hoverTopLightL = new THREE.SpotLight(0xff8ae8, 0, 10, Math.PI / 5.6, 0.72, 1.2);
-  hoverTopLightL.position.set(-0.65, 2.7, 0.52);
-  hoverTopLightL.target.position.set(0, 0, 0);
-  scene.add(hoverTopLightL);
-  scene.add(hoverTopLightL.target);
-  const hoverTopLightR = new THREE.SpotLight(0xff8ae8, 0, 10, Math.PI / 5.6, 0.72, 1.2);
-  hoverTopLightR.position.set(0.65, 2.7, 0.52);
-  hoverTopLightR.target.position.set(0, 0, 0);
-  scene.add(hoverTopLightR);
-  scene.add(hoverTopLightR.target);
-  const hoverAreaWash = new THREE.Mesh(
-    new THREE.CircleGeometry(1.95, 80),
-    new THREE.MeshBasicMaterial({ color: 0xff78e5, transparent: true, opacity: 0.0, depthWrite: false })
-  );
-  hoverAreaWash.rotation.x = -Math.PI / 2;
-  hoverAreaWash.position.set(0, -0.558, 0.02);
-  scene.add(hoverAreaWash);
-
-  let hoverActive = false;
-  function setHoverActive(v){
-    if (hoverActive === v) return;
-    hoverActive = v;
-    hoverTopLightL.intensity = hoverActive ? 1.95 : 0;
-    hoverTopLightR.intensity = hoverActive ? 1.95 : 0;
-    hoverAreaWash.material.opacity = hoverActive ? 0.19 : 0.0;
-  }
-  const onHoverMove = ()=>setHoverActive(true);
-  const onHoverLeave = ()=>setHoverActive(false);
-  const onHoverDown = ()=>setHoverActive(true);
-  containerEl.addEventListener('pointermove', onHoverMove);
-  containerEl.addEventListener('pointerleave', onHoverLeave);
-  containerEl.addEventListener('pointerdown', onHoverDown);
 
   // 材質
   const FRAME_COLOR = '#f1f4fb'; // polished silver tone
@@ -1284,13 +1230,6 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
     const postBox = new THREE.Box3().setFromObject(root);
     const postCenter = postBox.getCenter(new THREE.Vector3());
     root.position.sub(postCenter);
-    stageGlow.position.x = root.position.x;
-    stageGlow.position.z = root.position.z;
-    hoverAreaWash.position.x = root.position.x;
-    hoverAreaWash.position.z = root.position.z;
-    const lightAim = new THREE.Vector3(root.position.x, root.position.y + 0.02, root.position.z);
-    hoverTopLightL.target.position.copy(lightAim);
-    hoverTopLightR.target.position.copy(lightAim);
 
     let parts = forcedParts || { '1':[], '2':[], '3':[], other:[] };
     if (!forcedParts){
@@ -1385,7 +1324,7 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
     renderer.render(scene, camera);
     threeCtx && (threeCtx.rafId = requestAnimationFrame(tick));
   }
-  threeCtx = { renderer, scene, camera, controls, containerEl, rafId:null, onResize:null, onHoverMove, onHoverLeave, onHoverDown, partState:null, refreshParts:null, hasPart3:false, hasCase:false };
+  threeCtx = { renderer, scene, camera, controls, containerEl, rafId:null, onResize:null, partState:null, refreshParts:null, hasPart3:false, hasCase:false };
   tick();
 
   // resize
@@ -1403,11 +1342,6 @@ function disposeThreeViewer(){
   if (!threeCtx) return;
   if (threeCtx.rafId) cancelAnimationFrame(threeCtx.rafId);
   if (threeCtx.onResize) window.removeEventListener('resize', threeCtx.onResize);
-  if (threeCtx.containerEl && threeCtx.onHoverMove){
-    threeCtx.containerEl.removeEventListener('pointermove', threeCtx.onHoverMove);
-    threeCtx.containerEl.removeEventListener('pointerleave', threeCtx.onHoverLeave);
-    threeCtx.containerEl.removeEventListener('pointerdown', threeCtx.onHoverDown);
-  }
   if (threeCtx.renderer) threeCtx.renderer.dispose();
   if (threeCtx.containerEl && threeCtx.containerEl.firstChild){
     threeCtx.containerEl.removeChild(threeCtx.containerEl.firstChild);

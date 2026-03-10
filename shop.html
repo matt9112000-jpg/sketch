@@ -100,7 +100,7 @@
       .viewer-shell{
         position:absolute;
         left:50%;
-        top:48%;
+        top:50%;
         width:min(820px, 92vw);
         height:min(500px, 54vh);
         transform: translate(-50%, -50%) scale(0.72);
@@ -287,7 +287,7 @@
         }
         .viewer-shell{
           left:50%;
-          top:46%;
+          top:50%;
           width:min(94vw, 520px);
           height:min(46vh, 390px);
           transform: translate(-50%, -50%) scale(0.94);
@@ -692,7 +692,7 @@
           info.classList.toggle('is-active', active);
           hoverTopLightL.intensity = active ? 2.5 : 0;
           hoverTopLightR.intensity = active ? 2.5 : 0;
-          hoverAreaWash.material.opacity = active ? 0.22 : 0.0;
+          hoverAreaWash.material.opacity = 0.0;
         }
 
         function checkProximity(clientX, clientY){
