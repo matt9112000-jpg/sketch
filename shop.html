@@ -454,22 +454,17 @@
         hoverTopLightR.target.position.set(0, 0, 0);
         scene.add(hoverTopLightR);
         scene.add(hoverTopLightR.target);
-        const beamMat = new THREE.MeshBasicMaterial({ color: 0xff70df, transparent: true, opacity: 0.68, depthWrite: false });
-        const hoverBeamL = new THREE.Mesh(new THREE.CylinderGeometry(0.007, 0.007, 1, 10), beamMat.clone());
-        const hoverBeamR = new THREE.Mesh(new THREE.CylinderGeometry(0.007, 0.007, 1, 10), beamMat.clone());
-        hoverBeamL.visible = false;
-        hoverBeamR.visible = false;
-        scene.add(hoverBeamL);
-        scene.add(hoverBeamR);
-
-        function placeBeam(mesh, start, end){
-          const dir = new THREE.Vector3().subVectors(end, start);
-          const len = dir.length();
-          if (len < 0.001) return;
-          mesh.scale.set(1, len, 1);
-          mesh.position.copy(start).addScaledVector(dir, 0.5);
-          mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
-        }
+        hoverTopLightL.angle = Math.PI / 5.6;
+        hoverTopLightR.angle = Math.PI / 5.6;
+        hoverTopLightL.penumbra = 0.72;
+        hoverTopLightR.penumbra = 0.72;
+        const hoverAreaWash = new THREE.Mesh(
+          new THREE.CircleGeometry(1.95, 80),
+          new THREE.MeshBasicMaterial({ color: 0xff78e5, transparent: true, opacity: 0.0, depthWrite: false })
+        );
+        hoverAreaWash.rotation.x = -Math.PI / 2;
+        hoverAreaWash.position.set(0, -0.558, 0.02);
+        scene.add(hoverAreaWash);
 
         // Stage-like floor glow and soft shadow catcher.
         const stageGlow = new THREE.Mesh(
@@ -643,11 +638,11 @@
           root.position.y += 0.0;
           stageGlow.position.x = root.position.x;
           stageGlow.position.z = root.position.z;
+          hoverAreaWash.position.x = root.position.x;
+          hoverAreaWash.position.z = root.position.z;
           const aim = new THREE.Vector3(root.position.x, root.position.y + 0.02, root.position.z);
           hoverTopLightL.target.position.copy(aim);
           hoverTopLightR.target.position.copy(aim);
-          placeBeam(hoverBeamL, hoverTopLightL.position, aim);
-          placeBeam(hoverBeamR, hoverTopLightR.position, aim);
           root.updateWorldMatrix(true, true);
           focusControlsOnMeshes(root, parts);
 
@@ -695,10 +690,9 @@
           active = v;
           shell.classList.toggle('is-active', active);
           info.classList.toggle('is-active', active);
-          hoverTopLightL.intensity = active ? 2.2 : 0;
-          hoverTopLightR.intensity = active ? 2.2 : 0;
-          hoverBeamL.visible = active;
-          hoverBeamR.visible = active;
+          hoverTopLightL.intensity = active ? 2.5 : 0;
+          hoverTopLightR.intensity = active ? 2.5 : 0;
+          hoverAreaWash.material.opacity = active ? 0.22 : 0.0;
         }
 
         function checkProximity(clientX, clientY){
