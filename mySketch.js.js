@@ -124,8 +124,65 @@ let charmCloseHook = null;
 /***** 遊玩次數（右下角顯示） *****/
 const PLAYED_KEY = 'tetris_played_count';
 let playedCount = 0;
+let cloudPlayedCount = null;
+let activityFeed = [];
+let lastActivityState = '';
+let lastActivityAt = 0;
+let lastProgressPublishAt = 0;
 function loadPlayed(){ playedCount = parseInt(localStorage.getItem(PLAYED_KEY) || '0'); }
 function incPlayed(){ playedCount++; localStorage.setItem(PLAYED_KEY, String(playedCount)); }
+function getDisplayedPlayedCount(){
+  if (typeof cloudPlayedCount === 'number' && cloudPlayedCount >= 0) return cloudPlayedCount;
+  return playedCount;
+}
+async function incPlayedCloud(){
+  if (!db || !firebase || !firebase.firestore || !firebase.firestore.FieldValue) return;
+  try{
+    await db.collection('gameStats').doc('global').set({
+      playedCount: firebase.firestore.FieldValue.increment(1),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge:true });
+  }catch(e){ console.warn('incPlayedCloud failed', e); }
+}
+function subscribePlayedCount(){
+  if (!db) return;
+  db.collection('gameStats').doc('global').onSnapshot((doc)=>{
+    const data = doc && doc.data ? doc.data() : null;
+    if (data && typeof data.playedCount === 'number') cloudPlayedCount = data.playedCount;
+  }, (err)=>console.warn('playedCount subscribe error', err));
+}
+async function publishActivity(state, extra = {}){
+  if (!db || PREVIEW_MODE) return;
+  const now = millis ? millis() : Date.now();
+  if (state === lastActivityState && (now - lastActivityAt) < 700) return;
+  lastActivityState = state;
+  lastActivityAt = now;
+  const safeName = (playerName || 'Guest').slice(0,20);
+  try{
+    await db.collection('activity').doc(nameKeyFrom(safeName)).set({
+      name: safeName,
+      nameKey: nameKeyFrom(safeName),
+      state,
+      score: typeof extra.score === 'number' ? extra.score : null,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge:true });
+  }catch(e){ console.warn('publishActivity failed', e); }
+}
+function subscribeActivityFeed(){
+  if (!db || !PREVIEW_MODE) return;
+  db.collection('activity').orderBy('updatedAt','desc').limit(8).onSnapshot((snap)=>{
+    const arr = [];
+    snap.forEach((d)=>{
+      const r = d.data() || {};
+      arr.push({
+        name: (r.name || 'Guest').slice(0,20),
+        state: r.state || 'playing',
+        score: typeof r.score === 'number' ? r.score : null
+      });
+    });
+    activityFeed = arr;
+  }, (err)=>console.warn('activity subscribe error', err));
+}
 
 /***** ====== 小工具 ====== *****/
 function stylePill(btn, base="#FF5722", hover="#FF784E"){
@@ -239,6 +296,8 @@ function initFirebase(){
     if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
     db = firebase.firestore(); firebase.firestore().enablePersistence().catch(()=>{});
     subscribeLeaderboard();
+    subscribePlayedCount();
+    subscribeActivityFeed();
   }catch(e){ FIREBASE_ENABLED=false; console.warn('Firebase init failed:', e); }
 }
 function subscribeLeaderboard(){
@@ -335,6 +394,8 @@ function setup(){
     if (e.key === 'Enter' && nameInput.value().trim()){
       playerName = nameInput.value().trim().slice(0,20);
       inputComplete = true; gameState = 'playing'; nameInput.hide(); spawnPiece();
+      lastProgressPublishAt = 0;
+      publishActivity('playing');
     }
   });
 }
@@ -394,8 +455,8 @@ function draw(){
   noStroke(); fill(BG_BLUE); rect(BORDER_HALF, BORDER_HALF, innerW, innerH);
   stroke(PINK); strokeWeight(BORDER_THICK); noFill(); rect(0,0,width,height);
 
-  noStroke(); fill('#FF3BDA'); textAlign(RIGHT, BOTTOM); textStyle(BOLD); textSize(14);
-  text(`played: ${playedCount}`, width - BORDER_HALF - 6, BORDER_HALF + innerH - 6);
+  drawPlayedBadge();
+  if (PREVIEW_MODE) drawPreviewActivityFeed();
 
   if (gameState === 'input'){
     push(); translate(BORDER_HALF, BORDER_HALF); updateIntroPieces(); drawIntroPieces(); pop();
@@ -413,6 +474,14 @@ function draw(){
     const safePlayerName = fitTextToWidth(playerName, innerW - 12);
     text(safePlayerName, BORDER_HALF+6, BORDER_HALF+4);
     handleDrop();
+    if (!PREVIEW_MODE){
+      const now = millis ? millis() : Date.now();
+      if (now - lastProgressPublishAt > 3200){
+        lastProgressPublishAt = now;
+        const liveBlocks = board.flat().filter(c=>c===null).length;
+        publishActivity('playing', { score: liveBlocks });
+      }
+    }
     push(); translate(BORDER_HALF, BORDER_HALF); drawBoard(); drawPiece(); pop();
     if (!PREVIEW_MODE) drawHintSquares();
     return;
@@ -431,7 +500,7 @@ function draw(){
     if (!select('#savedFlag')){
       const snap = encodeBoardSnapshot();
       lastSnapshot = snap; lastName = playerName; lastBlocks = endBlocks;
-      saveScore(playerName, endBlocks, snap); incPlayed();
+      saveScore(playerName, endBlocks, snap); incPlayed(); incPlayedCloud(); publishActivity('gameover', { score:endBlocks });
       const flag = createDiv(''); flag.id('savedFlag'); flag.style('display','none');
     }
     noStroke(); fill('#FF3BDA'); textAlign(CENTER,CENTER); textStyle(BOLD);
@@ -452,6 +521,7 @@ function draw(){
               if (pendingLeaderboardAfterReward){
                 pendingLeaderboardAfterReward = false;
                 gameState = 'leaderboard';
+                publishActivity('leaderboard', { score:endBlocks });
                 clearButtons();
                 removeSavedFlag();
               }
@@ -470,6 +540,81 @@ function draw(){
   }
   if (gameState === 'leaderboard'){
     renderLeaderboard(); return;
+  }
+}
+
+function drawPlayedBadge(){
+  const count = getDisplayedPlayedCount();
+  const label = 'GLOBAL PLAYS';
+  const num = String(count);
+  const padX = 10;
+  const padY = 6;
+  const numW = max(38, num.length * 8 + 10);
+  const w = 108 + numW;
+  const h = 28;
+  const x = width - BORDER_HALF - w - 6;
+  const y = BORDER_HALF + innerH - h - 6;
+
+  noStroke();
+  fill(14, 22, 92, 230);
+  rect(x, y, w, h, 10);
+  stroke(255, 59, 218, 210);
+  strokeWeight(1.4);
+  noFill();
+  rect(x, y, w, h, 10);
+
+  noStroke();
+  fill('#ffd3f8');
+  textAlign(LEFT, CENTER);
+  textStyle(BOLD);
+  textSize(10);
+  text(label, x + padX, y + h / 2 + 0.5);
+
+  fill('#ff3bda');
+  rect(x + w - numW - 4, y + 4, numW, h - 8, 7);
+  fill('#ffffff');
+  textAlign(CENTER, CENTER);
+  textSize(13);
+  text(num, x + w - numW / 2 - 4, y + h / 2 + 0.5);
+}
+
+function drawPreviewActivityFeed(){
+  const panelW = min(150, innerW * 0.44);
+  const panelX = width - BORDER_HALF - panelW - 8;
+  const panelY = BORDER_HALF + 8;
+  const rowH = 14;
+  const rowsMax = 7;
+  const panelH = 28 + rowH * rowsMax;
+
+  noStroke();
+  fill(8, 16, 74, 210);
+  rect(panelX, panelY, panelW, panelH, 8);
+  stroke(255, 59, 218, 170);
+  strokeWeight(1.1);
+  noFill();
+  rect(panelX, panelY, panelW, panelH, 8);
+
+  noStroke();
+  fill('#ffd7fa');
+  textAlign(LEFT, TOP);
+  textStyle(BOLD);
+  textSize(9);
+  text('LIVE PLAYER PROCESS', panelX + 7, panelY + 6);
+
+  const list = activityFeed && activityFeed.length ? activityFeed : [];
+  textStyle(NORMAL);
+  textSize(9);
+  fill('#eff2ff');
+  if (!list.length){
+    text('Waiting for players...', panelX + 7, panelY + 19);
+    return;
+  }
+  for (let i = 0; i < min(rowsMax, list.length); i++){
+    const r = list[i];
+    const stateLabel = (r.state || 'playing').toUpperCase();
+    const scoreTxt = (typeof r.score === 'number') ? ` | ${r.score}` : '';
+    const line = `${fitTextToWidth(r.name || 'Guest', panelW - 72)} ${stateLabel}${scoreTxt}`;
+    text(line, panelX + 7, panelY + 19 + i * rowH);
   }
 }
 
@@ -639,7 +784,7 @@ function renderLeaderboard(){
     if (i === 0){
       fill('#cbd2ff');
       textSize(max(10, innerW * 0.018));
-      text(`played ${playedCount}`, colX[i] + colW/2, colY[i] + colHeights[i] - 8);
+      text(`played ${getDisplayedPlayedCount()}`, colX[i] + colW/2, colY[i] + colHeights[i] - 8);
     }
   }
 
