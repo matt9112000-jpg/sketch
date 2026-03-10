@@ -1271,7 +1271,8 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
     const postSize = postBox.getSize(new THREE.Vector3());
     root.position.sub(postCenter);
     if (mode === 'charm'){
-      root.position.y += postSize.y * 0.2;
+      const isMobileShift = windowWidth <= 700;
+      root.position.y += postSize.y * (isMobileShift ? 0.05 : 0.15);
     }
 
     let parts = forcedParts || { '1':[], '2':[], '3':[], other:[] };
@@ -1591,7 +1592,7 @@ async function openCharmPreview3D(options = {}){
   threeWrap.parent(ov);
   threeWrap.id('threeWrap');
   threeWrap.style('position','absolute')
-    .style('left', isCompactReward ? '20%' : '25%').style('top', '5%')
+    .style('left', isCompactReward ? '23%' : '28%').style('top', '5%')
     .style('transform', fromGameOver
       ? 'translate(-50%, -50%) scale(0.22)'
       : (isCompactReward ? 'translate(-50%, -50%) scale(0.5)' : 'translate(-50%, -50%) scale(0.55)'))

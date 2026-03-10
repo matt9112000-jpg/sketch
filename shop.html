@@ -634,7 +634,7 @@
           const centered = new THREE.Box3().setFromObject(root);
           const center = centered.getCenter(new THREE.Vector3());
           root.position.sub(center);
-          root.position.x += (window.innerWidth <= 700) ? 0.0 : 1.426;
+          root.position.x += (window.innerWidth <= 700) ? 0.42 : 1.426;
           root.position.y += 0.0;
           stageGlow.position.x = root.position.x;
           stageGlow.position.z = root.position.z;
