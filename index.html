@@ -372,7 +372,7 @@
         font:700 13px/1 var(--font-mono);
       }
       .row .name{
-        font:800 clamp(.84rem, 1.95vw, 1.45rem)/1 var(--font-sans);
+        font:800 clamp(.74rem, 1.7vw, 1.2rem)/1 var(--font-sans);
         text-transform:uppercase;
         letter-spacing:-.02em;
         white-space:nowrap;
@@ -445,11 +445,11 @@
         text-transform:uppercase;
       }
       .preview-title{
-        font:800 clamp(1.6rem, 4vw, 3rem)/.95 var(--font-sans);
+        font:800 clamp(1.28rem, 3.25vw, 2.35rem)/.95 var(--font-sans);
         text-transform:uppercase;
       }
       .preview-desc{
-        font:400 13px/1.45 var(--font-sans);
+        font:400 12px/1.4 var(--font-sans);
         max-width:34ch;
       }
 
@@ -516,7 +516,7 @@
           padding:.85rem .7rem;
         }
         .row .name{
-          font-size:clamp(.86rem, 5.4vw, 1.06rem);
+          font-size:clamp(.78rem, 4.7vw, .95rem);
           letter-spacing:-.01em;
         }
         .row .meta{
@@ -564,8 +564,8 @@
           <span>ID</span><span>Project</span><span style="text-align:right;">Type</span>
         </div>
         <div class="rows" id="rows">
-          <a class="row active" data-preview-title="Introduction" data-preview-desc="Core game page with leaderboard, charm build, and merch unlock result view." data-preview-image="linear-gradient(130deg,#1a26ff 0%,#ff3bda 60%,#ff4622 100%)" href="./sketch.html" data-soft-nav>
-            <span class="num">01</span><span class="name">Introduction</span><span class="meta">Game<br/>Live</span>
+          <a class="row active" data-preview-title="SELF-INTRODUCTION" data-preview-desc="Core game page with leaderboard, charm build, and merch unlock result view." data-preview-image="linear-gradient(130deg,#1a26ff 0%,#ff3bda 60%,#ff4622 100%)" href="./sketch.html" data-soft-nav>
+            <span class="num">01</span><span class="name">SELF-INTRODUCTION</span><span class="meta">Game<br/>Live</span>
           </a>
         </div>
       </section>
@@ -576,7 +576,7 @@
           <iframe class="preview-frame" id="preview-frame" title="Page preview" loading="lazy"></iframe>
           <div class="preview-overlay">
             <div class="preview-kicker">Inner Page Preview</div>
-            <div class="preview-title" id="preview-title">Introduction</div>
+            <div class="preview-title" id="preview-title">SELF-INTRODUCTION</div>
             <p class="preview-desc" id="preview-desc">Core game page with leaderboard, charm build, and merch unlock result view.</p>
           </div>
         </div>
@@ -603,12 +603,12 @@
         if (navShop) navShop.textContent = t('Shop', '商店');
         if (navContact) navContact.textContent = t('Contact', '聯絡');
         if (headerType) headerType.textContent = t('Type', '類型');
-        if (firstName) firstName.textContent = t('Introduction', '介紹');
+        if (firstName) firstName.textContent = t('SELF-INTRODUCTION', '自我介紹');
         if (firstMeta) firstMeta.innerHTML = t('Game<br/>Live', '遊戲<br/>即時');
         if (previewKicker) previewKicker.textContent = t('Inner Page Preview', '頁面預覽');
         if (titleSub) titleSub.textContent = t('ᴍᴀᴋɪɴɢ ꜱᴘᴀᴄᴇ ꜰᴏʀ ᴛʜᴇ ᴛʜɪɴɢꜱ ᴛʜᴀᴛ ᴍᴀᴛᴛᴇʀ.', '為真正重要的事，騰出空間。');
         if (firstRow){
-          firstRow.dataset.previewTitle = t('Introduction', '介紹');
+          firstRow.dataset.previewTitle = t('SELF-INTRODUCTION', '自我介紹');
           firstRow.dataset.previewDesc = t(
             'Core game page with leaderboard, charm build, and merch unlock result view.',
             '核心遊戲頁，含排行榜、吊飾製作與周邊解鎖展示。'

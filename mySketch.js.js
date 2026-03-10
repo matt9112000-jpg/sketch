@@ -1228,7 +1228,7 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
     color:'#2f3138', metalness:0.08, roughness:0.58, clearcoat:0.12, clearcoatRoughness:0.42
   });
   const cartridgeGrayMat = new THREE.MeshPhysicalMaterial({
-    color:'#070809',
+    color:'#2a2d34',
     metalness:0.32,
     roughness:0.46,
     clearcoat:0.2,
@@ -1535,9 +1535,9 @@ async function openCharmPreview3D(options = {}){
     const rawDesigner = (lastName || playerName || 'PLAYER').toUpperCase();
     const designerValue = isCompactReward ? rawDesigner.slice(0, 7) : rawDesigner.slice(0, 12);
     const chips = [
-      { label:'DESIGNER', value:designerValue, color:'#44f1ff', delay:80 },
-      { label:'EMPTY BLOCKS', value:String(lastBlocks || 0), color:'#ff6adf', delay:180 },
-      { label:'MERCH SCORE', value:String(rewardScore), color:'#83ff4a', delay:280 }
+      { label:T('DESIGNER', '設計者'), value:designerValue, color:'#44f1ff', delay:80 },
+      { label:T('EMPTY BLOCKS', '空格數'), value:String(lastBlocks || 0), color:'#ff6adf', delay:180 },
+      { label:T('MERCH SCORE', '周邊分數'), value:String(rewardScore), color:'#83ff4a', delay:280 }
     ];
     const infoWrap = createDiv('');
     infoWrap.parent(ov);
