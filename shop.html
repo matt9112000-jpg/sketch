@@ -99,7 +99,7 @@
       }
       .viewer-shell{
         position:absolute;
-        left:60%;
+        left:50%;
         top:50%;
         width:min(820px, 92vw);
         height:min(500px, 54vh);
@@ -286,7 +286,7 @@
           right:14px;
         }
         .viewer-shell{
-          left:60%;
+          left:50%;
           top:50%;
           width:min(94vw, 520px);
           height:min(46vh, 390px);
@@ -634,7 +634,7 @@
           const centered = new THREE.Box3().setFromObject(root);
           const center = centered.getCenter(new THREE.Vector3());
           root.position.sub(center);
-          root.position.x += (window.innerWidth <= 700) ? 0.42 : 1.426;
+          root.position.x += (window.innerWidth <= 700) ? 0.50 : 1.71;
           root.position.y += 0.0;
           stageGlow.position.x = root.position.x;
           stageGlow.position.z = root.position.z;
