@@ -455,7 +455,6 @@ function draw(){
   noStroke(); fill(BG_BLUE); rect(BORDER_HALF, BORDER_HALF, innerW, innerH);
   stroke(PINK); strokeWeight(BORDER_THICK); noFill(); rect(0,0,width,height);
 
-  drawPlayedBadge();
   if (PREVIEW_MODE) drawPreviewActivityFeed();
 
   if (gameState === 'input'){
@@ -579,42 +578,68 @@ function drawPlayedBadge(){
 }
 
 function drawPreviewActivityFeed(){
-  const panelW = min(150, innerW * 0.44);
+  const panelW = min(176, innerW * 0.5);
   const panelX = width - BORDER_HALF - panelW - 8;
   const panelY = BORDER_HALF + 8;
-  const rowH = 14;
+  const rowH = 15;
   const rowsMax = 7;
-  const panelH = 28 + rowH * rowsMax;
+  const panelH = 34 + rowH * rowsMax;
+  const list = activityFeed && activityFeed.length ? activityFeed : [];
 
   noStroke();
-  fill(8, 16, 74, 210);
-  rect(panelX, panelY, panelW, panelH, 8);
-  stroke(255, 59, 218, 170);
+  fill(7, 13, 62, 224);
+  rect(panelX, panelY, panelW, panelH, 9);
+  fill(255, 59, 218, 210);
+  rect(panelX, panelY, panelW, 16, 9, 9, 0, 0);
+  stroke(255, 209, 246, 190);
   strokeWeight(1.1);
   noFill();
-  rect(panelX, panelY, panelW, panelH, 8);
+  rect(panelX, panelY, panelW, panelH, 9);
 
   noStroke();
-  fill('#ffd7fa');
-  textAlign(LEFT, TOP);
+  fill('#fff6ff');
+  textAlign(LEFT, CENTER);
   textStyle(BOLD);
-  textSize(9);
-  text('LIVE PLAYER PROCESS', panelX + 7, panelY + 6);
+  textSize(8);
+  text('LIVE / BROADCAST', panelX + 7, panelY + 8.5);
+  fill('#d6ddff');
+  textSize(8);
+  text('PLAYER PROCESS', panelX + panelW - 70, panelY + 8.5);
 
-  const list = activityFeed && activityFeed.length ? activityFeed : [];
-  textStyle(NORMAL);
-  textSize(9);
-  fill('#eff2ff');
-  if (!list.length){
-    text('Waiting for players...', panelX + 7, panelY + 19);
-    return;
-  }
-  for (let i = 0; i < min(rowsMax, list.length); i++){
+  for (let i = 0; i < rowsMax; i++){
+    const y = panelY + 20 + i * rowH;
     const r = list[i];
-    const stateLabel = (r.state || 'playing').toUpperCase();
-    const scoreTxt = (typeof r.score === 'number') ? ` | ${r.score}` : '';
-    const line = `${fitTextToWidth(r.name || 'Guest', panelW - 72)} ${stateLabel}${scoreTxt}`;
-    text(line, panelX + 7, panelY + 19 + i * rowH);
+    noStroke();
+    fill(i % 2 ? color(22, 28, 102, 170) : color(16, 22, 90, 140));
+    rect(panelX + 4, y - 1, panelW - 8, rowH - 2, 4);
+
+    if (!r) continue;
+    const state = (r.state || 'playing').toUpperCase();
+    const chip =
+      state === 'PLAYING' ? '#5ee4ff' :
+      state === 'GAMEOVER' ? '#ff9ed4' :
+      state === 'LEADERBOARD' ? '#ffe173' : '#c7d2ff';
+    const scoreTxt = (typeof r.score === 'number') ? String(r.score) : '--';
+
+    fill(chip);
+    rect(panelX + 7, y + 2, 40, rowH - 6, 4);
+    fill('#0b1354');
+    textAlign(CENTER, CENTER);
+    textStyle(BOLD);
+    textSize(7);
+    text(state.slice(0,4), panelX + 27, y + rowH/2);
+
+    fill('#f4f7ff');
+    textAlign(LEFT, CENTER);
+    textStyle(NORMAL);
+    textSize(8);
+    text(fitTextToWidth((r.name || 'Guest').toUpperCase(), panelW - 108), panelX + 52, y + rowH/2);
+
+    fill('#ffcff5');
+    textAlign(RIGHT, CENTER);
+    textStyle(BOLD);
+    textSize(8);
+    text(scoreTxt, panelX + panelW - 8, y + rowH/2);
   }
 }
 
@@ -747,6 +772,7 @@ function renderLeaderboard(){
   fill('#ffd9f8');
   textSize(isCompactLb ? max(10, innerW * 0.022) : max(12, innerW * 0.025));
   text('Top survivors in insufficient space', width/2, titleY + titleSize + (isCompactLb ? 12 : 14));
+  drawPlayedBadge();
 
   const btnBaseY = isCompactLb ? 16 : 20;
   if (SHOW_CLEAR && !select('#clearBtn')) createStyledButton('clearBtn','Clear', canvasX + 12, canvasY + btnBaseY, clearScores);
