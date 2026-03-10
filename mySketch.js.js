@@ -1112,7 +1112,7 @@ function makeResultVoxelGroup(snapshot, panelRoot, cubeTemplate){
   }
   group.rotation.set(Math.PI / 2, Math.PI, 0);
   group.position.y += z + panelBox.max.y + cell * 0.12;
-  group.position.add(new THREE.Vector3(-10, -20, -18));
+  group.position.add(new THREE.Vector3(-10, -22, -18));
   return group.children.length ? group : null;
 }
 
@@ -1232,13 +1232,24 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
   const blackMat = new THREE.MeshPhysicalMaterial({
     color:'#2f3138', metalness:0.08, roughness:0.58, clearcoat:0.12, clearcoatRoughness:0.42
   });
-  const cartridgeGreyMat = new THREE.MeshPhysicalMaterial({
-    color: '#aeb4c0',
-    metalness: 0.74,
+  const cartridgeGrayMat = new THREE.MeshPhysicalMaterial({
+    color:'#9aa2af',
+    metalness:0.32,
+    roughness:0.46,
+    clearcoat:0.2,
+    clearcoatRoughness:0.26
+  });
+  const stickerTex = new THREE.TextureLoader().load('./sticker-shop001.png');
+  stickerTex.colorSpace = THREE.SRGBColorSpace;
+  stickerTex.flipY = false;
+  const stickerMat = new THREE.MeshPhysicalMaterial({
+    map: stickerTex,
+    color: '#ffffff',
+    metalness: 0.2,
     roughness: 0.34,
-    clearcoat: 0.34,
-    clearcoatRoughness: 0.2,
-    envMapIntensity: 1.08
+    clearcoat: 0.42,
+    clearcoatRoughness: 0.18,
+    envMapIntensity: 1.2
   });
 
   const mode = options.mode || 'charm'; // charm | shop
@@ -1302,11 +1313,11 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
         setList(parts['2'], pinkMat, true);
         setList(parts['3'], blackMat, partState.showPart3);
         setList(parts.other, metalMat, true);
-        if (partState.stickerMeshes && partState.stickerMeshes.length){
-          partState.stickerMeshes.forEach((m)=>{ m.material = cartridgeGreyMat; m.visible = true; });
-        }
         if (partState.cartridgeMeshes && partState.cartridgeMeshes.length){
-          partState.cartridgeMeshes.forEach((m)=>{ m.material = cartridgeGreyMat; m.visible = true; });
+          partState.cartridgeMeshes.forEach((m)=>{ m.material = cartridgeGrayMat; m.visible = true; });
+        }
+        if (partState.stickerMeshes && partState.stickerMeshes.length){
+          partState.stickerMeshes.forEach((m)=>{ m.material = cartridgeGrayMat; m.visible = true; });
         }
         if (partState.part3Node){
           partState.part3Node.visible = partState.showPart3;
@@ -1318,10 +1329,7 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
         setList(parts['3'], blackMat, true);
         setList(parts.other, metalMat, true);
         if (partState.stickerMeshes && partState.stickerMeshes.length){
-          partState.stickerMeshes.forEach((m)=>{ m.material = cartridgeGreyMat; m.visible = true; });
-        }
-        if (partState.cartridgeMeshes && partState.cartridgeMeshes.length){
-          partState.cartridgeMeshes.forEach((m)=>{ m.material = cartridgeGreyMat; m.visible = true; });
+          partState.stickerMeshes.forEach((m)=>{ m.material = stickerMat; m.visible = true; });
         }
       }
     };
