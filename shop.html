@@ -517,10 +517,11 @@
         });
         const stickerTex = new THREE.TextureLoader().load('./sticker-shop001.png');
         stickerTex.colorSpace = THREE.SRGBColorSpace;
-        // Use direct image mapping for maximum visibility on sticker mesh.
-        stickerTex.flipY = true;
-        stickerTex.wrapS = THREE.ClampToEdgeWrapping;
-        stickerTex.wrapT = THREE.ClampToEdgeWrapping;
+        // Tile the sticker image so pattern remains visible on all UVs.
+        stickerTex.flipY = false;
+        stickerTex.wrapS = THREE.RepeatWrapping;
+        stickerTex.wrapT = THREE.RepeatWrapping;
+        stickerTex.repeat.set(3, 3);
         stickerTex.rotation = 0;
         stickerTex.needsUpdate = true;
         const stickerMat = new THREE.MeshBasicMaterial({
