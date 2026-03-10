@@ -473,14 +473,6 @@ function draw(){
   if (gameState === 'input'){
     push(); translate(BORDER_HALF, BORDER_HALF); updateIntroPieces(); drawIntroPieces(); pop();
     if (!PREVIEW_MODE){
-      const promptW = max(280, NAME_INPUT_W + 28);
-      noStroke();
-      fill(7, 13, 58, 210);
-      rect(width/2 - promptW/2, height/2 - 54, promptW, 30, 9);
-      stroke(255, 59, 218, 170);
-      strokeWeight(1.2);
-      noFill();
-      rect(width/2 - promptW/2, height/2 - 54, promptW, 30, 9);
       noStroke();
       fill('#ffd6fa');
       textAlign(CENTER,CENTER);
