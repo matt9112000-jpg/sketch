@@ -644,7 +644,14 @@
           clearcoat: 0.02,
           clearcoatRoughness: 0.9
         });
-        const modelState = { caseVisible:true, showPart3:true, parts:null, part3Node:null, stickerMeshes:[] };
+        const cartridgeDarkMat = new THREE.MeshPhysicalMaterial({
+          color: '#3b3f48',
+          metalness: 0.14,
+          roughness: 0.62,
+          clearcoat: 0.1,
+          clearcoatRoughness: 0.45
+        });
+        const modelState = { caseVisible:true, showPart3:true, parts:null, part3Node:null, stickerMeshes:[], cartridgeMeshes:[] };
         const caseBtn = document.getElementById('case-toggle-btn');
         const part3Btn = document.getElementById('part3-toggle-btn');
 
@@ -655,6 +662,9 @@
           parts['2'].forEach((m)=>{ m.material = silverMat; m.visible = true; });
           parts['3'].forEach((m)=>{ m.material = blackMat; m.visible = modelState.showPart3; });
           parts.other.forEach((m)=>{ m.material = silverMat; m.visible = true; });
+          if (modelState.cartridgeMeshes && modelState.cartridgeMeshes.length){
+            modelState.cartridgeMeshes.forEach((m)=>{ m.material = cartridgeDarkMat; m.visible = true; });
+          }
           if (modelState.stickerMeshes && modelState.stickerMeshes.length){
             modelState.stickerMeshes.forEach((m)=>{ m.material = stickerMat; m.visible = true; });
           }
@@ -746,6 +756,7 @@
             root.add(bodyGltf.scene);
             root.add(stickerGltf.scene);
             modelState.part3Node = part3Gltf.scene;
+            modelState.cartridgeMeshes = meshListOf(bodyGltf.scene);
             modelState.stickerMeshes = meshListOf(stickerGltf.scene);
             modelState.stickerMeshes.forEach(ensureUvForMesh);
 
