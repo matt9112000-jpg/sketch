@@ -1325,57 +1325,40 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
 
   (async ()=>{
     try {
-      // Primary: new cartridge + sticker pair.
-      const [bodyGltf, stickerGltf] = await Promise.all([
+      // Primary: show all five models together.
+      const [caseGltf, panelGltf, part3Gltf, bodyGltf, stickerGltf] = await Promise.all([
+        loadGlb(MODEL_CASE_URL),
+        loadGlb(MODEL_PANEL_URL),
+        loadGlb(MODEL_PART3_URL),
         loadGlb(modelPath || MODEL_URL),
         loadGlb(MODEL_STICKER_URL),
       ]);
       const root = new THREE.Group();
+      root.add(caseGltf.scene);
+      root.add(panelGltf.scene);
+      root.add(part3Gltf.scene);
       root.add(bodyGltf.scene);
       root.add(stickerGltf.scene);
-      partState.part3Node = null;
-      partState.panelNode = stickerGltf.scene;
+      partState.part3Node = part3Gltf.scene;
+      partState.panelNode = panelGltf.scene;
 
-      const p1 = meshListOf(bodyGltf.scene);
-      const p2 = meshListOf(stickerGltf.scene);
-      const p3 = [];
+      const p1 = meshListOf(caseGltf.scene).concat(meshListOf(bodyGltf.scene));
+      const p2 = meshListOf(panelGltf.scene).concat(meshListOf(stickerGltf.scene));
+      const p3 = meshListOf(part3Gltf.scene);
       const used = new Set([].concat(p1, p2, p3));
       const all = meshListOf(root);
       const forcedParts = { '1':p1, '2':p2, '3':p3, other: all.filter((m)=>!used.has(m)) };
       finalizeLoadedRoot(root, forcedParts);
-    } catch (cartridgeErr){
-      console.warn('cartridge pair load failed, fallback to legacy box split', cartridgeErr);
+    } catch (allErr){
+      console.warn('five-model load failed, fallback to single glb', allErr);
+      partState.part3Node = null;
+      partState.panelNode = null;
       try {
-        const [caseGltf, panelGltf, part3Gltf] = await Promise.all([
-          loadGlb(MODEL_CASE_URL),
-          loadGlb(MODEL_PANEL_URL),
-          loadGlb(MODEL_PART3_URL),
-        ]);
-        const root = new THREE.Group();
-        root.add(caseGltf.scene);
-        root.add(panelGltf.scene);
-        root.add(part3Gltf.scene);
-        partState.part3Node = part3Gltf.scene;
-        partState.panelNode = panelGltf.scene;
-
-        const p1 = meshListOf(caseGltf.scene);
-        const p2 = meshListOf(panelGltf.scene);
-        const p3 = meshListOf(part3Gltf.scene);
-        const used = new Set([].concat(p1, p2, p3));
-        const all = meshListOf(root);
-        const forcedParts = { '1':p1, '2':p2, '3':p3, other: all.filter((m)=>!used.has(m)) };
-        finalizeLoadedRoot(root, forcedParts);
-      } catch (splitErr){
-        console.warn('legacy split load failed, fallback to single glb', splitErr);
-        partState.part3Node = null;
-        partState.panelNode = null;
-        try {
-          const gltf = await loadGlb(modelPath || MODEL_URL);
-          finalizeLoadedRoot(gltf.scene, null);
-        } catch (err){
-          console.error('GLB load failed', err);
-          alert('Unable to load cartridge models (cartridge/cartridge_sticker) or legacy box models.');
-        }
+        const gltf = await loadGlb(modelPath || MODEL_URL);
+        finalizeLoadedRoot(gltf.scene, null);
+      } catch (err){
+        console.error('GLB load failed', err);
+        alert('Unable to load all five models (box/cartridge set) or fallback model.');
       }
     }
   })();
