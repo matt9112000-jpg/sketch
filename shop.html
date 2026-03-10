@@ -145,6 +145,21 @@
         font-weight:800;
         letter-spacing:.01em;
       }
+      .edition-tag{
+        display:inline-flex;
+        align-items:center;
+        margin-top:6px;
+        padding:4px 10px;
+        border-radius:999px;
+        border:1px solid #7b87ff;
+        background:rgba(26, 38, 255, 0.22);
+        color:#b8f0ff;
+        font-size:10px;
+        font-family:'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-weight:700;
+        letter-spacing:.08em;
+        text-transform:uppercase;
+      }
       .product-top{
         display:flex;
         align-items:center;
@@ -316,7 +331,10 @@
         <div class="product-body" id="product-info">
           <div class="product-top">
             <div class="product-left">
-              <h2 class="product-title">001 — CCC <span style="font-size:.78em;opacity:.92;">[LIMITED CARTRIDGE EDITION]</span></h2>
+              <div>
+                <h2 class="product-title">001 — CCC</h2>
+                <div class="edition-tag">[LIMITED CARTRIDGE EDITION]</div>
+              </div>
             </div>
             <div class="product-price">$120</div>
           </div>
