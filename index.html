@@ -80,7 +80,7 @@
         white-space:normal;
         pointer-events:none;
         gap:.24em;
-        font-size:clamp(2.05rem, 6.4vw, 4.9rem);
+        font-size:clamp(1.75rem, 5.5vw, 4.1rem);
         text-transform:uppercase;
         letter-spacing:-.03em;
         line-height:.94;
@@ -304,6 +304,8 @@
         font:700 12px/1 var(--font-mono);
         letter-spacing:.08em;
         text-transform:uppercase;
+        cursor:pointer;
+        appearance:none;
       }
       .banner-btn:hover{
         border-color:#7784ff;
@@ -370,7 +372,7 @@
         font:700 13px/1 var(--font-mono);
       }
       .row .name{
-        font:800 clamp(.92rem, 2.15vw, 1.7rem)/1 var(--font-sans);
+        font:800 clamp(.84rem, 1.95vw, 1.45rem)/1 var(--font-sans);
         text-transform:uppercase;
         letter-spacing:-.02em;
         white-space:nowrap;
@@ -478,7 +480,7 @@
           flex-wrap:wrap;
         }
         .title{
-          font-size:clamp(1.78rem, 9.2vw, 2.55rem);
+          font-size:clamp(1.56rem, 8.2vw, 2.25rem);
           line-height:.95;
         }
         .title{
@@ -542,8 +544,9 @@
           <p class="title-sub" id="title-sub">ᴍᴀᴋɪɴɢ ꜱᴘᴀᴄᴇ ꜰᴏʀ ᴛʜᴇ ᴛʜɪɴɢꜱ ᴛʜᴀᴛ ᴍᴀᴛᴛᴇʀ.</p>
         </div>
         <nav class="banner-links" id="banner-links" aria-label="Banner links">
-          <a class="banner-btn" href="./shop.html" data-soft-nav>Shop</a>
-          <a class="banner-btn" href="mailto:insufficientspace20@gmail.com">Contact</a>
+          <a class="banner-btn" href="./shop.html" data-soft-nav id="nav-shop">Shop</a>
+          <a class="banner-btn" href="mailto:insufficientspace20@gmail.com" id="nav-contact">Contact</a>
+          <button class="banner-btn" id="lang-toggle" type="button">中文</button>
           <a class="banner-btn insta-btn" href="https://www.instagram.com/insufficient__space/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <rect x="3.2" y="3.2" width="17.6" height="17.6" rx="5" stroke="#f4f6ff" stroke-width="1.8"></rect>
@@ -581,6 +584,55 @@
     </main>
 
     <script>
+      (function(){
+        const params = new URLSearchParams(window.location.search);
+        const urlLang = params.get('lang');
+        const lang = (urlLang === 'zh' || (!urlLang && localStorage.getItem('site_lang') === 'zh')) ? 'zh' : 'en';
+        localStorage.setItem('site_lang', lang);
+        const isZh = lang === 'zh';
+        const t = (en, zh)=> isZh ? zh : en;
+        const navShop = document.getElementById('nav-shop');
+        const navContact = document.getElementById('nav-contact');
+        const langToggle = document.getElementById('lang-toggle');
+        const headerType = document.querySelector('.index-head span:last-child');
+        const firstRow = document.querySelector('.row');
+        const firstName = document.querySelector('.row .name');
+        const firstMeta = document.querySelector('.row .meta');
+        const previewKicker = document.querySelector('.preview-kicker');
+        const titleSub = document.getElementById('title-sub');
+        if (navShop) navShop.textContent = t('Shop', '商店');
+        if (navContact) navContact.textContent = t('Contact', '聯絡');
+        if (headerType) headerType.textContent = t('Type', '類型');
+        if (firstName) firstName.textContent = t('Introduction', '介紹');
+        if (firstMeta) firstMeta.innerHTML = t('Game<br/>Live', '遊戲<br/>即時');
+        if (previewKicker) previewKicker.textContent = t('Inner Page Preview', '頁面預覽');
+        if (titleSub) titleSub.textContent = t('ᴍᴀᴋɪɴɢ ꜱᴘᴀᴄᴇ ꜰᴏʀ ᴛʜᴇ ᴛʜɪɴɢꜱ ᴛʜᴀᴛ ᴍᴀᴛᴛᴇʀ.', '為真正重要的事，騰出空間。');
+        if (firstRow){
+          firstRow.dataset.previewTitle = t('Introduction', '介紹');
+          firstRow.dataset.previewDesc = t(
+            'Core game page with leaderboard, charm build, and merch unlock result view.',
+            '核心遊戲頁，含排行榜、吊飾製作與周邊解鎖展示。'
+          );
+        }
+        document.querySelectorAll('a[data-soft-nav]').forEach((link)=>{
+          const href = link.getAttribute('href');
+          if (!href) return;
+          const u = new URL(href, window.location.href);
+          u.searchParams.set('lang', lang);
+          link.setAttribute('href', u.pathname + u.search);
+        });
+        if (langToggle){
+          langToggle.textContent = isZh ? 'EN' : '中文';
+          langToggle.addEventListener('click', ()=>{
+            const next = isZh ? 'en' : 'zh';
+            localStorage.setItem('site_lang', next);
+            const u = new URL(window.location.href);
+            u.searchParams.set('lang', next);
+            window.location.href = u.toString();
+          });
+        }
+      })();
+
       (function(){
         const ins = document.getElementById('word-ins');
         const space = document.getElementById('word-space');

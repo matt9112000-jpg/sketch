@@ -31,6 +31,9 @@ const MODEL_PANEL_URL = './box_panel.glb';
 const MODEL_PART3_URL = './box_part3.glb';
 const CUBE_MODEL_URL = './cube.glb';
 const PREVIEW_MODE = new URLSearchParams(window.location.search).has('preview');
+const URL_LANG = new URLSearchParams(window.location.search).get('lang');
+const LANG_ZH = (URL_LANG === 'zh') || (!URL_LANG && localStorage.getItem('site_lang') === 'zh');
+const T = (en, zh)=> LANG_ZH ? zh : en;
 /***** Three.js（非 ESM 版） *****/
 const THREE_CDNS = [
   'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js',
@@ -324,7 +327,7 @@ function clearLocalScores(){
   localStorage.removeItem(CLOUD_CACHE_KEY);
 }
 async function clearScores(){
-  const want = confirm('Clear leaderboard?\n（本地與雲端都會嘗試清除）');
+  const want = confirm(T('Clear leaderboard?\n(Local and cloud records will be removed if possible.)', '清除排行榜？\n（本地與雲端都會嘗試清除）'));
   if (!want) return;
   try{ await clearCloudScores(); }catch(e){ console.warn('清雲端失敗（可能是權限）', e); }
   try{ clearLocalScores(); }catch(e){}
@@ -380,7 +383,7 @@ function setup(){
   board = createBoard(); loadPlayed();
 
   nameInput = createInput();
-  nameInput.attribute('placeholder','Enter your IG')
+  nameInput.attribute('placeholder', T('Enter your IG', '輸入你的 IG'))
            .attribute('inputmode','text').attribute('autocomplete','off')
            .attribute('autocorrect','off').attribute('autocapitalize','off');
   nameInput.style('position','absolute').style('z-index','10010').style('pointer-events','auto')
@@ -478,7 +481,7 @@ function draw(){
       textAlign(CENTER,CENTER);
       textSize(12);
       textStyle(BOLD);
-      text('ENTER YOUR IG TO START', width/2, height/2 - 39);
+      text(T('ENTER YOUR IG TO START', '輸入 IG 開始遊戲'), width/2, height/2 - 39);
       nameInput.show(); nameInput.elt.focus();
     } else {
       nameInput.hide();
@@ -518,7 +521,7 @@ function draw(){
     push(); translate(BORDER_HALF, BORDER_HALF); drawBoard(); drawPiece(); pop();
     if (!select('#nextPromptBtn')){
       clearButtons();
-      createStyledButton('nextPromptBtn','Next', canvasX + width/2 - 50, canvasY + height/2 - 14,
+      createStyledButton('nextPromptBtn', T('Next', '下一步'), canvasX + width/2 - 50, canvasY + height/2 - 14,
         () => { gameState = 'gameover'; clearButtons(); });
     }
     return;
@@ -532,11 +535,11 @@ function draw(){
       const flag = createDiv(''); flag.id('savedFlag'); flag.style('display','none');
     }
     noStroke(); fill('#FF3BDA'); textAlign(CENTER,CENTER); textStyle(BOLD);
-    textSize(28); text('Game Over!', width/2, height/2 - 26);
-    textSize(22); text(`Empty Blocks: ${endBlocks}`, width/2, height/2 + 6);
+    textSize(28); text(T('Game Over!', '遊戲結束！'), width/2, height/2 - 26);
+    textSize(22); text(`${T('Empty Blocks', '空格數')}: ${endBlocks}`, width/2, height/2 + 6);
     if (!select('#nextBtn')){
       clearButtons();
-      createStyledButton('nextBtn','Next',
+      createStyledButton('nextBtn', T('Next', '下一步'),
         canvasX + width/2 - 50, canvasY + height/2 + 40,
         () => {
           clearButtons();
@@ -731,16 +734,16 @@ function renderLeaderboard(){
   const titleY = BORDER_HALF + (isCompactLb ? 6 : 8);
   const titleSize = isCompactLb ? max(16, innerW * 0.05) : max(20, innerW * 0.062);
   textSize(titleSize);
-  text('LEADERBOARD', width/2, titleY);
+  text(T('LEADERBOARD', '排行榜'), width/2, titleY);
   fill('#ffd9f8');
   textSize(isCompactLb ? max(10, innerW * 0.022) : max(12, innerW * 0.025));
-  text('Top survivors in insufficient space', width/2, titleY + titleSize + (isCompactLb ? 12 : 14));
+  text(T('Top survivors in insufficient space', '空間不足中的最佳生存者'), width/2, titleY + titleSize + (isCompactLb ? 12 : 14));
   drawPlayedBadge();
 
   const btnBaseY = isCompactLb ? 16 : 20;
-  if (SHOW_CLEAR && !select('#clearBtn')) createStyledButton('clearBtn','Clear', canvasX + 12, canvasY + btnBaseY, clearScores);
-  if (!select('#saveBtn')) createStyledButton('saveBtn','Save', canvasX + 12, canvasY + btnBaseY + 36, saveLastGamePng);
-  if (!select('#makeCharmBtnLB')) createStyledButton('makeCharmBtnLB','★ Make a Charm', canvasX + 12, canvasY + btnBaseY + 72, () => { openCharmPreview3D(); });
+  if (SHOW_CLEAR && !select('#clearBtn')) createStyledButton('clearBtn', T('Clear', '清除'), canvasX + 12, canvasY + btnBaseY, clearScores);
+  if (!select('#saveBtn')) createStyledButton('saveBtn', T('Save', '儲存'), canvasX + 12, canvasY + btnBaseY + 36, saveLastGamePng);
+  if (!select('#makeCharmBtnLB')) createStyledButton('makeCharmBtnLB', T('★ Make a Charm', '★ 製作吊飾'), canvasX + 12, canvasY + btnBaseY + 72, () => { openCharmPreview3D(); });
 
   let source = [];
   if (topScores && topScores.length) source = topScores;
@@ -840,7 +843,7 @@ function renderLeaderboard(){
       text(isCompactLb ? compactName : desktopName, bx + bw/2, nameY);
       fill('#f6f8ff');
       textSize(scoreSize);
-      text(`Empty Blocks: ${rec.score}`, bx + bw/2, scoreY);
+      text(`${T('Empty Blocks', '空格數')}: ${rec.score}`, bx + bw/2, scoreY);
 
       // Medal badge
       if (!isCompactLb){
@@ -919,13 +922,13 @@ function openCheckoutConfirmModal(itemName, totalText){
       .style('padding','14px 14px 12px')
       .style('font-family',"Montserrat, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', Arial, sans-serif");
     card.elt.innerHTML = `
-      <h3 style="margin:0 0 8px;font-size:16px;letter-spacing:.01em;">Confirm Checkout</h3>
-      <div style="display:flex;justify-content:space-between;gap:10px;margin:6px 0;font-size:13px;color:#d7ddff;"><span>Item</span><strong>${itemName}</strong></div>
-      <div style="display:flex;justify-content:space-between;gap:10px;margin:6px 0;font-size:13px;color:#d7ddff;"><span>Qty</span><strong>1</strong></div>
-      <div style="display:flex;justify-content:space-between;gap:10px;margin:6px 0;font-size:13px;color:#d7ddff;"><span>Total</span><strong>${totalText}</strong></div>
+      <h3 style="margin:0 0 8px;font-size:16px;letter-spacing:.01em;">${T('Confirm Checkout', '確認結帳')}</h3>
+      <div style="display:flex;justify-content:space-between;gap:10px;margin:6px 0;font-size:13px;color:#d7ddff;"><span>${T('Item', '商品')}</span><strong>${itemName}</strong></div>
+      <div style="display:flex;justify-content:space-between;gap:10px;margin:6px 0;font-size:13px;color:#d7ddff;"><span>${T('Qty', '數量')}</span><strong>1</strong></div>
+      <div style="display:flex;justify-content:space-between;gap:10px;margin:6px 0;font-size:13px;color:#d7ddff;"><span>${T('Total', '總計')}</span><strong>${totalText}</strong></div>
       <div style="margin-top:12px;display:flex;justify-content:flex-end;gap:8px;">
-        <button type="button" data-cancel style="border:1px solid #4a56be;border-radius:10px;background:#162070;color:#f4f6ff;padding:7px 10px;font-size:11px;font-weight:700;letter-spacing:.04em;cursor:pointer;">Continue</button>
-        <button type="button" data-go style="border:1px solid #ee00b8;border-radius:10px;background:#ee00b8;color:#ffffff;padding:7px 10px;font-size:11px;font-weight:700;letter-spacing:.04em;cursor:pointer;">Checkout</button>
+        <button type="button" data-cancel style="border:1px solid #4a56be;border-radius:10px;background:#162070;color:#f4f6ff;padding:7px 10px;font-size:11px;font-weight:700;letter-spacing:.04em;cursor:pointer;">${T('Continue', '返回')}</button>
+        <button type="button" data-go style="border:1px solid #ee00b8;border-radius:10px;background:#ee00b8;color:#ffffff;padding:7px 10px;font-size:11px;font-weight:700;letter-spacing:.04em;cursor:pointer;">${T('Checkout', '前往結帳')}</button>
       </div>`;
     const cleanup = (ok)=>{ if (mask) mask.remove(); resolve(ok); };
     mask.elt.addEventListener('click', (e)=>{ if (e.target === mask.elt) cleanup(false); });
@@ -1225,7 +1228,7 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
     color:'#2f3138', metalness:0.08, roughness:0.58, clearcoat:0.12, clearcoatRoughness:0.42
   });
   const cartridgeGrayMat = new THREE.MeshPhysicalMaterial({
-    color:'#9aa2af',
+    color:'#070809',
     metalness:0.32,
     roughness:0.46,
     clearcoat:0.2,
@@ -1650,7 +1653,7 @@ async function openCharmPreview3D(options = {}){
         .style('z-index','10060').style('pointer-events','auto');
   charmFS.footer = footer;
 
-  const addCart = createButton('Add Cart');
+  const addCart = createButton(T('Add Cart', '加入購物車'));
   stylePill(addCart, PALETTE[2], PALETTE[3]);
   addCart.style('background','#ee00b8')
          .style('border-color','#ff61e3')
@@ -1659,14 +1662,14 @@ async function openCharmPreview3D(options = {}){
   addCart.parent(footer);
   addCart.mousePressed(async ()=> {
     if (!CHECKOUT_URL){
-      alert('Checkout URL not set. Please set CHECKOUT_URL.');
+      alert(T('Checkout URL not set. Please set CHECKOUT_URL.', '尚未設定結帳連結，請設定 CHECKOUT_URL。'));
       return;
     }
     const ok = await openCheckoutConfirmModal('001 — CCC', '$120');
     if (ok) window.location.href = CHECKOUT_URL;
   });
 
-  const closeBtn = createButton('Close');
+  const closeBtn = createButton(T('Close', '關閉'));
   stylePill(closeBtn, '#4C4C4C', '#6A6A6A');
   closeBtn.style('background','rgba(16,23,86,0.92)')
           .style('border-color','rgba(157,171,255,0.55)')
@@ -1676,7 +1679,7 @@ async function openCharmPreview3D(options = {}){
   closeBtn.mousePressed(closeCharmPreview3D);
   charmFS.closeBtn = closeBtn;
 
-  const tip = createDiv(fromGameOver ? 'Merch Unlocked' : 'Make your own charm');
+  const tip = createDiv(fromGameOver ? T('Merch Unlocked', '周邊已解鎖') : T('Make your own charm', '製作你的吊飾'));
   tip.parent(ov);
   tip.style('position','absolute')
      .style('left','50%')
