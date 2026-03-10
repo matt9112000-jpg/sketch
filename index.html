@@ -617,7 +617,15 @@
         };
 
         const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const navEntry = (performance.getEntriesByType && performance.getEntriesByType('navigation')[0]) || null;
+        const navType = navEntry && navEntry.type ? navEntry.type : '';
+        const legacyNavReload = !!(performance.navigation && performance.navigation.type === 1);
+        const playIntroOnThisLoad = (navType === 'reload') || legacyNavReload;
         if (reduce){
+          showFinalHeroState();
+          return;
+        }
+        if (!playIntroOnThisLoad){
           showFinalHeroState();
           return;
         }

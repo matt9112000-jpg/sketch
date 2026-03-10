@@ -444,11 +444,32 @@
         rimSpot.target.position.set(0, 0, 0);
         scene.add(rimSpot);
         scene.add(rimSpot.target);
-        const hoverTopLight = new THREE.SpotLight(0xffffff, 0, 10, Math.PI / 8, 0.35, 1.15);
-        hoverTopLight.position.set(0, 2.7, 0.35);
-        hoverTopLight.target.position.set(0, 0, 0);
-        scene.add(hoverTopLight);
-        scene.add(hoverTopLight.target);
+        const hoverTopLightL = new THREE.SpotLight(0xff8ae8, 0, 10, Math.PI / 14, 0.2, 1.2);
+        hoverTopLightL.position.set(-0.65, 2.7, 0.52);
+        hoverTopLightL.target.position.set(0, 0, 0);
+        scene.add(hoverTopLightL);
+        scene.add(hoverTopLightL.target);
+        const hoverTopLightR = new THREE.SpotLight(0xff8ae8, 0, 10, Math.PI / 14, 0.2, 1.2);
+        hoverTopLightR.position.set(0.65, 2.7, 0.52);
+        hoverTopLightR.target.position.set(0, 0, 0);
+        scene.add(hoverTopLightR);
+        scene.add(hoverTopLightR.target);
+        const beamMat = new THREE.MeshBasicMaterial({ color: 0xff70df, transparent: true, opacity: 0.68, depthWrite: false });
+        const hoverBeamL = new THREE.Mesh(new THREE.CylinderGeometry(0.007, 0.007, 1, 10), beamMat.clone());
+        const hoverBeamR = new THREE.Mesh(new THREE.CylinderGeometry(0.007, 0.007, 1, 10), beamMat.clone());
+        hoverBeamL.visible = false;
+        hoverBeamR.visible = false;
+        scene.add(hoverBeamL);
+        scene.add(hoverBeamR);
+
+        function placeBeam(mesh, start, end){
+          const dir = new THREE.Vector3().subVectors(end, start);
+          const len = dir.length();
+          if (len < 0.001) return;
+          mesh.scale.set(1, len, 1);
+          mesh.position.copy(start).addScaledVector(dir, 0.5);
+          mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
+        }
 
         // Stage-like floor glow and soft shadow catcher.
         const stageGlow = new THREE.Mesh(
@@ -622,6 +643,11 @@
           root.position.y += 0.0;
           stageGlow.position.x = root.position.x;
           stageGlow.position.z = root.position.z;
+          const aim = new THREE.Vector3(root.position.x, root.position.y + 0.02, root.position.z);
+          hoverTopLightL.target.position.copy(aim);
+          hoverTopLightR.target.position.copy(aim);
+          placeBeam(hoverBeamL, hoverTopLightL.position, aim);
+          placeBeam(hoverBeamR, hoverTopLightR.position, aim);
           root.updateWorldMatrix(true, true);
           focusControlsOnMeshes(root, parts);
 
@@ -669,7 +695,10 @@
           active = v;
           shell.classList.toggle('is-active', active);
           info.classList.toggle('is-active', active);
-          hoverTopLight.intensity = active ? 1.45 : 0;
+          hoverTopLightL.intensity = active ? 2.2 : 0;
+          hoverTopLightR.intensity = active ? 2.2 : 0;
+          hoverBeamL.visible = active;
+          hoverBeamR.visible = active;
         }
 
         function checkProximity(clientX, clientY){
