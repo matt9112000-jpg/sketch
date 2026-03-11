@@ -18,6 +18,7 @@
         --glass-border-hover: rgba(255,255,255,.34);
         --glass-focus: rgba(238,0,184,.45);
         --txt-dim: #c7d1ff;
+        --tri-cut: 14px;
       }
       *{ box-sizing:border-box; }
       html, body { height: 100%; }
@@ -59,16 +60,18 @@
       .hud-btn {
         text-decoration: none;
         color: #ffffff;
-        background: var(--glass-bg);
+        background: linear-gradient(145deg, rgba(9,22,124,.62), rgba(6,15,82,.52));
         border: 1px solid var(--glass-border);
         padding: 8px 12px;
-        border-radius: 10px;
+        border-radius: 0;
+        clip-path: polygon(var(--tri-cut) 0, 100% 0, calc(100% - var(--tri-cut)) 100%, 0 100%);
         font-weight: 800;
         font-size: 12px;
         letter-spacing: .01em;
         backdrop-filter: blur(10px);
         cursor:pointer;
         pointer-events:auto;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
       }
       .hud-btn:hover { border-color: var(--glass-border-hover); }
       .hud-btn:focus-visible { outline: 3px solid var(--glass-focus); outline-offset: 2px; }
@@ -98,7 +101,7 @@
         z-index:9997;
         transform:translateX(102%);
         transition:transform .32s cubic-bezier(.2,.9,.2,1);
-        background: rgba(8, 18, 100, .82);
+        background: linear-gradient(180deg, rgba(8, 18, 100, .86), rgba(6, 12, 72, .86));
         border-left:1px solid var(--glass-border);
         backdrop-filter: blur(14px);
         padding:56px 14px calc(18px + env(safe-area-inset-bottom));
@@ -127,11 +130,25 @@
         color:var(--txt-dim);
       }
       .hud-card{
-        background: var(--glass-bg);
-        border-radius: 14px;
+        position:relative;
+        overflow:hidden;
+        background: linear-gradient(160deg, rgba(12,24,128,.54), rgba(6,15,82,.52));
+        border-radius: 0;
+        clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px));
         border: 1px solid var(--glass-border);
         padding: 11px 12px 10px;
         backdrop-filter: blur(12px);
+      }
+      .hud-card::after{
+        content:"";
+        position:absolute;
+        right:0;
+        top:0;
+        width:22px;
+        height:22px;
+        background:linear-gradient(135deg, rgba(255,59,218,.42), rgba(76,255,236,.28));
+        clip-path: polygon(100% 0, 0 0, 100% 100%);
+        pointer-events:none;
       }
       .hud-card h2{
         margin:0 0 6px;

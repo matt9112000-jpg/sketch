@@ -198,7 +198,8 @@ function isValid(p, dx, dy, mat = p.matrix) {
     for (let x=0; x<mat[y].length; x++){
       if (mat[y][x]){
         const nx = p.x + x + dx, ny = p.y + y + dy;
-        if (nx < 0 || nx >= cols || ny < 0 || ny >= rows) return false;
+        if (nx < 0 || nx >= cols || ny >= rows) return false;
+        if (ny < 0) continue;
         if (board[ny][nx] !== null) return false;
       }
     }
@@ -618,12 +619,14 @@ function handleDrop(){ const now=millis(), d=now-lastTime; lastTime=now; dropCou
 function moveDown(){
   if (!currentPiece) return;
   if (isValid(currentPiece,0,1)) { currentPiece.y++; return; }
-  lockPiece(); if (currentPiece.y===0){ endGame(); return; } spawnPiece();
+  if (currentPiece.y < 0){ endGame(); return; }
+  lockPiece();
+  spawnPiece();
 }
 function endGame(){ gameState='endedWait'; }
 function spawnPiece(){
   const keys = Object.keys(SHAPES); const k = random(keys);
-  currentPiece = { matrix: SHAPES[k].map(r=>r.slice()), x: floor(cols/2)-floor(SHAPES[k][0].length/2), y:0, cidx: floor(random(PALETTE.length)) };
+  currentPiece = { matrix: SHAPES[k].map(r=>r.slice()), x: floor(cols/2)-floor(SHAPES[k][0].length/2), y:-1, cidx: floor(random(PALETTE.length)) };
   if (!isValid(currentPiece,0,0)) endGame();
 }
 
@@ -742,7 +745,6 @@ function renderLeaderboard(){
   fill('#ffd9f8');
   textSize(isCompactLb ? max(10, innerW * 0.022) : max(12, innerW * 0.025));
   text(T('Top survivors in insufficient space', '空間不足中的最佳生存者'), width/2, titleY + titleSize + (isCompactLb ? 12 : 14));
-  drawPlayedBadge();
 
   const btnBaseY = isCompactLb ? 16 : 20;
   if (SHOW_CLEAR && !select('#clearBtn')) createStyledButton('clearBtn', T('Clear', '清除'), canvasX + 12, canvasY + btnBaseY, clearScores);
@@ -777,11 +779,6 @@ function renderLeaderboard(){
     noStroke(); fill('#f6f8ff');
     textAlign(CENTER, CENTER); textStyle(BOLD); textSize(max(14, innerW * 0.038));
     text(String(i+1), colX[i] + colW/2, colY[i] + colHeights[i] - 24);
-    if (i === 0){
-      fill('#cbd2ff');
-      textSize(max(10, innerW * 0.018));
-      text(`played ${getDisplayedPlayedCount()}`, colX[i] + colW/2, colY[i] + colHeights[i] - 8);
-    }
   }
 
   const maxCardW = innerW * (isCompactLb ? 0.26 : 0.30);
@@ -1646,7 +1643,7 @@ async function openCharmPreview3D(options = {}){
   threeWrap.parent(ov);
   threeWrap.id('threeWrap');
   threeWrap.style('position','absolute')
-    .style('left', isCompactReward ? '32%' : '37%').style('top', '5%')
+    .style('left', isCompactReward ? '32%' : '37%').style('top', isCompactReward ? '25%' : '5%')
     .style('transform', fromGameOver
       ? 'translate(-50%, -50%) scale(0.22)'
       : (isCompactReward ? 'translate(-50%, -50%) scale(0.5)' : 'translate(-50%, -50%) scale(0.55)'))
@@ -1673,22 +1670,6 @@ async function openCharmPreview3D(options = {}){
         .style('background','rgba(8,12,46,0.66)')
         .style('z-index','10060').style('pointer-events','auto');
   charmFS.footer = footer;
-
-  const addCart = createButton(T('Add Cart', '加入購物車'));
-  stylePill(addCart, PALETTE[2], PALETTE[3]);
-  addCart.style('background','#ee00b8')
-         .style('border-color','#ff61e3')
-         .style('color','#ffffff')
-         .style('font-weight','800');
-  addCart.parent(footer);
-  addCart.mousePressed(async ()=> {
-    if (!CHECKOUT_URL){
-      alert(T('Checkout URL not set. Please set CHECKOUT_URL.', '尚未設定結帳連結，請設定 CHECKOUT_URL。'));
-      return;
-    }
-    const ok = await openCheckoutConfirmModal('001 — CCC', '$120');
-    if (ok) window.location.href = CHECKOUT_URL;
-  });
 
   const closeBtn = createButton(T('Close', '關閉'));
   stylePill(closeBtn, '#4C4C4C', '#6A6A6A');

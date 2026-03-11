@@ -851,7 +851,6 @@
           if (active === v) return;
           active = v;
           shell.classList.toggle('is-active', active);
-          info.classList.toggle('is-active', active);
           hoverTopLightL.intensity = active ? 3.4 : 0;
           hoverTopLightR.intensity = active ? 3.4 : 0;
           hoverAreaWash.material.opacity = 0.0;
@@ -875,7 +874,9 @@
           setActive(dist < 280 || inInfo);
         }
 
+        info.classList.add('is-active');
         shell.addEventListener('pointermove', (e)=>checkProximity(e.clientX, e.clientY));
+        stage.addEventListener('pointermove', (e)=>checkProximity(e.clientX, e.clientY));
         shell.addEventListener('pointerleave', ()=>setActive(false));
         shell.addEventListener('pointerdown', ()=>setActive(true));
         info.addEventListener('pointerenter', ()=>setActive(true));
