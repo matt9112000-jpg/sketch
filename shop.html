@@ -466,7 +466,7 @@
         camera.position.set(1.05, 0.65, 1.45);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
         renderer.setSize(mount.clientWidth, mount.clientHeight);
         renderer.outputColorSpace = THREE.SRGBColorSpace;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -881,6 +881,7 @@
         info.addEventListener('pointerenter', ()=>setActive(true));
         info.addEventListener('pointermove', ()=>setActive(true));
 
+        let rafId = 0;
         function tick(){
           if (rotateResumeAt && performance.now() >= rotateResumeAt){
             controls.autoRotate = true;
@@ -889,9 +890,19 @@
           }
           controls.update();
           renderer.render(scene, camera);
-          requestAnimationFrame(tick);
+          rafId = requestAnimationFrame(tick);
         }
         tick();
+        document.addEventListener('visibilitychange', ()=>{
+          if (document.hidden){
+            if (rafId){
+              cancelAnimationFrame(rafId);
+              rafId = 0;
+            }
+            return;
+          }
+          if (!rafId) tick();
+        });
 
         window.addEventListener('resize', ()=>{
           const w = mount.clientWidth;

@@ -1158,7 +1158,7 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
 
   const w = containerEl.clientWidth, h = containerEl.clientHeight;
   const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.5));
   renderer.setSize(w, h, false);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -1408,7 +1408,20 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
     renderer.render(scene, camera);
     threeCtx && (threeCtx.rafId = requestAnimationFrame(tick));
   }
-  threeCtx = { renderer, scene, camera, controls, containerEl, rafId:null, onResize:null, partState:null, refreshParts:null, hasPart3:false, hasCase:false };
+  const onVisibility = ()=>{
+    if (!threeCtx) return;
+    if (document.hidden){
+      if (threeCtx.rafId){
+        cancelAnimationFrame(threeCtx.rafId);
+        threeCtx.rafId = null;
+      }
+      return;
+    }
+    if (!threeCtx.rafId) tick();
+  };
+  document.addEventListener('visibilitychange', onVisibility);
+  threeCtx = { renderer, scene, camera, controls, containerEl, rafId:null, onResize:null, onVisibility:null, partState:null, refreshParts:null, hasPart3:false, hasCase:false };
+  threeCtx.onVisibility = onVisibility;
   tick();
 
   // resize
@@ -1426,6 +1439,7 @@ function disposeThreeViewer(){
   if (!threeCtx) return;
   if (threeCtx.rafId) cancelAnimationFrame(threeCtx.rafId);
   if (threeCtx.onResize) window.removeEventListener('resize', threeCtx.onResize);
+  if (threeCtx.onVisibility) document.removeEventListener('visibilitychange', threeCtx.onVisibility);
   if (threeCtx.renderer) threeCtx.renderer.dispose();
   if (threeCtx.containerEl && threeCtx.containerEl.firstChild){
     threeCtx.containerEl.removeChild(threeCtx.containerEl.firstChild);

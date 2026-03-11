@@ -792,7 +792,12 @@
           row.addEventListener('focus', ()=>setPreview(row));
           row.addEventListener('touchstart', ()=>setPreview(row), { passive:true });
         });
-        if (rows[0]) setPreview(rows[0]);
+        // Keep first item highlighted in the list, but avoid loading iframe
+        // until user actually interacts with the preview area.
+        if (rows[0]){
+          rows.forEach(r => r.classList.remove('active'));
+          rows[0].classList.add('active');
+        }
 
         document.body.classList.add('is-ready');
         document.querySelectorAll('a[data-soft-nav]').forEach(link=>{
