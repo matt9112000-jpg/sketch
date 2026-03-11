@@ -41,6 +41,9 @@ const THREE_CDNS = [
 const GLTF_CDNS = [
   'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js',
 ];
+const DRACO_CDNS = [
+  'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js',
+];
 const ORBIT_CDNS = [
   'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js',
 ];
@@ -65,9 +68,10 @@ async function loadOneFrom(list){
 async function ensureThreeScripts(){
   if (!window.THREE) { await loadOneFrom(THREE_CDNS); }
   if (!THREE.GLTFLoader) { await loadOneFrom(GLTF_CDNS); }
+  if (!THREE.DRACOLoader) { await loadOneFrom(DRACO_CDNS); }
   if (!THREE.OrbitControls) { await loadOneFrom(ORBIT_CDNS); }
-  if (!window.THREE || !THREE.GLTFLoader || !THREE.OrbitControls){
-    throw new Error('Three.js / GLTFLoader / OrbitControls not available');
+  if (!window.THREE || !THREE.GLTFLoader || !THREE.DRACOLoader || !THREE.OrbitControls){
+    throw new Error('Three.js / GLTFLoader / DRACOLoader / OrbitControls not available');
   }
 }
 
@@ -1148,7 +1152,7 @@ function frameObject(object, camera, controls, focusMeshes = null){
 }
 
 async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, options = {}){
-  if (!window.THREE || !THREE.GLTFLoader || !THREE.OrbitControls) {
+  if (!window.THREE || !THREE.GLTFLoader || !THREE.DRACOLoader || !THREE.OrbitControls) {
     alert('Three.js 尚未載好'); return;
   }
 
@@ -1259,6 +1263,9 @@ async function initThreeViewer(containerEl, getSnapshotCanvas, modelPath, option
 
   // 載入 GLB（優先三件式；失敗則回退單檔）
   const loader = new THREE.GLTFLoader();
+  const dracoLoader = new THREE.DRACOLoader();
+  dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/libs/draco/');
+  loader.setDRACOLoader(dracoLoader);
   loader.setCrossOrigin('anonymous');
   const loadGlb = (url)=>new Promise((resolve, reject)=>{
     loader.load(url, resolve, undefined, reject);
