@@ -454,45 +454,10 @@
         font:800 clamp(1.28rem, 3.25vw, 2.35rem)/.95 var(--font-sans);
         text-transform:uppercase;
       }
-      .preview-desc-fx{
-        display:flex;
-        flex-wrap:wrap;
-        gap:6px 8px;
-        max-width:36ch;
-        margin-top:4px;
-        pointer-events:none;
-        transition:opacity .24s ease, transform .24s ease;
-      }
-      .preview-desc-fx .chip{
-        display:inline-flex;
-        padding:2px 6px;
-        border:1px solid rgba(207,212,255,.34);
-        border-radius:999px;
-        background:rgba(17,27,117,.36);
-        color:#dce1ff;
-        font:600 10px/1.1 var(--font-mono);
-        letter-spacing:.02em;
-        animation: descDrop .6s cubic-bezier(.2,.9,.2,1) both;
-      }
-      .preview-card.is-rebuild .preview-desc-fx{
-        opacity:0;
-        transform:translateY(6px);
-      }
       .preview-desc{
         font:400 12px/1.4 var(--font-sans);
         max-width:34ch;
         white-space:pre-line;
-        opacity:0;
-        transform:translateY(8px);
-        transition:opacity .24s ease, transform .24s ease;
-      }
-      .preview-card.is-rebuild .preview-desc{
-        opacity:1;
-        transform:translateY(0);
-      }
-      @keyframes descDrop{
-        from{ opacity:0; transform:translateY(-12px); }
-        to{ opacity:1; transform:translateY(0); }
       }
 
       @media (max-width: 920px){
@@ -619,7 +584,6 @@
           <div class="preview-overlay">
             <div class="preview-kicker"></div>
             <div class="preview-title" id="preview-title">SELF-INTRODUCTION</div>
-            <div class="preview-desc-fx" id="preview-desc-fx" aria-hidden="true"></div>
             <p class="preview-desc" id="preview-desc">What is INSUFFICIENT SPACE?<br>You might find out through the game.</p>
           </div>
         </div>
@@ -811,27 +775,12 @@
         const frame = document.getElementById('preview-frame');
         const title = document.getElementById('preview-title');
         const desc = document.getElementById('preview-desc');
-        const descFx = document.getElementById('preview-desc-fx');
-        function renderDescFx(text){
-          if (!descFx) return;
-          const tokens = String(text || '').replace(/\n/g, ' ').split(/\s+/).filter(Boolean).slice(0, 16);
-          descFx.innerHTML = '';
-          tokens.forEach((token, i)=>{
-            const chip = document.createElement('span');
-            chip.className = 'chip';
-            chip.textContent = token;
-            chip.style.animationDelay = `${i * 45}ms`;
-            descFx.appendChild(chip);
-          });
-        }
 
         function setPreview(row){
           rows.forEach(r => r.classList.remove('active'));
           row.classList.add('active');
           title.textContent = row.dataset.previewTitle || 'Project';
           desc.textContent = row.dataset.previewDesc || '';
-          renderDescFx(row.dataset.previewDesc || '');
-          card.classList.remove('is-rebuild');
           const href = row.getAttribute('href') || './game.html';
           const previewHref = href + (href.includes('?') ? '&' : '?') + 'preview=1';
           if (frame && frame.getAttribute('src') !== previewHref){
@@ -859,11 +808,6 @@
         });
         if (previewSide) previewSide.addEventListener('mouseleave', closePreview);
         if (card) card.addEventListener('click', openActiveProject);
-        if (card){
-          card.addEventListener('mouseenter', ()=>card.classList.add('is-rebuild'));
-          card.addEventListener('mouseleave', ()=>card.classList.remove('is-rebuild'));
-          card.addEventListener('touchstart', ()=>card.classList.add('is-rebuild'), { passive:true });
-        }
         if (rows[0]) setPreview(rows[0]);
 
         document.body.classList.add('is-ready');

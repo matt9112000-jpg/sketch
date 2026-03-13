@@ -164,6 +164,64 @@
       .controls-card{
         transition: opacity .2s ease, transform .2s ease;
       }
+      .intro-phrase{
+        position:fixed;
+        left:50%;
+        top:56%;
+        width:min(620px, 92vw);
+        transform:translate(-50%, -50%);
+        z-index:15000;
+        pointer-events:auto;
+        user-select:none;
+      }
+      .intro-phrase.is-hidden{
+        opacity:0;
+        visibility:hidden;
+        pointer-events:none;
+      }
+      .intro-phrase-chips{
+        position:relative;
+        min-height:88px;
+      }
+      .intro-phrase-chip{
+        position:absolute;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        padding:4px 7px;
+        border:1px solid rgba(207,212,255,.34);
+        border-radius:8px;
+        background:rgba(8,18,84,.64);
+        color:#eff3ff;
+        font:700 10px/1 var(--glass-font, Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif);
+        letter-spacing:.02em;
+        box-shadow:0 4px 10px rgba(0,0,0,.16);
+        animation: wordDrop 580ms cubic-bezier(.2,.9,.2,1) both;
+      }
+      .intro-phrase-full{
+        margin:0;
+        opacity:0;
+        transform:translateY(10px);
+        transition:opacity .25s ease, transform .25s ease;
+        color:#f7f8ff;
+        font:700 clamp(12px, 2.1vw, 16px)/1.5 Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        text-align:center;
+        text-shadow:0 1px 10px rgba(0,0,0,.28);
+        white-space:pre-line;
+      }
+      .intro-phrase.is-rebuild .intro-phrase-chips{
+        opacity:0;
+        transform:translateY(8px);
+        transition:opacity .2s ease, transform .2s ease;
+      }
+      .intro-phrase.is-rebuild .intro-phrase-full{
+        opacity:1;
+        transform:translateY(0);
+      }
+      @keyframes wordDrop{
+        from{ opacity:0; transform:translateY(-90px) scale(.95); }
+        to{ opacity:1; transform:translateY(0) scale(1); }
+      }
       @media (max-width: 700px){
         .ui-dock{
           inset:0;
@@ -186,8 +244,19 @@
         .hud-card{
           padding:9px 10px 8px;
         }
+        .intro-phrase{
+          top:54%;
+          width:min(92vw, 420px);
+        }
+        .intro-phrase-chip{
+          font-size:9px;
+          padding:3px 6px;
+        }
       }
       body.preview-mode .ui-dock{
+        display:none !important;
+      }
+      body.preview-mode .intro-phrase{
         display:none !important;
       }
     </style>
@@ -214,6 +283,10 @@
         </ul>
       </section>
     </aside>
+    <div class="intro-phrase" id="intro-phrase" aria-hidden="true">
+      <div class="intro-phrase-chips" id="intro-phrase-chips"></div>
+      <p class="intro-phrase-full" id="intro-phrase-full"></p>
+    </div>
 
     <!-- Libraries first, then the sketch -->
     <script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.js" type="text/javascript"></script>
@@ -233,6 +306,41 @@
         const infoTitle = document.querySelector('.info-title');
         const controlsTitle = document.querySelector('.controls-card h2');
         const controlsList = document.querySelectorAll('.controls-list li');
+        const introPhrase = document.getElementById('intro-phrase');
+        const introPhraseChips = document.getElementById('intro-phrase-chips');
+        const introPhraseFull = document.getElementById('intro-phrase-full');
+        function makePhraseTokens(line){
+          const s = String(line || '').trim();
+          if (!s) return [];
+          if (/[\u3400-\u9fff]/.test(s)){
+            return s.replace(/[，。！？]/g, ' ').split(/\s+/).filter(Boolean);
+          }
+          return s.split(/\s+/).filter(Boolean);
+        }
+        function renderIntroPhrase(){
+          if (!introPhrase || !introPhraseChips || !introPhraseFull) return;
+          const line1 = t('What is INSUFFICIENT SPACE?', '什麼是 INSUFFICIENT SPACE？');
+          const line2 = t('Maybe you can find out through the game.', '也許你可以透過這個遊戲找到答案。');
+          const tokens = [...makePhraseTokens(line1), ...makePhraseTokens(line2)];
+          introPhraseFull.textContent = `${line1}\n${line2}`;
+          introPhraseChips.innerHTML = '';
+          const cols = window.innerWidth <= 700 ? 4 : 7;
+          const cellW = window.innerWidth <= 700 ? 76 : 84;
+          const rowH = window.innerWidth <= 700 ? 22 : 24;
+          tokens.forEach((token, i)=>{
+            const chip = document.createElement('span');
+            chip.className = 'intro-phrase-chip';
+            chip.textContent = token;
+            const col = i % cols;
+            const row = Math.floor(i / cols);
+            chip.style.left = `${col * cellW + (row % 2 ? 12 : 0)}px`;
+            chip.style.top = `${row * rowH}px`;
+            chip.style.animationDelay = `${i * 45}ms`;
+            introPhraseChips.appendChild(chip);
+          });
+          const rows = Math.max(1, Math.ceil(tokens.length / cols));
+          introPhraseChips.style.minHeight = `${rows * rowH + 26}px`;
+        }
         if (homeLink){
           homeLink.textContent = t('Home', '首頁');
           const u = new URL(homeLink.getAttribute('href'), window.location.href);
@@ -246,6 +354,14 @@
         if (controlsList[1]) controlsList[1].innerHTML = t('<code>↓</code>: soft drop', '<code>↓</code>：緩降');
         if (controlsList[2]) controlsList[2].innerHTML = t('<code>↑</code>: rotate', '<code>↑</code>：旋轉');
         if (controlsList[3]) controlsList[3].textContent = t('On mobile: use the on-screen buttons', '手機版：使用畫面上的按鈕');
+        renderIntroPhrase();
+        if (introPhrase){
+          introPhrase.addEventListener('mouseenter', ()=>introPhrase.classList.add('is-rebuild'));
+          introPhrase.addEventListener('mouseleave', ()=>introPhrase.classList.remove('is-rebuild'));
+          introPhrase.addEventListener('touchstart', ()=>introPhrase.classList.add('is-rebuild'), { passive:true });
+          introPhrase.addEventListener('touchend', ()=>introPhrase.classList.remove('is-rebuild'), { passive:true });
+          window.addEventListener('resize', renderIntroPhrase);
+        }
         function enableSoftNav(){
           if (PREVIEW_MODE) document.body.classList.add('preview-mode');
           document.body.classList.add('is-ready');
@@ -273,6 +389,7 @@
         const infoSheet = document.getElementById('info-sheet');
         const infoOverlay = document.getElementById('info-overlay');
         const hudActions = document.getElementById('hud-actions');
+        const introPhrase = document.getElementById('intro-phrase');
         if (!infoBtn || !infoSheet || !infoOverlay || !hudActions) return;
 
         function setInfoOpen(isOpen){
@@ -301,6 +418,7 @@
           const inGame = state !== 'input';
           infoBtn.classList.toggle('is-hidden', inGame);
           hudActions.classList.toggle('is-game', inGame);
+          if (introPhrase) introPhrase.classList.toggle('is-hidden', inGame);
           if (inGame) setInfoOpen(false);
         }, 180);
       })();
