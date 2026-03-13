@@ -146,7 +146,12 @@ function getDisplayedPlayedCount(){
   return playedCount;
 }
 async function incPlayedCloud(){
+  if (typeof cloudPlayedCount === 'number' && cloudPlayedCount >= 0) cloudPlayedCount += 1;
+  else cloudPlayedCount = playedCount;
   if (!db || !firebase || !firebase.firestore || !firebase.firestore.FieldValue) return;
+  if (typeof cloudPlayedCount === 'number' && cloudPlayedCount >= 0){
+    cloudPlayedCount = Math.max(cloudPlayedCount, playedCount);
+  }
   try{
     await db.collection('gameStats').doc('global').set({
       playedCount: firebase.firestore.FieldValue.increment(1),
@@ -497,19 +502,22 @@ function draw(){
     const safePlayerName = fitTextToWidth(playerName, innerW - 12);
     const padX = 8;
     const labelW = max(88, min(innerW - 12, safePlayerName.length * max(9, blockSize * 0.27) + 24));
+    const labelH = 32;
+    const labelY = BORDER_HALF + 4;
+    const labelX = width / 2 - labelW / 2;
     noStroke();
     fill(10, 16, 74, 215);
-    rect(BORDER_HALF + 6, BORDER_HALF + 4, labelW, 26, 8);
+    rect(labelX, labelY, labelW, labelH, 8);
     stroke(255, 59, 218, 180);
     strokeWeight(1.1);
     noFill();
-    rect(BORDER_HALF + 6, BORDER_HALF + 4, labelW, 26, 8);
+    rect(labelX, labelY, labelW, labelH, 8);
     noStroke();
     fill('#ffd4f8');
-    textSize(max(13, blockSize*0.33));
+    textSize(max(12, blockSize*0.31));
     textAlign(LEFT,CENTER);
     textStyle(BOLD);
-    text(safePlayerName, BORDER_HALF + 6 + padX, BORDER_HALF + 17);
+    text(safePlayerName, labelX + padX, labelY + labelH / 2 + 0.5);
     handleDrop();
     if (!PREVIEW_MODE){
       const now = millis ? millis() : Date.now();
@@ -526,8 +534,10 @@ function draw(){
     push(); translate(BORDER_HALF, BORDER_HALF); drawBoard(); drawPiece(); pop();
     if (!select('#nextPromptBtn')){
       clearButtons();
-      createStyledButton('nextPromptBtn', T('Next', '下一步'), canvasX + width/2 - 50, canvasY + height/2 - 14,
+      createStyledButton('nextPromptBtn', T('Next', '下一步'), canvasX + width/2, canvasY + height/2 - 14,
         () => { gameState = 'gameover'; clearButtons(); });
+      const nextPromptBtn = select('#nextPromptBtn');
+      if (nextPromptBtn) nextPromptBtn.style('transform','translateX(-50%)');
     }
     return;
   }
@@ -545,7 +555,7 @@ function draw(){
     if (!select('#nextBtn')){
       clearButtons();
       createStyledButton('nextBtn', T('Next', '下一步'),
-        canvasX + width/2 - 50, canvasY + height/2 + 40,
+        canvasX + width/2, canvasY + height/2 + 40,
         () => {
           clearButtons();
           removeSavedFlag();
@@ -564,6 +574,8 @@ function draw(){
             }
           });
         });
+      const nextBtn = select('#nextBtn');
+      if (nextBtn) nextBtn.style('transform','translateX(-50%)');
     }
     return;
   }
@@ -682,14 +694,14 @@ function drawHintSquares(){
   for (const it of spec){
     const b = it.b;
     noStroke();
-    fill(0, 0, 0, 90);
-    rect(b.x + 2, b.y + 2, b.s, b.s, 8);
-    fill(24, 30, 52, 205);
-    rect(b.x, b.y, b.s, b.s, 8);
+    fill(0, 0, 0, 72);
+    rect(b.x + 2, b.y + 2, b.s, b.s, 10);
+    fill(8, 18, 84, 192);
+    rect(b.x, b.y, b.s, b.s, 10);
     noFill();
-    stroke(it.color);
-    strokeWeight(1.6);
-    rect(b.x, b.y, b.s, b.s, 8);
+    stroke(236, 242, 255, 200);
+    strokeWeight(1.4);
+    rect(b.x, b.y, b.s, b.s, 10);
     noStroke();
     fill(it.color);
     textAlign(CENTER, CENTER);
@@ -745,6 +757,7 @@ function renderLeaderboard(){
   fill('#ffd9f8');
   textSize(isCompactLb ? max(10, innerW * 0.022) : max(12, innerW * 0.025));
   text(T('Top survivors in insufficient space', '空間不足中的最佳生存者'), width/2, titleY + titleSize + (isCompactLb ? 12 : 14));
+  drawPlayedBadge();
 
   const btnBaseY = isCompactLb ? 16 : 20;
   if (SHOW_CLEAR && !select('#clearBtn')) createStyledButton('clearBtn', T('Clear', '清除'), canvasX + 12, canvasY + btnBaseY, clearScores);
@@ -952,7 +965,7 @@ function fitTextToWidth(value, maxPx){
 
 /***** 跑馬燈 *****/
 function ensureMarquees(){
-  if (IS_MOBILE){
+  if (IS_MOBILE && !PREVIEW_MODE){
     const phrase = 'INSUFFICIENT SPACE\u00A0';
     const longMsg = phrase.repeat(12);
     const html = `<div class="track"><span class="content">${longMsg}</span><span class="content">${longMsg}</span></div>`;
@@ -1643,7 +1656,7 @@ async function openCharmPreview3D(options = {}){
   threeWrap.parent(ov);
   threeWrap.id('threeWrap');
   threeWrap.style('position','absolute')
-    .style('left', isCompactReward ? '32%' : '37%').style('top', isCompactReward ? '25%' : '5%')
+    .style('left', isCompactReward ? '34%' : '39%').style('top', isCompactReward ? '31%' : '10%')
     .style('transform', fromGameOver
       ? 'translate(-50%, -50%) scale(0.22)'
       : (isCompactReward ? 'translate(-50%, -50%) scale(0.5)' : 'translate(-50%, -50%) scale(0.55)'))
@@ -1660,16 +1673,34 @@ async function openCharmPreview3D(options = {}){
   const footer = createDiv('');
   footer.parent(ov);
   footer.style('position','absolute').style('left','50%')
-        .style('bottom', isCompactReward ? '12px' : '20px')
+        .style('bottom', isCompactReward ? '18px' : '30px')
         .style('transform','translateX(-50%)')
         .style('display','flex').style('gap', isCompactReward ? '6px' : '10px').style('flex-wrap','wrap').style('justify-content','center')
         .style('max-width', isCompactReward ? '95vw' : 'none')
-        .style('padding', isCompactReward ? '8px 10px' : '10px 12px')
-        .style('border','1px solid rgba(255,255,255,0.16)')
-        .style('border-radius','12px')
-        .style('background','rgba(8,12,46,0.66)')
+        .style('padding','0')
+        .style('border','none')
+        .style('border-radius','0')
+        .style('background','transparent')
         .style('z-index','10060').style('pointer-events','auto');
   charmFS.footer = footer;
+
+  if (!fromGameOver){
+    const addCart = createButton(T('Add Cart', '加入購物車'));
+    stylePill(addCart, PALETTE[2], PALETTE[3]);
+    addCart.style('background','#ee00b8')
+           .style('border-color','#ff61e3')
+           .style('color','#ffffff')
+           .style('font-weight','800');
+    addCart.parent(footer);
+    addCart.mousePressed(async ()=> {
+      if (!CHECKOUT_URL){
+        alert(T('Checkout URL not set. Please set CHECKOUT_URL.', '尚未設定結帳連結，請設定 CHECKOUT_URL。'));
+        return;
+      }
+      const ok = await openCheckoutConfirmModal('001 — CCC', '$120');
+      if (ok) window.location.href = CHECKOUT_URL;
+    });
+  }
 
   const closeBtn = createButton(T('Close', '關閉'));
   stylePill(closeBtn, '#4C4C4C', '#6A6A6A');
@@ -1709,13 +1740,13 @@ async function openCharmPreview3D(options = {}){
     requestAnimationFrame(()=>{
       threeWrap.style('opacity','1');
       threeWrap.style('transform', fromGameOver
-        ? (isCompactReward ? 'translate(-50%, -50%) scale(0.88)' : 'translate(-50%, -50%) scale(1.14)')
-        : 'translate(-50%, -50%) scale(1)');
+        ? (isCompactReward ? 'translate(-50%, -50%) scale(0.98)' : 'translate(-50%, -50%) scale(1.2)')
+        : 'translate(-50%, -50%) scale(1.12)');
       if (fromGameOver){
         setTimeout(()=>{
           if (charmFS.overlay && threeWrap){
             threeWrap.style('transition','transform 190ms cubic-bezier(0.2, 0.9, 0.2, 1), opacity 180ms ease-out');
-            threeWrap.style('transform','translate(-50%, -50%) scale(1)');
+            threeWrap.style('transform','translate(-50%, -50%) scale(1.08)');
           }
         }, 210);
       }

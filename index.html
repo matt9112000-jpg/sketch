@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Insufficient Space - Home</title>
+    <title>INSUFFICIENT SPACE</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -24,6 +24,7 @@
         --font-serif:'Playfair Display', serif;
         --font-gaylon:'Gaylon','Syne',sans-serif;
         --font-didot:'Didot','Bodoni Moda','Playfair Display',serif;
+        --cursor-cube:url("./cursor-cube.svg") 9 9;
       }
       *{ box-sizing:border-box; margin:0; padding:0; }
       html,body{ height:100%; }
@@ -31,8 +32,12 @@
         background:var(--bg);
         color:var(--text);
         font-family:var(--font-sans);
+        cursor:var(--cursor-cube), auto;
         opacity:0;
         transition:opacity 220ms ease;
+      }
+      a, button, .row, .preview-card{
+        cursor:var(--cursor-cube), pointer;
       }
       body.is-ready{ opacity:1; }
       body.is-exiting{ opacity:0; }
@@ -412,6 +417,7 @@
         inset:0;
         border-left:2px solid var(--line);
         background:#070d42;
+        cursor:pointer;
         opacity:0;
         transform: translateX(18px) scale(.98);
         clip-path: inset(0 0 0 0);
@@ -451,6 +457,7 @@
       .preview-desc{
         font:400 12px/1.4 var(--font-sans);
         max-width:34ch;
+        white-space:pre-line;
       }
 
       @media (max-width: 920px){
@@ -564,7 +571,7 @@
           <span>ID</span><span>Project</span><span style="text-align:right;">Type</span>
         </div>
         <div class="rows" id="rows">
-          <a class="row active" data-preview-title="SELF-INTRODUCTION" data-preview-desc="Core game page with leaderboard, charm build, and merch unlock result view." data-preview-image="linear-gradient(130deg,#1a26ff 0%,#ff3bda 60%,#ff4622 100%)" href="./sketch.html" data-soft-nav>
+          <a class="row active" data-preview-title="SELF-INTRODUCTION" data-preview-desc="What is INSUFFICIENT SPACE?&#10;You might find out through the game." data-preview-image="linear-gradient(130deg,#1a26ff 0%,#ff3bda 60%,#ff4622 100%)" href="./game.html" data-soft-nav>
             <span class="num">01</span><span class="name">SELF-INTRODUCTION</span><span class="meta">Game<br/>Live</span>
           </a>
         </div>
@@ -575,9 +582,9 @@
         <div class="preview-card visible" id="preview-card">
           <iframe class="preview-frame" id="preview-frame" title="Page preview" loading="lazy"></iframe>
           <div class="preview-overlay">
-            <div class="preview-kicker">Inner Page Preview</div>
+            <div class="preview-kicker"></div>
             <div class="preview-title" id="preview-title">SELF-INTRODUCTION</div>
-            <p class="preview-desc" id="preview-desc">Core game page with leaderboard, charm build, and merch unlock result view.</p>
+            <p class="preview-desc" id="preview-desc">What is INSUFFICIENT SPACE?<br>You might find out through the game.</p>
           </div>
         </div>
       </section>
@@ -605,13 +612,13 @@
         if (headerType) headerType.textContent = t('Type', '類型');
         if (firstName) firstName.textContent = t('SELF-INTRODUCTION', '自我介紹');
         if (firstMeta) firstMeta.innerHTML = t('Game<br/>Live', '遊戲<br/>即時');
-        if (previewKicker) previewKicker.textContent = t('Inner Page Preview', '頁面預覽');
+        if (previewKicker) previewKicker.textContent = '';
         if (titleSub) titleSub.textContent = t('ᴍᴀᴋɪɴɢ ꜱᴘᴀᴄᴇ ꜰᴏʀ ᴛʜᴇ ᴛʜɪɴɢꜱ ᴛʜᴀᴛ ᴍᴀᴛᴛᴇʀ.', '為真正重要的事，騰出空間。');
         if (firstRow){
           firstRow.dataset.previewTitle = t('SELF-INTRODUCTION', '自我介紹');
           firstRow.dataset.previewDesc = t(
-            'Core game page with leaderboard, charm build, and merch unlock result view.',
-            '核心遊戲頁，含排行榜、吊飾製作與周邊解鎖展示。'
+            'What is INSUFFICIENT SPACE?\nYou might find out through the game.',
+            '什麼是 INSUFFICIENT SPACE？\n你也許可以在遊戲裡找到答案。'
           );
         }
         document.querySelectorAll('a[data-soft-nav]').forEach((link)=>{
@@ -774,7 +781,7 @@
           row.classList.add('active');
           title.textContent = row.dataset.previewTitle || 'Project';
           desc.textContent = row.dataset.previewDesc || '';
-          const href = row.getAttribute('href') || './sketch.html';
+          const href = row.getAttribute('href') || './game.html';
           const previewHref = href + (href.includes('?') ? '&' : '?') + 'preview=1';
           if (frame && frame.getAttribute('src') !== previewHref){
             frame.setAttribute('src', previewHref);
@@ -785,13 +792,22 @@
           card.classList.remove('visible');
           rows.forEach(r => r.classList.remove('active'));
         }
+        function openActiveProject(){
+          const row = rows.find(r => r.classList.contains('active')) || rows[0];
+          if (!row) return;
+          const href = row.getAttribute('href');
+          if (!href || href.startsWith('#')) return;
+          document.body.classList.add('is-exiting');
+          setTimeout(()=>{ window.location.href = href; }, 190);
+        }
 
         rows.forEach((row)=>{
           row.addEventListener('mouseenter', ()=>setPreview(row));
-          row.addEventListener('mouseleave', closePreview);
           row.addEventListener('focus', ()=>setPreview(row));
           row.addEventListener('touchstart', ()=>setPreview(row), { passive:true });
         });
+        if (previewSide) previewSide.addEventListener('mouseleave', closePreview);
+        if (card) card.addEventListener('click', openActiveProject);
         if (rows[0]) setPreview(rows[0]);
 
         document.body.classList.add('is-ready');

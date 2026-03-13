@@ -18,6 +18,7 @@
         --accent:#ee00b8;
         --ring: rgba(238,0,184,.35);
         --border:#3340a8;
+        --cursor-cube:url("./cursor-cube.svg") 9 9;
       }
       *{ box-sizing:border-box; }
       html, body{ height:100%; }
@@ -26,8 +27,12 @@
         font-family: Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
         color: var(--text);
         background: var(--bg);
+        cursor:var(--cursor-cube), auto;
         opacity:0;
         transition: opacity 260ms ease-out;
+      }
+      a, button, .viewer-shell, .product-body{
+        cursor:var(--cursor-cube), pointer;
       }
       body.is-ready{ opacity:1; }
       body.is-exiting{ opacity:0; }
@@ -112,6 +117,9 @@
       .viewer-shell.is-active{
         transform: translate(-50%, -50%) scale(1);
         filter: drop-shadow(0 22px 44px rgba(0,0,0,.16));
+      }
+      .viewer-shell.is-info-hover{
+        transform: translate(-50%, -50%) scale(1.06);
       }
       .viewer{
         width:100%;
@@ -320,6 +328,9 @@
         }
         .viewer-shell.is-active{
           transform: translate(-50%, -50%) scale(1.0);
+        }
+        .viewer-shell.is-info-hover{
+          transform: translate(-50%, -50%) scale(1.03);
         }
         .product-body{
           top:74%;
@@ -877,10 +888,20 @@
         info.classList.add('is-active');
         shell.addEventListener('pointermove', (e)=>checkProximity(e.clientX, e.clientY));
         stage.addEventListener('pointermove', (e)=>checkProximity(e.clientX, e.clientY));
-        shell.addEventListener('pointerleave', ()=>setActive(false));
+        shell.addEventListener('pointerleave', ()=>{
+          setActive(false);
+          shell.classList.remove('is-info-hover');
+        });
         shell.addEventListener('pointerdown', ()=>setActive(true));
-        info.addEventListener('pointerenter', ()=>setActive(true));
-        info.addEventListener('pointermove', ()=>setActive(true));
+        info.addEventListener('pointerenter', ()=>{
+          setActive(true);
+          shell.classList.add('is-info-hover');
+        });
+        info.addEventListener('pointermove', ()=>{
+          setActive(true);
+          shell.classList.add('is-info-hover');
+        });
+        info.addEventListener('pointerleave', ()=>shell.classList.remove('is-info-hover'));
 
         let rafId = 0;
         function tick(){
