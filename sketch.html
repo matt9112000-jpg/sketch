@@ -167,12 +167,14 @@
       .intro-phrase{
         position:fixed;
         left:50%;
-        top:56%;
+        top:46%;
         width:min(620px, 92vw);
         transform:translate(-50%, -50%);
         z-index:15000;
         pointer-events:auto;
         user-select:none;
+        display:flex;
+        flex-direction:column;
         border:1px solid rgba(214,224,255,.22);
         border-radius:14px;
         background:linear-gradient(180deg, rgba(8, 18, 100, .44), rgba(6, 12, 72, .28));
@@ -191,12 +193,15 @@
         border-color:rgba(255,59,218,.34);
       }
       .intro-phrase-head{
-        padding:10px 12px 8px;
-        font:800 11px/1.2 Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-        letter-spacing:.12em;
+        margin:8px auto 2px;
+        padding:4px 8px;
+        font:800 10px/1.1 Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        letter-spacing:.08em;
         text-transform:uppercase;
-        color:#d8deff;
-        border-bottom:1px solid rgba(214,224,255,.18);
+        color:#e8ecff;
+        border:1px solid rgba(214,224,255,.28);
+        border-radius:999px;
+        background:rgba(8,18,84,.54);
       }
       .intro-phrase-body{
         max-height:0;
@@ -206,7 +211,7 @@
         transition:max-height .34s cubic-bezier(.2,.9,.2,1), opacity .24s ease, transform .24s ease;
       }
       .intro-phrase.is-hover .intro-phrase-body{
-        max-height:min(48vh, 420px);
+        max-height:min(42vh, 360px);
         overflow:auto;
         opacity:1;
         transform:translateY(0);
@@ -282,11 +287,14 @@
           padding:9px 10px 8px;
         }
         .intro-phrase{
-          top:54%;
+          top:42%;
           width:min(92vw, 420px);
         }
+        .intro-phrase.is-hover .intro-phrase-body{
+          max-height:min(36vh, 280px);
+        }
         .intro-arrow{
-          bottom:108px;
+          bottom:132px;
         }
       }
       body.preview-mode .ui-dock{
@@ -313,17 +321,16 @@
         <h2 class="info-title">Game Info</h2>
       </div>
       <section class="hud-card controls-card" aria-label="How to play">
-        <h2>Controls</h2>
+        <h2>Hover to see</h2>
         <ul class="controls-list">
-          <li><code>←</code> / <code>→</code>: move</li>
-          <li><code>↓</code>: soft drop</li>
-          <li><code>↑</code>: rotate</li>
-          <li>On mobile: use the on-screen buttons</li>
+          <li>Hover the phrase panel to reveal the full story.</li>
+          <li>Scroll to the end to show the arrow.</li>
+          <li>Then enter your IG and start the game.</li>
         </ul>
       </section>
     </aside>
-    <div class="intro-phrase" id="intro-phrase" aria-hidden="true">
-      <div class="intro-phrase-head">Hover To Read</div>
+      <div class="intro-phrase" id="intro-phrase" aria-hidden="true">
+      <div class="intro-phrase-head">Hover</div>
       <div class="intro-phrase-body" id="intro-phrase-body">
         <div class="intro-phrase-content" id="intro-phrase-content"></div>
       </div>
@@ -390,23 +397,36 @@
         }
         if (infoBtnLabel) infoBtnLabel.textContent = t('Info', '資訊');
         if (infoTitle) infoTitle.textContent = t('Game Info', '遊戲資訊');
-        if (controlsTitle) controlsTitle.textContent = t('Controls', '操作方式');
-        if (controlsList[0]) controlsList[0].innerHTML = t('<code>←</code> / <code>→</code>: move', '<code>←</code> / <code>→</code>：移動');
-        if (controlsList[1]) controlsList[1].innerHTML = t('<code>↓</code>: soft drop', '<code>↓</code>：緩降');
-        if (controlsList[2]) controlsList[2].innerHTML = t('<code>↑</code>: rotate', '<code>↑</code>：旋轉');
-        if (controlsList[3]) controlsList[3].textContent = t('On mobile: use the on-screen buttons', '手機版：使用畫面上的按鈕');
+        if (controlsTitle) controlsTitle.textContent = t('Hover to see', '懸停查看');
+        if (controlsList[0]) controlsList[0].textContent = t('Hover the phrase panel to reveal the full story.', '將游標移到文字面板上可展開完整內容。');
+        if (controlsList[1]) controlsList[1].textContent = t('Scroll to the end to show the arrow.', '捲到最底會出現箭頭提示。');
+        if (controlsList[2]) controlsList[2].textContent = t('Then enter your IG and start the game.', '接著輸入 IG 後開始遊戲。');
         renderIntroPhrase();
         if (introPhrase){
-          introPhrase.addEventListener('mouseenter', ()=>{
+          const canHover = window.matchMedia && window.matchMedia('(hover: hover)').matches;
+          let hoverCloseTimer = null;
+          const openPhrase = ()=>{
+            if (hoverCloseTimer){
+              clearTimeout(hoverCloseTimer);
+              hoverCloseTimer = null;
+            }
             introPhrase.classList.add('is-hover');
             checkIntroScrollEnd();
-          });
-          introPhrase.addEventListener('mouseleave', ()=>{
-            introPhrase.classList.remove('is-hover');
-            if (introArrow) introArrow.classList.remove('is-visible');
-          });
-          introPhrase.addEventListener('click', ()=>introPhrase.classList.toggle('is-hover'));
-          introPhrase.addEventListener('touchstart', ()=>introPhrase.classList.add('is-hover'), { passive:true });
+          };
+          const closePhrase = ()=>{
+            if (hoverCloseTimer) clearTimeout(hoverCloseTimer);
+            hoverCloseTimer = setTimeout(()=>{
+              introPhrase.classList.remove('is-hover');
+              if (introArrow) introArrow.classList.remove('is-visible');
+              hoverCloseTimer = null;
+            }, 120);
+          };
+          introPhrase.addEventListener('pointerenter', openPhrase);
+          introPhrase.addEventListener('pointerleave', closePhrase);
+          if (!canHover){
+            introPhrase.addEventListener('click', ()=>introPhrase.classList.toggle('is-hover'));
+            introPhrase.addEventListener('touchstart', openPhrase, { passive:true });
+          }
           if (introPhraseBody) introPhraseBody.addEventListener('scroll', checkIntroScrollEnd, { passive:true });
           window.addEventListener('resize', renderIntroPhrase);
         }
