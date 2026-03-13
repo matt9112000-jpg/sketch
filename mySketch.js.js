@@ -422,7 +422,7 @@ function windowResized(){ calculateLayout(); if(!inputComplete) centerInput(); p
 function centerInput(){
   const w = innerW + BORDER_THICK, h = innerH + BORDER_THICK;
   nameInput.size(NAME_INPUT_W, NAME_INPUT_H);
-  const centerRatio = IS_MOBILE ? 0.70 : 0.66;
+  const centerRatio = IS_MOBILE ? 0.78 : 0.74;
   const inputCenterY = canvasY + h * centerRatio;
   nameInput.position(canvasX + (w - NAME_INPUT_W)/2, inputCenterY - NAME_INPUT_H / 2);
 }
@@ -488,7 +488,7 @@ function draw(){
   if (gameState === 'input'){
     push(); translate(BORDER_HALF, BORDER_HALF); updateIntroPieces(); drawIntroPieces(); pop();
     if (!PREVIEW_MODE){
-      const promptY = height * (IS_MOBILE ? 0.60 : 0.56);
+      const promptY = height * (IS_MOBILE ? 0.70 : 0.66);
       noStroke();
       fill('#ffd6fa');
       textAlign(CENTER,CENTER);
