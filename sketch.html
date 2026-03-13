@@ -44,7 +44,7 @@
       .ui-dock{
         position: fixed;
         inset:0;
-        z-index: 9999;
+        z-index: 20000;
         pointer-events:none;
       }
       .hud-actions{
@@ -83,7 +83,7 @@
       .info-overlay{
         position:fixed;
         inset:0;
-        z-index:9996;
+        z-index:20001;
         background:rgba(2,6,40,.32);
         opacity:0;
         pointer-events:none;
@@ -100,7 +100,7 @@
         height:100dvh;
         max-height:100dvh;
         width:min(430px, 94vw);
-        z-index:9997;
+        z-index:20002;
         transform:translateX(102%);
         transition:transform .32s cubic-bezier(.2,.9,.2,1);
         background: linear-gradient(180deg, rgba(8, 18, 100, .86), rgba(6, 12, 72, .86));
@@ -108,7 +108,7 @@
         backdrop-filter: blur(14px);
         padding:56px 14px calc(18px + env(safe-area-inset-bottom));
         display:grid;
-        grid-template-rows:auto auto 1fr;
+        grid-template-rows:auto auto;
         gap:10px;
         overflow-y:auto;
         overscroll-behavior:contain;
@@ -164,33 +164,6 @@
       .controls-card{
         transition: opacity .2s ease, transform .2s ease;
       }
-      .desc-card p{
-        margin:0;
-        color:#eff2ff;
-        font-size:11px;
-        line-height:1.55;
-      }
-      .desc-body{
-        display:grid;
-        gap:10px;
-      }
-      .desc-body p{
-        margin:0;
-      }
-      .desc-body .lead{
-        color:#ffffff;
-        font-weight:700;
-      }
-      .desc-quote{
-        border-left:2px solid rgba(255,255,255,.24);
-        padding-left:8px;
-      }
-      .desc-note{
-        margin-top:8px !important;
-        font-size:10px !important;
-        color:var(--txt-dim) !important;
-        letter-spacing:.02em;
-      }
       @media (max-width: 700px){
         .ui-dock{
           inset:0;
@@ -240,20 +213,6 @@
           <li>On mobile: use the on-screen buttons</li>
         </ul>
       </section>
-      <section class="hud-card desc-card" aria-label="Game description">
-        <h2>Why I Made This Game</h2>
-        <div class="desc-body" id="desc-body">
-          <p class="lead">What is INSUFFICIENT SPACE?<br>Maybe you can find out through the game.</p>
-          <p class="desc-quote">"INSUFFICIENT SPACE" is actually a common message in many games. When your inventory runs out of capacity, the system simply tells you there is no more room.</p>
-          <p>We have always liked that moment. Because in many ways, it feels a lot like real life.</p>
-          <p>So on this website, we adjusted a small Tetris game. A familiar game that lets you experience something simple: space is always limited.</p>
-          <p>Just like a closet, a room, or any kind of storage space. Once space becomes limited, we start rearranging things, making room, and sometimes deciding again what should stay.</p>
-          <p>This is also something INSUFFICIENT SPACE constantly faces while running the brand. Every new object entering this space is, in some way, a decision.</p>
-          <p>So with this little game, we simply pass that role to you. Within a game of "INSUFFICIENT SPACE", you can experience the process of arranging, deciding, and making things fit.</p>
-          <p>A process that comes with frustration, satisfaction, and challenge at the same time.</p>
-          <p>And we hope that everything we release through INSUFFICIENT SPACE is something you would choose to give space to.</p>
-        </div>
-      </section>
     </aside>
 
     <!-- Libraries first, then the sketch -->
@@ -273,9 +232,7 @@
         const infoBtnLabel = document.getElementById('info-toggle');
         const infoTitle = document.querySelector('.info-title');
         const controlsTitle = document.querySelector('.controls-card h2');
-        const descTitle = document.querySelector('.desc-card h2');
         const controlsList = document.querySelectorAll('.controls-list li');
-        const descBody = document.getElementById('desc-body');
         if (homeLink){
           homeLink.textContent = t('Home', '首頁');
           const u = new URL(homeLink.getAttribute('href'), window.location.href);
@@ -289,29 +246,6 @@
         if (controlsList[1]) controlsList[1].innerHTML = t('<code>↓</code>: soft drop', '<code>↓</code>：緩降');
         if (controlsList[2]) controlsList[2].innerHTML = t('<code>↑</code>: rotate', '<code>↑</code>：旋轉');
         if (controlsList[3]) controlsList[3].textContent = t('On mobile: use the on-screen buttons', '手機版：使用畫面上的按鈕');
-        if (descTitle) descTitle.textContent = t('Why I Made This Game', '我為什麼做這個遊戲');
-        if (descBody){
-          descBody.innerHTML = t(
-            `<p class="lead">What is INSUFFICIENT SPACE?<br>Maybe you can find out through the game.</p>
-            <p class="desc-quote">"INSUFFICIENT SPACE" is actually a common message in many games. When your inventory runs out of capacity, the system simply tells you there is no more room.</p>
-            <p>We have always liked that moment. Because in many ways, it feels a lot like real life.</p>
-            <p>So on this website, we adjusted a small Tetris game. A familiar game that lets you experience something simple: space is always limited.</p>
-            <p>Just like a closet, a room, or any kind of storage space. Once space becomes limited, we start rearranging things, making room, and sometimes deciding again what should stay.</p>
-            <p>This is also something INSUFFICIENT SPACE constantly faces while running the brand. Every new object entering this space is, in some way, a decision.</p>
-            <p>So with this little game, we simply pass that role to you. Within a game of "INSUFFICIENT SPACE", you can experience the process of arranging, deciding, and making things fit.</p>
-            <p>A process that comes with frustration, satisfaction, and challenge at the same time.</p>
-            <p>And we hope that everything we release through INSUFFICIENT SPACE is something you would choose to give space to.</p>`,
-            `<p class="lead">什麼是 INSUFFICIENT SPACE？<br>也許你可以透過這個遊戲找到答案。</p>
-            <p class="desc-quote">「INSUFFICIENT SPACE」其實是很多遊戲裡很常見的一句提示。當背包容量不夠時，系統只會告訴你：已經沒有更多空間。</p>
-            <p>我們一直很喜歡那個時刻，因為在很多層面上，它很像真實生活。</p>
-            <p>所以在這個網站裡，我們調整了一個小型俄羅斯方塊遊戲。這個熟悉的遊戲，讓你體驗一件很簡單的事：空間永遠有限。</p>
-            <p>就像衣櫃、房間，或任何形式的收納空間。一旦空間變得有限，我們就開始重新整理、騰出位置，有時也會重新決定什麼該留下。</p>
-            <p>這也是 INSUFFICIENT SPACE 在經營品牌時持續面對的事情。每一件要進入這個空間的新物件，某種程度上都是一次選擇。</p>
-            <p>所以我們把這個角色交給你。透過一局「INSUFFICIENT SPACE」，你可以體驗排列、取捨、讓事物被放進去的過程。</p>
-            <p>那是一個同時伴隨挫折、滿足與挑戰的過程。</p>
-            <p>而我們也希望，所有由 INSUFFICIENT SPACE 釋出的作品，都是你願意留出空間給它們的東西。</p>`
-          );
-        }
         function enableSoftNav(){
           if (PREVIEW_MODE) document.body.classList.add('preview-mode');
           document.body.classList.add('is-ready');
