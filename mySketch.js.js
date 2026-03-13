@@ -422,7 +422,8 @@ function windowResized(){ calculateLayout(); if(!inputComplete) centerInput(); p
 function centerInput(){
   const w = innerW + BORDER_THICK, h = innerH + BORDER_THICK;
   nameInput.size(NAME_INPUT_W, NAME_INPUT_H);
-  nameInput.position(canvasX + (w - NAME_INPUT_W)/2, canvasY + (h - NAME_INPUT_H)/2);
+  const bottomInset = IS_MOBILE ? 18 : 24;
+  nameInput.position(canvasX + (w - NAME_INPUT_W)/2, canvasY + h - NAME_INPUT_H - bottomInset);
 }
 function applyResponsiveUI(){
   IS_MOBILE =
@@ -486,12 +487,13 @@ function draw(){
   if (gameState === 'input'){
     push(); translate(BORDER_HALF, BORDER_HALF); updateIntroPieces(); drawIntroPieces(); pop();
     if (!PREVIEW_MODE){
+      const promptY = height - NAME_INPUT_H - (IS_MOBILE ? 30 : 38);
       noStroke();
       fill('#ffd6fa');
       textAlign(CENTER,CENTER);
       textSize(12);
       textStyle(BOLD);
-      text(T('ENTER YOUR IG TO START', '輸入 IG 開始遊戲'), width/2, height/2 - 39);
+      text(T('ENTER YOUR IG TO START', '輸入 IG 開始遊戲'), width/2, promptY);
       nameInput.show(); nameInput.elt.focus();
     } else {
       nameInput.hide();

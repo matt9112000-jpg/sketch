@@ -173,54 +173,91 @@
         z-index:15000;
         pointer-events:auto;
         user-select:none;
+        border:1px solid rgba(214,224,255,.22);
+        border-radius:14px;
+        background:linear-gradient(180deg, rgba(8, 18, 100, .44), rgba(6, 12, 72, .28));
+        backdrop-filter:blur(10px);
+        box-shadow:0 10px 28px rgba(0,0,0,.18);
+        transition:transform .28s cubic-bezier(.2,.9,.2,1), box-shadow .28s ease, border-color .2s ease;
       }
       .intro-phrase.is-hidden{
         opacity:0;
         visibility:hidden;
         pointer-events:none;
       }
-      .intro-phrase-chips{
-        position:relative;
-        min-height:88px;
+      .intro-phrase.is-hover{
+        transform:translate(-50%, -50%) scale(1.02);
+        box-shadow:0 16px 44px rgba(0,0,0,.28);
+        border-color:rgba(255,59,218,.34);
       }
-      .intro-phrase-chip{
-        position:absolute;
-        display:inline-flex;
-        align-items:center;
-        justify-content:center;
-        padding:4px 7px;
-        border:1px solid rgba(207,212,255,.34);
-        border-radius:8px;
-        background:rgba(8,18,84,.64);
-        color:#eff3ff;
-        font:700 10px/1 var(--glass-font, Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif);
-        letter-spacing:.02em;
-        box-shadow:0 4px 10px rgba(0,0,0,.16);
-        animation: wordDrop 580ms cubic-bezier(.2,.9,.2,1) both;
+      .intro-phrase-head{
+        padding:10px 12px 8px;
+        font:800 11px/1.2 Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        letter-spacing:.12em;
+        text-transform:uppercase;
+        color:#d8deff;
+        border-bottom:1px solid rgba(214,224,255,.18);
       }
-      .intro-phrase-full{
-        margin:0;
-        opacity:0;
-        transform:translateY(10px);
-        transition:opacity .25s ease, transform .25s ease;
-        color:#f7f8ff;
-        font:700 clamp(12px, 2.1vw, 16px)/1.5 Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-        text-align:center;
-        text-shadow:0 1px 10px rgba(0,0,0,.28);
-        white-space:pre-line;
-      }
-      .intro-phrase.is-rebuild .intro-phrase-chips{
+      .intro-phrase-body{
+        max-height:0;
+        overflow:hidden;
         opacity:0;
         transform:translateY(8px);
-        transition:opacity .2s ease, transform .2s ease;
+        transition:max-height .34s cubic-bezier(.2,.9,.2,1), opacity .24s ease, transform .24s ease;
       }
-      .intro-phrase.is-rebuild .intro-phrase-full{
+      .intro-phrase.is-hover .intro-phrase-body{
+        max-height:min(48vh, 420px);
+        overflow:auto;
         opacity:1;
         transform:translateY(0);
       }
-      @keyframes wordDrop{
-        from{ opacity:0; transform:translateY(-90px) scale(.95); }
-        to{ opacity:1; transform:translateY(0) scale(1); }
+      .intro-phrase-content{
+        margin:0;
+        padding:12px 13px 14px;
+        color:#f7f8ff;
+        font:600 clamp(12px, 1.55vw, 14px)/1.6 Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        text-align:left;
+        text-shadow:0 1px 10px rgba(0,0,0,.28);
+        white-space:pre-line;
+      }
+      .intro-phrase-content p{
+        margin:0 0 11px;
+      }
+      .intro-phrase-content p:last-child{
+        margin-bottom:0;
+      }
+      .intro-phrase-content .lead{
+        font-weight:800;
+        color:#ffffff;
+      }
+      .intro-arrow{
+        position:fixed;
+        left:50%;
+        bottom:100px;
+        transform:translateX(-50%) translateY(8px);
+        z-index:15001;
+        width:28px;
+        height:28px;
+        border-radius:999px;
+        border:1px solid rgba(214,224,255,.26);
+        background:rgba(8,18,84,.58);
+        color:#ffd7f7;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        font:800 18px/1 Montserrat, sans-serif;
+        opacity:0;
+        pointer-events:none;
+        transition:opacity .22s ease, transform .22s ease;
+      }
+      .intro-arrow.is-visible{
+        opacity:1;
+        transform:translateX(-50%) translateY(0);
+        animation:introArrowPulse 1s ease-in-out infinite;
+      }
+      @keyframes introArrowPulse{
+        0%,100%{ transform:translateX(-50%) translateY(0); }
+        50%{ transform:translateX(-50%) translateY(4px); }
       }
       @media (max-width: 700px){
         .ui-dock{
@@ -248,15 +285,17 @@
           top:54%;
           width:min(92vw, 420px);
         }
-        .intro-phrase-chip{
-          font-size:9px;
-          padding:3px 6px;
+        .intro-arrow{
+          bottom:108px;
         }
       }
       body.preview-mode .ui-dock{
         display:none !important;
       }
       body.preview-mode .intro-phrase{
+        display:none !important;
+      }
+      body.preview-mode .intro-arrow{
         display:none !important;
       }
     </style>
@@ -284,9 +323,12 @@
       </section>
     </aside>
     <div class="intro-phrase" id="intro-phrase" aria-hidden="true">
-      <div class="intro-phrase-chips" id="intro-phrase-chips"></div>
-      <p class="intro-phrase-full" id="intro-phrase-full"></p>
+      <div class="intro-phrase-head">Hover To Read</div>
+      <div class="intro-phrase-body" id="intro-phrase-body">
+        <div class="intro-phrase-content" id="intro-phrase-content"></div>
+      </div>
     </div>
+    <div class="intro-arrow" id="intro-arrow" aria-hidden="true">↓</div>
 
     <!-- Libraries first, then the sketch -->
     <script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.js" type="text/javascript"></script>
@@ -307,39 +349,38 @@
         const controlsTitle = document.querySelector('.controls-card h2');
         const controlsList = document.querySelectorAll('.controls-list li');
         const introPhrase = document.getElementById('intro-phrase');
-        const introPhraseChips = document.getElementById('intro-phrase-chips');
-        const introPhraseFull = document.getElementById('intro-phrase-full');
-        function makePhraseTokens(line){
-          const s = String(line || '').trim();
-          if (!s) return [];
-          if (/[\u3400-\u9fff]/.test(s)){
-            return s.replace(/[，。！？]/g, ' ').split(/\s+/).filter(Boolean);
-          }
-          return s.split(/\s+/).filter(Boolean);
-        }
+        const introPhraseBody = document.getElementById('intro-phrase-body');
+        const introPhraseContent = document.getElementById('intro-phrase-content');
+        const introArrow = document.getElementById('intro-arrow');
         function renderIntroPhrase(){
-          if (!introPhrase || !introPhraseChips || !introPhraseFull) return;
-          const line1 = t('What is INSUFFICIENT SPACE?', '什麼是 INSUFFICIENT SPACE？');
-          const line2 = t('Maybe you can find out through the game.', '也許你可以透過這個遊戲找到答案。');
-          const tokens = [...makePhraseTokens(line1), ...makePhraseTokens(line2)];
-          introPhraseFull.textContent = `${line1}\n${line2}`;
-          introPhraseChips.innerHTML = '';
-          const cols = window.innerWidth <= 700 ? 4 : 7;
-          const cellW = window.innerWidth <= 700 ? 76 : 84;
-          const rowH = window.innerWidth <= 700 ? 22 : 24;
-          tokens.forEach((token, i)=>{
-            const chip = document.createElement('span');
-            chip.className = 'intro-phrase-chip';
-            chip.textContent = token;
-            const col = i % cols;
-            const row = Math.floor(i / cols);
-            chip.style.left = `${col * cellW + (row % 2 ? 12 : 0)}px`;
-            chip.style.top = `${row * rowH}px`;
-            chip.style.animationDelay = `${i * 45}ms`;
-            introPhraseChips.appendChild(chip);
-          });
-          const rows = Math.max(1, Math.ceil(tokens.length / cols));
-          introPhraseChips.style.minHeight = `${rows * rowH + 26}px`;
+          if (!introPhraseContent) return;
+          introPhraseContent.innerHTML = t(
+            `<p class="lead">What is INSUFFICIENT SPACE?<br>Maybe you can find out through the game.</p>
+            <p>"INSUFFICIENT SPACE" is actually a common message in many games. When your inventory runs out of capacity, the system simply tells you: there is no more room.</p>
+            <p>We've always liked that moment. Because in many ways, it feels a lot like real life.</p>
+            <p>So on this website, we adjusted a small Tetris game. A familiar game that lets you experience something simple: space is always limited.</p>
+            <p>Just like a closet, a room, or any kind of storage space. Once space becomes limited, we start rearranging things, making room, and sometimes deciding again what should stay.</p>
+            <p>This is also something INSUFFICIENT SPACE constantly faces while running the brand. Every new object entering this space is, in some way, a decision.</p>
+            <p>So with this little game, we simply pass that role to you. Within a game of "INSUFFICIENT SPACE", you can experience the process of arranging, deciding, and making things fit.</p>
+            <p>A process that comes with frustration, satisfaction, and challenge at the same time.</p>
+            <p>And we hope that everything we release through INSUFFICIENT SPACE is something you would choose to give space to.</p>`,
+            `<p class="lead">什麼是 INSUFFICIENT SPACE？<br>也許你可以透過這個遊戲找到答案。</p>
+            <p>「INSUFFICIENT SPACE」其實是很多遊戲裡很常見的一句提示。當背包容量不夠時，系統只會告訴你：已經沒有更多空間。</p>
+            <p>我們一直很喜歡那個時刻。因為在很多層面上，它很像真實生活。</p>
+            <p>所以在這個網站裡，我們調整了一個小型俄羅斯方塊遊戲。這個熟悉的遊戲，讓你體驗一件很簡單的事：空間永遠有限。</p>
+            <p>就像衣櫃、房間，或任何形式的收納空間。一旦空間變得有限，我們就開始重新整理、騰出位置，有時也會重新決定什麼該留下。</p>
+            <p>這也是 INSUFFICIENT SPACE 在經營品牌時持續面對的事情。每一件要進入這個空間的新物件，某種程度上都是一次選擇。</p>
+            <p>所以我們把這個角色交給你。透過一局「INSUFFICIENT SPACE」，你可以體驗排列、取捨、讓事物被放進去的過程。</p>
+            <p>那是一個同時伴隨挫折、滿足與挑戰的過程。</p>
+            <p>而我們也希望，所有由 INSUFFICIENT SPACE 釋出的作品，都是你願意留出空間給它們的東西。</p>`
+          );
+          if (introPhraseBody) introPhraseBody.scrollTop = 0;
+          if (introArrow) introArrow.classList.remove('is-visible');
+        }
+        function checkIntroScrollEnd(){
+          if (!introPhraseBody || !introArrow) return;
+          const atEnd = (introPhraseBody.scrollTop + introPhraseBody.clientHeight) >= (introPhraseBody.scrollHeight - 6);
+          introArrow.classList.toggle('is-visible', introPhrase.classList.contains('is-hover') && atEnd);
         }
         if (homeLink){
           homeLink.textContent = t('Home', '首頁');
@@ -356,10 +397,17 @@
         if (controlsList[3]) controlsList[3].textContent = t('On mobile: use the on-screen buttons', '手機版：使用畫面上的按鈕');
         renderIntroPhrase();
         if (introPhrase){
-          introPhrase.addEventListener('mouseenter', ()=>introPhrase.classList.add('is-rebuild'));
-          introPhrase.addEventListener('mouseleave', ()=>introPhrase.classList.remove('is-rebuild'));
-          introPhrase.addEventListener('touchstart', ()=>introPhrase.classList.add('is-rebuild'), { passive:true });
-          introPhrase.addEventListener('touchend', ()=>introPhrase.classList.remove('is-rebuild'), { passive:true });
+          introPhrase.addEventListener('mouseenter', ()=>{
+            introPhrase.classList.add('is-hover');
+            checkIntroScrollEnd();
+          });
+          introPhrase.addEventListener('mouseleave', ()=>{
+            introPhrase.classList.remove('is-hover');
+            if (introArrow) introArrow.classList.remove('is-visible');
+          });
+          introPhrase.addEventListener('click', ()=>introPhrase.classList.toggle('is-hover'));
+          introPhrase.addEventListener('touchstart', ()=>introPhrase.classList.add('is-hover'), { passive:true });
+          if (introPhraseBody) introPhraseBody.addEventListener('scroll', checkIntroScrollEnd, { passive:true });
           window.addEventListener('resize', renderIntroPhrase);
         }
         function enableSoftNav(){
@@ -419,6 +467,7 @@
           infoBtn.classList.toggle('is-hidden', inGame);
           hudActions.classList.toggle('is-game', inGame);
           if (introPhrase) introPhrase.classList.toggle('is-hidden', inGame);
+          if (introArrow) introArrow.classList.toggle('is-visible', false);
           if (inGame) setInfoOpen(false);
         }, 180);
       })();
