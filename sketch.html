@@ -17,7 +17,6 @@
         --glass-border: rgba(214,224,255,.22);
         --glass-border-hover: rgba(255,255,255,.34);
         --glass-focus: rgba(238,0,184,.45);
-        --txt-dim: #c7d1ff;
         --cursor-cube:url("./cursor-cube.svg") 9 9;
       }
       *{ box-sizing:border-box; }
@@ -54,7 +53,7 @@
         right:14px;
         display:flex;
         align-items:center;
-        justify-content:space-between;
+        justify-content:flex-start;
         gap:14px;
         pointer-events:none;
       }
@@ -79,90 +78,6 @@
       .hud-btn:focus-visible { outline: 3px solid var(--glass-focus); outline-offset: 2px; }
       .hud-btn.is-hidden{
         display:none !important;
-      }
-      .info-overlay{
-        position:fixed;
-        inset:0;
-        z-index:20001;
-        background:rgba(2,6,40,.32);
-        opacity:0;
-        pointer-events:none;
-        transition:opacity .24s ease;
-      }
-      .info-overlay.is-open{
-        opacity:1;
-        pointer-events:auto;
-      }
-      .info-sheet{
-        position:fixed;
-        top:0;
-        right:0;
-        height:100dvh;
-        max-height:100dvh;
-        width:min(430px, 94vw);
-        z-index:20002;
-        transform:translateX(102%);
-        transition:transform .32s cubic-bezier(.2,.9,.2,1);
-        background: linear-gradient(180deg, rgba(8, 18, 100, .86), rgba(6, 12, 72, .86));
-        border-left:1px solid var(--glass-border);
-        backdrop-filter: blur(14px);
-        padding:56px 14px calc(18px + env(safe-area-inset-bottom));
-        display:grid;
-        grid-template-rows:auto auto;
-        gap:10px;
-        overflow-y:auto;
-        overscroll-behavior:contain;
-        -webkit-overflow-scrolling:touch;
-      }
-      .info-sheet.is-open{
-        transform:translateX(0);
-      }
-      .info-head{
-        display:flex;
-        align-items:center;
-        justify-content:space-between;
-        gap:8px;
-      }
-      .info-title{
-        margin:0;
-        font-size:11px;
-        font-weight:800;
-        letter-spacing:.18em;
-        text-transform:uppercase;
-        color:var(--txt-dim);
-      }
-      .hud-card{
-        background: var(--glass-bg);
-        border-radius: 14px;
-        border: 1px solid var(--glass-border);
-        padding: 11px 12px 10px;
-        backdrop-filter: blur(12px);
-      }
-      .hud-card h2{
-        margin:0 0 6px;
-        font-size:10px;
-        text-transform:uppercase;
-        letter-spacing:.18em;
-        color:var(--txt-dim);
-      }
-      .controls-list{
-        margin:0;
-        padding-left:16px;
-        font-size:11px;
-        line-height:1.42;
-        color:#e9ebff;
-      }
-      .controls-list li{ margin:2px 0; }
-      .controls-list code{
-        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-        font-size:.9em;
-        background: rgba(0,0,0,.35);
-        padding:1px 4px;
-        border-radius:6px;
-        color:#ffffff;
-      }
-      .controls-card{
-        transition: opacity .2s ease, transform .2s ease;
       }
       .intro-phrase{
         position:fixed;
@@ -285,15 +200,6 @@
           padding:7px 10px;
           font-size:11px;
         }
-        .info-sheet{
-          width:100vw;
-          border-left:none;
-          padding:64px 10px calc(12px + env(safe-area-inset-bottom));
-          gap:8px;
-        }
-        .hud-card{
-          padding:9px 10px 8px;
-        }
         .intro-phrase{
           top:42%;
           width:min(92vw, 420px);
@@ -317,23 +223,9 @@
     <section class="ui-dock" aria-label="Game HUD">
       <div class="hud-actions" id="hud-actions">
         <a class="hud-btn" href="./index.html" data-soft-nav id="home-link">Home</a>
-        <button class="hud-btn" type="button" id="info-toggle" aria-expanded="false" aria-controls="info-sheet">Info</button>
       </div>
     </section>
-    <div class="info-overlay" id="info-overlay" aria-hidden="true"></div>
-    <aside class="info-sheet" id="info-sheet" aria-label="Game information" aria-hidden="true">
-      <div class="info-head">
-        <h2 class="info-title">Game Info</h2>
-      </div>
-      <section class="hud-card controls-card" aria-label="How to play">
-        <h2>Hover to see</h2>
-        <ul class="controls-list">
-          <li>Hover the phrase panel to reveal the full story.</li>
-          <li>Scroll to the end to show the arrow.</li>
-          <li>Then enter your IG and start the game.</li>
-        </ul>
-      </section>
-    </aside>
+    
       <div class="intro-phrase" id="intro-phrase" aria-hidden="true">
       <div class="intro-phrase-head">Hover</div>
       <div class="intro-phrase-body" id="intro-phrase-body">
@@ -356,10 +248,6 @@
         const isZh = lang === 'zh';
         const t = (en, zh)=> isZh ? zh : en;
         const homeLink = document.getElementById('home-link');
-        const infoBtnLabel = document.getElementById('info-toggle');
-        const infoTitle = document.querySelector('.info-title');
-        const controlsTitle = document.querySelector('.controls-card h2');
-        const controlsList = document.querySelectorAll('.controls-list li');
         const introPhrase = document.getElementById('intro-phrase');
         const introPhraseBody = document.getElementById('intro-phrase-body');
         const introPhraseContent = document.getElementById('intro-phrase-content');
@@ -406,12 +294,6 @@
           u.searchParams.set('lang', lang);
           homeLink.setAttribute('href', u.pathname + u.search);
         }
-        if (infoBtnLabel) infoBtnLabel.textContent = t('Info', '資訊');
-        if (infoTitle) infoTitle.textContent = t('Game Info', '遊戲資訊');
-        if (controlsTitle) controlsTitle.textContent = t('Hover to see', '懸停查看');
-        if (controlsList[0]) controlsList[0].textContent = t('Hover the phrase panel to reveal the full story.', '將游標移到文字面板上可展開完整內容。');
-        if (controlsList[1]) controlsList[1].textContent = t('Scroll to the end to show the arrow.', '捲到最底會出現箭頭提示。');
-        if (controlsList[2]) controlsList[2].textContent = t('Then enter your IG and start the game.', '接著輸入 IG 後開始遊戲。');
         renderIntroPhrase();
         if (introPhrase){
           const canHover = window.matchMedia && window.matchMedia('(hover: hover)').matches;
@@ -432,11 +314,16 @@
               hoverCloseTimer = null;
             }, 120);
           };
-          introPhrase.addEventListener('pointerenter', openPhrase);
-          introPhrase.addEventListener('pointerleave', closePhrase);
-          if (!canHover){
-            introPhrase.addEventListener('click', ()=>introPhrase.classList.toggle('is-hover'));
-            introPhrase.addEventListener('touchstart', openPhrase, { passive:true });
+          if (canHover){
+            introPhrase.addEventListener('pointerenter', openPhrase);
+            introPhrase.addEventListener('pointerleave', closePhrase);
+          } else {
+            introPhrase.addEventListener('click', ()=>{
+              const nextOpen = !introPhrase.classList.contains('is-hover');
+              introPhrase.classList.toggle('is-hover', nextOpen);
+              if (!nextOpen && introArrow) introArrow.classList.remove('is-visible');
+              if (nextOpen) checkIntroScrollEnd();
+            });
           }
           if (introPhraseBody) introPhraseBody.addEventListener('scroll', checkIntroScrollEnd, { passive:true });
           window.addEventListener('resize', renderIntroPhrase);
@@ -464,42 +351,19 @@
       })();
 
       (function(){
-        const infoBtn = document.getElementById('info-toggle');
-        const infoSheet = document.getElementById('info-sheet');
-        const infoOverlay = document.getElementById('info-overlay');
         const hudActions = document.getElementById('hud-actions');
         const introPhrase = document.getElementById('intro-phrase');
-        if (!infoBtn || !infoSheet || !infoOverlay || !hudActions) return;
-
-        function setInfoOpen(isOpen){
-          infoSheet.classList.toggle('is-open', isOpen);
-          infoOverlay.classList.toggle('is-open', isOpen);
-          infoSheet.setAttribute('aria-hidden', String(!isOpen));
-          infoOverlay.setAttribute('aria-hidden', String(!isOpen));
-          infoBtn.setAttribute('aria-expanded', String(isOpen));
-        }
-
-        infoBtn.addEventListener('click', ()=>{
-          const isOpen = infoSheet.classList.contains('is-open');
-          setInfoOpen(!isOpen);
-        });
-        infoOverlay.addEventListener('click', ()=>setInfoOpen(false));
-        window.addEventListener('keydown', (e)=>{
-          if (e.key === 'Escape') setInfoOpen(false);
-        });
-
-        // Keep only Home visible once the user has entered gameplay.
+        const introArrow = document.getElementById('intro-arrow');
+        if (!hudActions) return;
         let lastState = null;
         setInterval(()=>{
           const state = typeof window.gameState === 'string' ? window.gameState : null;
           if (state === lastState || !state) return;
           lastState = state;
           const inGame = state !== 'input';
-          infoBtn.classList.toggle('is-hidden', inGame);
           hudActions.classList.toggle('is-game', inGame);
           if (introPhrase) introPhrase.classList.toggle('is-hidden', inGame);
-          if (introArrow) introArrow.classList.toggle('is-visible', false);
-          if (inGame) setInfoOpen(false);
+          if (introArrow) introArrow.classList.remove('is-visible');
         }, 180);
       })();
     </script>

@@ -481,6 +481,7 @@ function calculateLayout(){
   introPieces = []; introLastTime = 0; introSpawnTimer = 0;
 }
 function draw(){
+  window.gameState = gameState;
   background('#ffffff');
   noStroke(); fill(BG_BLUE); rect(BORDER_HALF, BORDER_HALF, innerW, innerH);
   stroke(PINK); strokeWeight(BORDER_THICK); noFill(); rect(0,0,width,height);
@@ -488,13 +489,6 @@ function draw(){
   if (gameState === 'input'){
     push(); translate(BORDER_HALF, BORDER_HALF); updateIntroPieces(); drawIntroPieces(); pop();
     if (!PREVIEW_MODE){
-      const promptY = height * (IS_MOBILE ? 0.70 : 0.66);
-      noStroke();
-      fill('#ffd6fa');
-      textAlign(CENTER,CENTER);
-      textSize(12);
-      textStyle(BOLD);
-      text(T('ENTER YOUR IG TO START', '輸入 IG 開始遊戲'), width/2, promptY);
       nameInput.show(); nameInput.elt.focus();
     } else {
       nameInput.hide();
