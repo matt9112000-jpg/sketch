@@ -798,11 +798,13 @@
         let modelRoot = null;
         const motionState = {
           progress: 0,
+          part3BaseX: 0,
           part3BaseZ: 0,
           caseBaseRotX: 0,
+          caseBaseX: 0,
           caseBaseY: 0,
           caseBaseZ: 0,
-          caseHalfHeight: 0,
+          casePivotLocal: new THREE.Vector3(),
           initialized: false
         };
         const finalizeRoot = (root, parts)=>{
@@ -934,30 +936,44 @@
             rotateResumeAt = 0;
           }
           if (modelRoot && !motionState.initialized){
-            if (modelState.part3Node) motionState.part3BaseZ = modelState.part3Node.position.z;
+            if (modelState.part3Node){
+              motionState.part3BaseX = modelState.part3Node.position.x;
+              motionState.part3BaseZ = modelState.part3Node.position.z;
+            }
             if (modelState.caseNode){
               motionState.caseBaseRotX = modelState.caseNode.rotation.x;
+              motionState.caseBaseX = modelState.caseNode.position.x;
               motionState.caseBaseY = modelState.caseNode.position.y;
               motionState.caseBaseZ = modelState.caseNode.position.z;
               const caseBox = new THREE.Box3().setFromObject(modelState.caseNode);
               const caseSize = caseBox.getSize(new THREE.Vector3());
-              motionState.caseHalfHeight = Math.max(0.001, caseSize.y * 0.5);
+              // Anchor line offset toward the pink-dot side/edge (not center).
+              motionState.casePivotLocal.set(
+                0,
+                caseSize.y * 0.12,
+                -caseSize.z * 0.36
+              );
             }
             motionState.initialized = true;
           }
           const target = active ? 1 : 0;
           motionState.progress += (target - motionState.progress) * 0.08;
           if (modelState.part3Node){
-            // Step 1: make part3 clearly slide on local Z.
-            modelState.part3Node.position.z = motionState.part3BaseZ + (0.42 * motionState.progress);
+            // Step 1: slide part3 outward from the case opening direction.
+            modelState.part3Node.position.x = motionState.part3BaseX - (0.36 * motionState.progress);
+            modelState.part3Node.position.z = motionState.part3BaseZ + (0.06 * motionState.progress);
           }
           if (modelState.caseNode){
             // Step 2: rotate the case body.
             const delta = -0.68 * motionState.progress;
             modelState.caseNode.rotation.x = motionState.caseBaseRotX + delta;
-            // Keep motion visually anchored near the bottom instead of center pivot.
-            modelState.caseNode.position.y = motionState.caseBaseY - motionState.caseHalfHeight * (1 - Math.cos(delta));
-            modelState.caseNode.position.z = motionState.caseBaseZ + motionState.caseHalfHeight * Math.sin(delta);
+            // Re-anchor pivot line away from center toward the requested side marker.
+            const pivot = motionState.casePivotLocal;
+            const rotatedPivot = pivot.clone().applyAxisAngle(new THREE.Vector3(1, 0, 0), delta);
+            const offset = pivot.clone().sub(rotatedPivot);
+            modelState.caseNode.position.x = motionState.caseBaseX + offset.x;
+            modelState.caseNode.position.y = motionState.caseBaseY + offset.y;
+            modelState.caseNode.position.z = motionState.caseBaseZ + offset.z;
           }
           controls.update();
           renderer.render(scene, camera);
