@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Game</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root{
+        --glass-bg: rgba(6, 15, 82, .46);
+        --glass-bg-strong: rgba(8, 18, 100, .62);
+        --glass-border: rgba(214,224,255,.22);
+        --glass-border-hover: rgba(255,255,255,.34);
+        --glass-focus: rgba(238,0,184,.45);
+        --cursor-cube:url("./cursor-cube.svg") 9 9;
+      }
+      *{ box-sizing:border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        background: #000e51;
+        color: #e9ebff;
+        font-family: Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        cursor:var(--cursor-cube), auto;
+        overflow: hidden;
+        opacity:0;
+        transition: opacity 260ms ease-out;
+      }
+      a, button, .hud-btn, canvas{
+        cursor:var(--cursor-cube), pointer;
+      }
+      body.is-ready{
+        opacity:1;
+      }
+      body.is-exiting{
+        opacity:0;
+      }
+      .ui-dock{
+        position: fixed;
+        inset:0;
+        z-index: 20000;
+        pointer-events:none;
+      }
+      .hud-actions{
+        position:absolute;
+        top:14px;
+        left:14px;
+        right:14px;
+        display:flex;
+        align-items:center;
+        justify-content:flex-start;
+        gap:14px;
+        pointer-events:none;
+      }
+      .hud-actions.is-game{
+        gap:0;
+      }
+      .hud-btn {
+        text-decoration: none;
+        color: #ffffff;
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        padding: 8px 12px;
+        border-radius: 10px;
+        font-weight: 800;
+        font-size: 12px;
+        letter-spacing: .01em;
+        backdrop-filter: blur(10px);
+        cursor:pointer;
+        pointer-events:auto;
+      }
+      .hud-btn:hover { border-color: var(--glass-border-hover); }
+      .hud-btn:focus-visible { outline: 3px solid var(--glass-focus); outline-offset: 2px; }
+      .hud-btn.is-hidden{
+        display:none !important;
+      }
+      .intro-phrase{
+        position:fixed;
+        left:50%;
+        top:46%;
+        width:min(620px, 92vw);
+        transform:translate(-50%, -50%);
+        z-index:15000;
+        pointer-events:auto;
+        user-select:none;
+        display:flex;
+        flex-direction:column;
+        border:1px solid rgba(214,224,255,.22);
+        border-radius:14px;
+        background:linear-gradient(180deg, rgba(8, 18, 100, .44), rgba(6, 12, 72, .28));
+        backdrop-filter:blur(10px);
+        box-shadow:0 10px 28px rgba(0,0,0,.18);
+        transition:transform .28s cubic-bezier(.2,.9,.2,1), box-shadow .28s ease, border-color .2s ease;
+      }
+      .intro-phrase:not(.is-hover){
+        width:auto;
+        border:none;
+        border-radius:0;
+        background:transparent;
+        backdrop-filter:none;
+        box-shadow:none;
+      }
+      .intro-phrase.is-hidden{
+        opacity:0;
+        visibility:hidden;
+        pointer-events:none;
+      }
+      .intro-phrase.is-hover{
+        transform:translate(-50%, -50%) scale(1.02);
+        box-shadow:0 16px 44px rgba(0,0,0,.28);
+        border-color:rgba(255,59,218,.34);
+      }
+      .intro-phrase-head{
+        margin:8px auto 2px;
+        padding:4px 8px;
+        font:800 10px/1.1 Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        letter-spacing:.08em;
+        text-transform:uppercase;
+        color:#e8ecff;
+        border:1px solid rgba(214,224,255,.28);
+        border-radius:999px;
+        background:rgba(8,18,84,.54);
+      }
+      .intro-phrase-body{
+        max-height:0;
+        overflow:hidden;
+        opacity:0;
+        transform:translateY(8px);
+        transition:max-height .34s cubic-bezier(.2,.9,.2,1), opacity .24s ease, transform .24s ease;
+      }
+      .intro-phrase.is-hover .intro-phrase-body{
+        max-height:min(42vh, 360px);
+        overflow:auto;
+        opacity:1;
+        transform:translateY(0);
+      }
+      .intro-phrase-content{
+        margin:0;
+        padding:12px 13px 14px;
+        color:#f7f8ff;
+        font:600 clamp(12px, 1.55vw, 14px)/1.6 Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        text-align:left;
+        text-shadow:0 1px 10px rgba(0,0,0,.28);
+        white-space:pre-line;
+      }
+      .intro-phrase-content p{
+        margin:0 0 11px;
+      }
+      .intro-phrase-content p:last-child{
+        margin-bottom:0;
+      }
+      .intro-phrase-content .lead{
+        font-weight:800;
+        color:#ffffff;
+      }
+      .intro-arrow{
+        position:fixed;
+        left:50%;
+        top:50%;
+        transform:translateX(-50%) translateY(8px);
+        z-index:15001;
+        width:28px;
+        height:28px;
+        border-radius:999px;
+        border:1px solid rgba(214,224,255,.26);
+        background:rgba(8,18,84,.58);
+        color:#ffd7f7;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        font:800 18px/1 Montserrat, sans-serif;
+        opacity:0;
+        pointer-events:none;
+        transition:opacity .22s ease, transform .22s ease;
+      }
+      .intro-arrow.is-visible{
+        opacity:1;
+        transform:translateX(-50%) translateY(0);
+        animation:introArrowPulse 1s ease-in-out infinite;
+      }
+      @keyframes introArrowPulse{
+        0%,100%{ transform:translateX(-50%) translateY(0); }
+        50%{ transform:translateX(-50%) translateY(4px); }
+      }
+      @media (max-width: 700px){
+        .ui-dock{
+          inset:0;
+        }
+        .hud-actions{
+          top:10px;
+          left:10px;
+          right:10px;
+        }
+        .hud-btn{
+          padding:7px 10px;
+          font-size:11px;
+        }
+        .intro-phrase{
+          top:42%;
+          width:min(92vw, 420px);
+        }
+        .intro-phrase.is-hover .intro-phrase-body{
+          max-height:min(36vh, 280px);
+        }
+      }
+      body.preview-mode .ui-dock{
+        display:none !important;
+      }
+      body.preview-mode .intro-phrase{
+        display:none !important;
+      }
+      body.preview-mode .intro-arrow{
+        display:none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <section class="ui-dock" aria-label="Game HUD">
+      <div class="hud-actions" id="hud-actions">
+        <a class="hud-btn" href="./index.html" data-soft-nav id="home-link">Home</a>
+      </div>
+    </section>
+    
+      <div class="intro-phrase" id="intro-phrase" aria-hidden="true">
+      <div class="intro-phrase-head">Hover</div>
+      <div class="intro-phrase-body" id="intro-phrase-body">
+        <div class="intro-phrase-content" id="intro-phrase-content"></div>
+      </div>
+    </div>
+    <div class="intro-arrow" id="intro-arrow" aria-hidden="true">↓</div>
+
+    <!-- Libraries first, then the sketch -->
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.js" type="text/javascript"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-app-compat.js" type="text/javascript"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore-compat.js" type="text/javascript"></script>
+    <script src="./mySketch.js.js" type="text/javascript"></script>
+    <script>
+      (function(){
+        const params = new URLSearchParams(window.location.search);
+        const PREVIEW_MODE = params.has('preview');
+        const lang = (params.get('lang') === 'zh' || (!params.get('lang') && localStorage.getItem('site_lang') === 'zh')) ? 'zh' : 'en';
+        localStorage.setItem('site_lang', lang);
+        const isZh = lang === 'zh';
+        const t = (en, zh)=> isZh ? zh : en;
+        const homeLink = document.getElementById('home-link');
+        const introPhrase = document.getElementById('intro-phrase');
+        const introPhraseBody = document.getElementById('intro-phrase-body');
+        const introPhraseContent = document.getElementById('intro-phrase-content');
+        const introArrow = document.getElementById('intro-arrow');
+        function renderIntroPhrase(){
+          if (!introPhraseContent) return;
+          introPhraseContent.innerHTML = t(
+            `<p class="lead">What is INSUFFICIENT SPACE?<br>Maybe you can find out through the game.</p>
+            <p>"INSUFFICIENT SPACE" is actually a common message in many games. When your inventory runs out of capacity, the system simply tells you: there is no more room.</p>
+            <p>We've always liked that moment. Because in many ways, it feels a lot like real life.</p>
+            <p>So on this website, we adjusted a small Tetris game. A familiar game that lets you experience something simple: space is always limited.</p>
+            <p>Just like a closet, a room, or any kind of storage space. Once space becomes limited, we start rearranging things, making room, and sometimes deciding again what should stay.</p>
+            <p>This is also something INSUFFICIENT SPACE constantly faces while running the brand. Every new object entering this space is, in some way, a decision.</p>
+            <p>So with this little game, we simply pass that role to you. Within a game of "INSUFFICIENT SPACE", you can experience the process of arranging, deciding, and making things fit.</p>
+            <p>A process that comes with frustration, satisfaction, and challenge at the same time.</p>
+            <p>And we hope that everything we release through INSUFFICIENT SPACE is something you would choose to give space to.</p>`,
+            `<p class="lead">什麼是 INSUFFICIENT SPACE？<br>也許你可以透過這個遊戲找到答案。</p>
+            <p>「INSUFFICIENT SPACE」其實是很多遊戲裡很常見的一句提示。當背包容量不夠時，系統只會告訴你：已經沒有更多空間。</p>
+            <p>我們一直很喜歡那個時刻。因為在很多層面上，它很像真實生活。</p>
+            <p>所以在這個網站裡，我們調整了一個小型俄羅斯方塊遊戲。這個熟悉的遊戲，讓你體驗一件很簡單的事：空間永遠有限。</p>
+            <p>就像衣櫃、房間，或任何形式的收納空間。一旦空間變得有限，我們就開始重新整理、騰出位置，有時也會重新決定什麼該留下。</p>
+            <p>這也是 INSUFFICIENT SPACE 在經營品牌時持續面對的事情。每一件要進入這個空間的新物件，某種程度上都是一次選擇。</p>
+            <p>所以我們把這個角色交給你。透過一局「INSUFFICIENT SPACE」，你可以體驗排列、取捨、讓事物被放進去的過程。</p>
+            <p>那是一個同時伴隨挫折、滿足與挑戰的過程。</p>
+            <p>而我們也希望，所有由 INSUFFICIENT SPACE 釋出的作品，都是你願意留出空間給它們的東西。</p>`
+          );
+          if (introPhraseBody) introPhraseBody.scrollTop = 0;
+          if (introArrow) introArrow.classList.remove('is-visible');
+        }
+        function checkIntroScrollEnd(){
+          if (!introPhraseBody || !introArrow) return;
+          const atEnd = (introPhraseBody.scrollTop + introPhraseBody.clientHeight) >= (introPhraseBody.scrollHeight - 6);
+          const canShow = introPhrase.classList.contains('is-hover') && atEnd;
+          introArrow.classList.toggle('is-visible', canShow);
+          if (canShow){
+            const rect = introPhrase.getBoundingClientRect();
+            introArrow.style.left = `${rect.left + rect.width / 2}px`;
+            introArrow.style.top = `${rect.bottom + 8}px`;
+          }
+        }
+        if (homeLink){
+          homeLink.textContent = t('Home', '首頁');
+          const u = new URL(homeLink.getAttribute('href'), window.location.href);
+          u.searchParams.set('lang', lang);
+          homeLink.setAttribute('href', u.pathname + u.search);
+        }
+        renderIntroPhrase();
+        if (introPhrase){
+          const canHover = window.matchMedia && window.matchMedia('(hover: hover)').matches;
+          let hoverCloseTimer = null;
+          const openPhrase = ()=>{
+            if (hoverCloseTimer){
+              clearTimeout(hoverCloseTimer);
+              hoverCloseTimer = null;
+            }
+            introPhrase.classList.add('is-hover');
+            checkIntroScrollEnd();
+          };
+          const closePhrase = ()=>{
+            if (hoverCloseTimer) clearTimeout(hoverCloseTimer);
+            hoverCloseTimer = setTimeout(()=>{
+              introPhrase.classList.remove('is-hover');
+              if (introArrow) introArrow.classList.remove('is-visible');
+              hoverCloseTimer = null;
+            }, 120);
+          };
+          if (canHover){
+            introPhrase.addEventListener('pointerenter', openPhrase);
+            introPhrase.addEventListener('pointerleave', closePhrase);
+          } else {
+            introPhrase.addEventListener('click', ()=>{
+              const nextOpen = !introPhrase.classList.contains('is-hover');
+              introPhrase.classList.toggle('is-hover', nextOpen);
+              if (!nextOpen && introArrow) introArrow.classList.remove('is-visible');
+              if (nextOpen) checkIntroScrollEnd();
+            });
+          }
+          if (introPhraseBody) introPhraseBody.addEventListener('scroll', checkIntroScrollEnd, { passive:true });
+          window.addEventListener('resize', renderIntroPhrase);
+        }
+        function enableSoftNav(){
+          if (PREVIEW_MODE) document.body.classList.add('preview-mode');
+          document.body.classList.add('is-ready');
+          const links = document.querySelectorAll('a[data-soft-nav]');
+          links.forEach(link=>{
+            link.addEventListener('click', (ev)=>{
+              const href = link.getAttribute('href');
+              const target = link.getAttribute('target');
+              if (!href || href.startsWith('#') || target === '_blank') return;
+              ev.preventDefault();
+              document.body.classList.add('is-exiting');
+              setTimeout(()=>{ window.location.href = href; }, 240);
+            });
+          });
+        }
+        if (document.readyState === 'loading'){
+          document.addEventListener('DOMContentLoaded', enableSoftNav);
+        } else {
+          enableSoftNav();
+        }
+      })();
+
+      (function(){
+        const hudActions = document.getElementById('hud-actions');
+        const introPhrase = document.getElementById('intro-phrase');
+        const introArrow = document.getElementById('intro-arrow');
+        if (!hudActions) return;
+        let lastState = null;
+        setInterval(()=>{
+          const state = typeof window.gameState === 'string' ? window.gameState : null;
+          if (state === lastState || !state) return;
+          lastState = state;
+          const inGame = state !== 'input';
+          hudActions.classList.toggle('is-game', inGame);
+          if (introPhrase) introPhrase.classList.toggle('is-hidden', inGame);
+          if (introArrow) introArrow.classList.remove('is-visible');
+        }, 180);
+      })();
+    </script>
+  </body>
+</html>
