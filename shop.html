@@ -806,6 +806,7 @@
           caseBaseX: 0,
           caseBaseY: 0,
           caseBaseZ: 0,
+          caseShiftX: 0,
           casePivotLocal: new THREE.Vector3(),
           initialized: false
         };
@@ -952,13 +953,15 @@
               const rootScale = Math.max(0.0001, Math.abs(modelRoot.scale.x || 1));
               // Convert world size back to local-ish units so animation isn't tiny after scaling.
               const caseSize = caseSizeWorld.clone().divideScalar(rootScale);
-              motionState.part3SlideX = Math.max(10, Math.min(90, caseSize.x * 0.6));
-              motionState.part3SlideZ = Math.max(2, Math.min(20, caseSize.z * 0.09));
-              // Hinge point moved away from center: lower + rear edge for 0318 case.
+              // Switch part3 motion emphasis to another axis (Z-led).
+              motionState.part3SlideX = Math.max(2, Math.min(14, caseSize.x * 0.08));
+              motionState.part3SlideZ = Math.max(14, Math.min(120, caseSize.x * 0.72));
+              motionState.caseShiftX = Math.max(4, Math.min(28, caseSize.x * 0.16));
+              // Keep previous vertical level, then shift hinge behavior rightward.
               motionState.casePivotLocal.set(
                 0,
-                -caseSize.y * 0.46,
-                -caseSize.z * 0.52
+                caseSize.y * 0.12,
+                -caseSize.z * 0.36
               );
             }
             motionState.initialized = true;
@@ -966,7 +969,7 @@
           const target = active ? 1 : 0;
           motionState.progress += (target - motionState.progress) * 0.08;
           if (modelState.part3Node){
-            // Step 1: slide part3 outward from the case opening direction.
+            // Step 1: move on a different axis (now mostly Z), with slight X drift.
             modelState.part3Node.position.x = motionState.part3BaseX - (motionState.part3SlideX * motionState.progress);
             modelState.part3Node.position.z = motionState.part3BaseZ + (motionState.part3SlideZ * motionState.progress);
           }
@@ -978,7 +981,7 @@
             const pivot = motionState.casePivotLocal;
             const rotatedPivot = pivot.clone().applyAxisAngle(new THREE.Vector3(1, 0, 0), delta);
             const offset = pivot.clone().sub(rotatedPivot);
-            modelState.caseNode.position.x = motionState.caseBaseX + offset.x;
+            modelState.caseNode.position.x = motionState.caseBaseX + offset.x + (motionState.caseShiftX * motionState.progress);
             modelState.caseNode.position.y = motionState.caseBaseY + offset.y;
             modelState.caseNode.position.z = motionState.caseBaseZ + offset.z;
           }
