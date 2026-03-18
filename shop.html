@@ -995,7 +995,7 @@
             modelState.part3Node.position.x = motionState.part3BaseX + (motionState.part3SlideX * motionState.progress);
             modelState.part3Node.position.z = motionState.part3BaseZ + (motionState.part3SlideZ * motionState.progress);
             // Use the previous part3 movement profile for cartridge + sticker.
-            const prevDx = motionState.prevPart3SlideX * motionState.progress;
+            const prevDx = 0;
             const prevDz = motionState.prevPart3SlideZ * motionState.progress;
             if (modelState.cartridgeNode){
               modelState.cartridgeNode.position.x = motionState.cartridgeBaseX + prevDx;
