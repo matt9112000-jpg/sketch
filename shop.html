@@ -800,6 +800,8 @@
           progress: 0,
           part3BaseX: 0,
           part3BaseZ: 0,
+          part3SlideX: 0,
+          part3SlideZ: 0,
           caseBaseRotX: 0,
           caseBaseX: 0,
           caseBaseY: 0,
@@ -946,12 +948,17 @@
               motionState.caseBaseY = modelState.caseNode.position.y;
               motionState.caseBaseZ = modelState.caseNode.position.z;
               const caseBox = new THREE.Box3().setFromObject(modelState.caseNode);
-              const caseSize = caseBox.getSize(new THREE.Vector3());
-              // Anchor line offset toward the pink-dot side/edge (not center).
+              const caseSizeWorld = caseBox.getSize(new THREE.Vector3());
+              const rootScale = Math.max(0.0001, Math.abs(modelRoot.scale.x || 1));
+              // Convert world size back to local-ish units so animation isn't tiny after scaling.
+              const caseSize = caseSizeWorld.clone().divideScalar(rootScale);
+              motionState.part3SlideX = Math.max(10, Math.min(90, caseSize.x * 0.6));
+              motionState.part3SlideZ = Math.max(2, Math.min(20, caseSize.z * 0.09));
+              // Hinge point moved away from center: lower + rear edge for 0318 case.
               motionState.casePivotLocal.set(
                 0,
-                caseSize.y * 0.12,
-                -caseSize.z * 0.36
+                -caseSize.y * 0.46,
+                -caseSize.z * 0.52
               );
             }
             motionState.initialized = true;
@@ -960,8 +967,8 @@
           motionState.progress += (target - motionState.progress) * 0.08;
           if (modelState.part3Node){
             // Step 1: slide part3 outward from the case opening direction.
-            modelState.part3Node.position.x = motionState.part3BaseX - (0.36 * motionState.progress);
-            modelState.part3Node.position.z = motionState.part3BaseZ + (0.06 * motionState.progress);
+            modelState.part3Node.position.x = motionState.part3BaseX - (motionState.part3SlideX * motionState.progress);
+            modelState.part3Node.position.z = motionState.part3BaseZ + (motionState.part3SlideZ * motionState.progress);
           }
           if (modelState.caseNode){
             // Step 2: rotate the case body.
