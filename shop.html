@@ -804,6 +804,8 @@
           part3BaseZ: 0,
           part3SlideX: 0,
           part3SlideZ: 0,
+          prevPart3SlideX: 0,
+          prevPart3SlideZ: 0,
           cartridgeBaseX: 0,
           cartridgeBaseZ: 0,
           stickerBaseX: 0,
@@ -972,6 +974,9 @@
               // Restore previous main axis style (X-led), but travel in the opposite way.
               motionState.part3SlideX = Math.max(10, Math.min(90, caseSize.x * 0.6));
               motionState.part3SlideZ = Math.max(1, Math.min(12, caseSize.z * 0.06));
+              // Keep the earlier (previous) part3 profile for cartridge+sticker linkage.
+              motionState.prevPart3SlideX = -Math.max(2, Math.min(14, caseSize.x * 0.08));
+              motionState.prevPart3SlideZ = Math.max(14, Math.min(120, caseSize.x * 0.72));
               // Add a clear upward lift distance on case opening.
               motionState.caseLiftY = Math.max(2, Math.min(26, caseSize.y * 0.2));
               // Keep previous vertical level for the hinge compensation point.
@@ -989,16 +994,16 @@
             // Step 1: X-led slide, reversed direction.
             modelState.part3Node.position.x = motionState.part3BaseX + (motionState.part3SlideX * motionState.progress);
             modelState.part3Node.position.z = motionState.part3BaseZ + (motionState.part3SlideZ * motionState.progress);
-            const dx = modelState.part3Node.position.x - motionState.part3BaseX;
-            const dz = modelState.part3Node.position.z - motionState.part3BaseZ;
-            // Keep cartridge + sticker grouped with part3 travel.
+            // Use the previous part3 movement profile for cartridge + sticker.
+            const prevDx = motionState.prevPart3SlideX * motionState.progress;
+            const prevDz = motionState.prevPart3SlideZ * motionState.progress;
             if (modelState.cartridgeNode){
-              modelState.cartridgeNode.position.x = motionState.cartridgeBaseX + dx;
-              modelState.cartridgeNode.position.z = motionState.cartridgeBaseZ + dz;
+              modelState.cartridgeNode.position.x = motionState.cartridgeBaseX + prevDx;
+              modelState.cartridgeNode.position.z = motionState.cartridgeBaseZ + prevDz;
             }
             if (modelState.stickerNode){
-              modelState.stickerNode.position.x = motionState.stickerBaseX + dx;
-              modelState.stickerNode.position.z = motionState.stickerBaseZ + dz;
+              modelState.stickerNode.position.x = motionState.stickerBaseX + prevDx;
+              modelState.stickerNode.position.z = motionState.stickerBaseZ + prevDz;
             }
           }
           if (modelState.caseNode){
