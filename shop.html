@@ -384,9 +384,22 @@
         const displayUnit = isZh ? 'TWD' : 'USD';
         const displayPrice = `${displayAmount} ${displayUnit}`;
         const PREVIEW_MODE = new URLSearchParams(window.location.search).has('preview');
-        // Set your payment/checkout endpoint here.
-        // You can also set window.CHECKOUT_URL before this script runs.
-        const CHECKOUT_URL = window.CHECKOUT_URL || '';
+        const ECPAY_CREATE_ORDER_API = '/api/ecpay/create-order';
+        function postToEcpay(action, fields){
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = action;
+          form.style.display = 'none';
+          Object.keys(fields).forEach((key)=>{
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = String(fields[key] ?? '');
+            form.appendChild(input);
+          });
+          document.body.appendChild(form);
+          form.submit();
+        }
         function openCheckoutConfirm(titleText, priceText){
           return new Promise((resolve)=>{
             const modal = document.createElement('div');
@@ -454,12 +467,32 @@
         const addCartBtn = document.getElementById('add-cart-btn');
         if (addCartBtn){
           addCartBtn.addEventListener('click', async ()=>{
-            if (!CHECKOUT_URL){
-              alert(t('Checkout URL not set. Please set CHECKOUT_URL in shop.html.', '尚未設定結帳連結，請在 shop.html 設定 CHECKOUT_URL。'));
-              return;
-            }
             const ok = await openCheckoutConfirm('001 — CCC', displayPrice);
-            if (ok) window.location.href = CHECKOUT_URL;
+            if (!ok) return;
+            try {
+              addCartBtn.disabled = true;
+              const amount = isZh ? 3800 : 120;
+              const res = await fetch(ECPAY_CREATE_ORDER_API, {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({
+                  itemName: '001 — CCC',
+                  amount,
+                  quantity: 1,
+                  lang
+                })
+              });
+              const data = await res.json();
+              if (!res.ok || !data || !data.action || !data.fields){
+                throw new Error((data && data.error) || 'Create order failed');
+              }
+              postToEcpay(data.action, data.fields);
+            } catch (err){
+              console.error(err);
+              alert(t('Payment init failed. Please try again.', '啟動付款失敗，請稍後再試。'));
+            } finally {
+              addCartBtn.disabled = false;
+            }
           });
         }
         if (!mount || !stage || !shell || !info || !window.THREE || !THREE.GLTFLoader || !THREE.DRACOLoader || !THREE.OrbitControls) return;
