@@ -19,9 +19,11 @@ async function sha256Upper(text) {
 }
 
 async function buildCheckMacValue(params, hashKey, hashIV) {
-  const sortedPairs = Object.keys(params)
-    .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
-    .map((k) => `${k}=${params[k]}`)
+  const data = { ...params };
+  delete data.CheckMacValue;
+  const sortedPairs = Object.keys(data)
+    .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
+    .map((k) => `${k}=${data[k]}`)
     .join('&');
   const raw = `HashKey=${hashKey}&${sortedPairs}&HashIV=${hashIV}`;
   return sha256Upper(toUrlEncodedForCheckMac(raw));
@@ -46,12 +48,45 @@ function json(data, status = 200) {
   });
 }
 
+function sliceECPayField(s) {
+  const x = String(s || '').trim();
+  if (!x) return '';
+  return x.length <= 50 ? x : `${x.slice(0, 47)}...`;
+}
+
+function applyShippingToFields(fields, shipping) {
+  if (!shipping || typeof shipping !== 'object') return;
+  const namePhone = [shipping.fullName, shipping.phone].filter(Boolean).join(' / ');
+  const c1 = sliceECPayField(namePhone);
+  if (c1) fields.CustomField1 = c1;
+  const c2 = sliceECPayField(shipping.email);
+  if (c2) fields.CustomField2 = c2;
+  const addr = [shipping.addressLine1, shipping.addressLine2].filter(Boolean).join(', ');
+  const c3 = sliceECPayField(addr);
+  if (c3) fields.CustomField3 = c3;
+  const tail = [shipping.postalCode, shipping.city, shipping.note].filter(Boolean).join(' | ');
+  const c4 = sliceECPayField(tail);
+  if (c4) fields.CustomField4 = c4;
+}
+
 export async function onRequestPost(context) {
   try {
     const env = context.env || {};
-    const body = await context.request.json();
+    let body = {};
+    try {
+      body = await context.request.json();
+    } catch (_) {}
+
+    const paymentLink = String(env.ECPAY_PAYMENT_LINK || '').trim();
+    if (paymentLink) {
+      if (body.shipping && typeof body.shipping === 'object') {
+        console.log('[ECPay] shipping with payment link', JSON.stringify(body.shipping));
+      }
+      return json({ mode: 'redirect', url: paymentLink });
+    }
+
     const amount = Number(body.amount || 0);
-    const itemName = String(body.itemName || '001 — CCC');
+    const itemName = String(body.itemName || '001 - CCC');
 
     if (!Number.isFinite(amount) || amount <= 0) {
       return json({ error: 'Invalid amount' }, 400);
@@ -69,7 +104,6 @@ export async function onRequestPost(context) {
     const returnURL = env.ECPAY_RETURN_URL || `${origin}/api/ecpay/callback`;
     const orderResultURL = env.ECPAY_ORDER_RESULT_URL || `${origin}/shop.html?paid=1`;
     const clientBackURL = env.ECPAY_CLIENT_BACK_URL || `${origin}/shop.html`;
-    const paymentInfoURL = env.ECPAY_PAYMENT_INFO_URL || returnURL;
 
     const fields = {
       MerchantID: merchantID,
@@ -77,15 +111,19 @@ export async function onRequestPost(context) {
       MerchantTradeDate: makeTradeDate(),
       PaymentType: 'aio',
       TotalAmount: String(Math.round(amount)),
-      TradeDesc: 'Insufficient Space Order',
+      TradeDesc: 'Insufficient Space',
       ItemName: itemName,
       ReturnURL: returnURL,
       ChoosePayment: 'ALL',
       EncryptType: '1',
       OrderResultURL: orderResultURL,
-      ClientBackURL: clientBackURL,
-      PaymentInfoURL: paymentInfoURL
+      ClientBackURL: clientBackURL
     };
+
+    const extraPaymentInfo = String(env.ECPAY_PAYMENT_INFO_URL || '').trim();
+    if (extraPaymentInfo) fields.PaymentInfoURL = extraPaymentInfo;
+
+    applyShippingToFields(fields, body.shipping);
 
     fields.CheckMacValue = await buildCheckMacValue(fields, hashKey, hashIV);
     return json({ action, fields });

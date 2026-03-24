@@ -22,7 +22,7 @@ async function buildCheckMacValue(params, hashKey, hashIV) {
   const data = { ...params };
   delete data.CheckMacValue;
   const sortedPairs = Object.keys(data)
-    .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
+    .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
     .map((k) => `${k}=${data[k]}`)
     .join('&');
   const raw = `HashKey=${hashKey}&${sortedPairs}&HashIV=${hashIV}`;

@@ -183,6 +183,34 @@
         transform:translateX(-50%) translateY(0);
         animation:introArrowPulse 1s ease-in-out infinite;
       }
+      .coming-soon{
+        position:fixed;
+        left:50%;
+        top:50%;
+        transform:translate(-50%, -50%);
+        z-index:18000;
+        width:min(460px, 90vw);
+        padding:18px 16px;
+        border-radius:14px;
+        border:1px solid rgba(214,224,255,.26);
+        background:linear-gradient(180deg, rgba(8, 18, 100, .56), rgba(6, 12, 72, .42));
+        backdrop-filter:blur(10px);
+        text-align:center;
+        color:#f7f8ff;
+        box-shadow:0 12px 32px rgba(0,0,0,.24);
+      }
+      .coming-soon h2{
+        margin:0;
+        font-size:clamp(24px, 5.2vw, 34px);
+        letter-spacing:.02em;
+        font-weight:800;
+      }
+      .coming-soon p{
+        margin:8px 0 0;
+        color:#d5dbff;
+        font-size:13px;
+        line-height:1.5;
+      }
       @keyframes introArrowPulse{
         0%,100%{ transform:translateX(-50%) translateY(0); }
         50%{ transform:translateX(-50%) translateY(4px); }
@@ -233,6 +261,10 @@
       </div>
     </div>
     <div class="intro-arrow" id="intro-arrow" aria-hidden="true">↓</div>
+    <div class="coming-soon" id="coming-soon-panel" aria-live="polite">
+      <h2>COMING SOON</h2>
+      <p>This page is under preparation.</p>
+    </div>
 
     <!-- Libraries first, then the sketch -->
     <script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.js" type="text/javascript"></script>
@@ -249,9 +281,11 @@
         const t = (en, zh)=> isZh ? zh : en;
         const homeLink = document.getElementById('home-link');
         const introPhrase = document.getElementById('intro-phrase');
+        const introPhraseHead = introPhrase ? introPhrase.querySelector('.intro-phrase-head') : null;
         const introPhraseBody = document.getElementById('intro-phrase-body');
         const introPhraseContent = document.getElementById('intro-phrase-content');
         const introArrow = document.getElementById('intro-arrow');
+        const comingSoonPanel = document.getElementById('coming-soon-panel');
         function renderIntroPhrase(){
           if (!introPhraseContent) return;
           introPhraseContent.innerHTML = t(
@@ -294,7 +328,18 @@
           u.searchParams.set('lang', lang);
           homeLink.setAttribute('href', u.pathname + u.search);
         }
+        if (introPhraseHead){
+          introPhraseHead.textContent = t('Hover', '懸停');
+        }
+        if (comingSoonPanel){
+          const h2 = comingSoonPanel.querySelector('h2');
+          const p = comingSoonPanel.querySelector('p');
+          if (h2) h2.textContent = t('COMING SOON', '即將推出');
+          if (p) p.textContent = t('This page is under preparation.', '此頁面正在準備中。');
+        }
         renderIntroPhrase();
+        if (introPhrase) introPhrase.classList.add('is-hidden');
+        if (introArrow) introArrow.classList.remove('is-visible');
         if (introPhrase){
           const canHover = window.matchMedia && window.matchMedia('(hover: hover)').matches;
           let hoverCloseTimer = null;
@@ -362,7 +407,7 @@
           lastState = state;
           const inGame = state !== 'input';
           hudActions.classList.toggle('is-game', inGame);
-          if (introPhrase) introPhrase.classList.toggle('is-hidden', inGame);
+          if (introPhrase) introPhrase.classList.add('is-hidden');
           if (introArrow) introArrow.classList.remove('is-visible');
         }, 180);
       })();

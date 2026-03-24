@@ -34,6 +34,13 @@ const PREVIEW_MODE = new URLSearchParams(window.location.search).has('preview');
 const URL_LANG = new URLSearchParams(window.location.search).get('lang');
 const LANG_ZH = (URL_LANG === 'zh') || (!URL_LANG && localStorage.getItem('site_lang') === 'zh');
 const T = (en, zh)=> LANG_ZH ? zh : en;
+const COMING_SOON_MODE = true;
+const SHOP_PRICE_TWD = 3600;
+const SHOP_TWD_PER_USD = 31.5; // keep in sync with shop.html TWD_PER_USD
+function shopCheckoutPriceLabel(){
+  if (LANG_ZH) return `$${SHOP_PRICE_TWD} TWD`;
+  return `$${Math.round(SHOP_PRICE_TWD / SHOP_TWD_PER_USD)} USD`;
+}
 /***** Three.js（非 ESM 版） *****/
 const THREE_CDNS = [
   'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js',
@@ -410,12 +417,7 @@ function setup(){
            .size(NAME_INPUT_W, NAME_INPUT_H);
   centerInput(); nameInput.elt.focus();
   nameInput.elt.addEventListener('keydown', e=>{
-    if (e.key === 'Enter' && nameInput.value().trim()){
-      playerName = nameInput.value().trim().slice(0,20);
-      inputComplete = true; gameState = 'playing'; nameInput.hide(); spawnPiece();
-      lastProgressPublishAt = 0;
-      publishActivity('playing');
-    }
+    if (e.key === 'Enter') startGameFromInput();
   });
 }
 function windowResized(){ calculateLayout(); if(!inputComplete) centerInput(); positionMarquees(); clearButtons(); }
@@ -424,7 +426,18 @@ function centerInput(){
   nameInput.size(NAME_INPUT_W, NAME_INPUT_H);
   const centerRatio = IS_MOBILE ? 0.78 : 0.74;
   const inputCenterY = canvasY + h * centerRatio;
-  nameInput.position(canvasX + (w - NAME_INPUT_W)/2, inputCenterY - NAME_INPUT_H / 2);
+  const inputX = canvasX + (w - NAME_INPUT_W)/2;
+  const inputY = inputCenterY - NAME_INPUT_H / 2;
+  nameInput.position(inputX, inputY);
+  const startBtn = select('#startBtn');
+  if (startBtn){
+    const btnW = IS_MOBILE ? 54 : 60;
+    startBtn.style('width', `${btnW}px`);
+    startBtn.style('padding', IS_MOBILE ? '4px 6px' : '5px 7px');
+    startBtn.style('font-size', IS_MOBILE ? '9px' : '10px');
+    startBtn.style('border-radius', IS_MOBILE ? '9px' : '10px');
+    startBtn.position(inputX + NAME_INPUT_W + 8, inputY);
+  }
 }
 function applyResponsiveUI(){
   IS_MOBILE =
@@ -488,13 +501,32 @@ function draw(){
 
   if (gameState === 'input'){
     push(); translate(BORDER_HALF, BORDER_HALF); updateIntroPieces(); drawIntroPieces(); pop();
-    if (!PREVIEW_MODE){
-      nameInput.show(); nameInput.elt.focus();
-    } else {
+    if (COMING_SOON_MODE || PREVIEW_MODE){
       nameInput.hide();
+      const startBtn = select('#startBtn');
+      if (startBtn) startBtn.remove();
+    } else {
+      nameInput.show(); nameInput.elt.focus();
+      if (!select('#startBtn')){
+        createStyledButton('startBtn', T('Start', '開始'),
+          canvasX + width/2, canvasY + height/2 + 26,
+          ()=>startGameFromInput());
+        const startBtn = select('#startBtn');
+        if (startBtn){
+          startBtn.style('transform','none');
+          startBtn.style('background','rgba(238,0,184,0.94)');
+          startBtn.style('border-color','#ff61e3');
+          startBtn.style('color','#ffffff');
+          startBtn.style('text-align','center');
+          startBtn.style('line-height', IS_MOBILE ? '22px' : '24px');
+          centerInput();
+        }
+      }
     }
     return;
   }
+  const startBtn = select('#startBtn');
+  if (startBtn) startBtn.remove();
   if (gameState === 'playing'){
     const safePlayerName = fitTextToWidth(playerName, innerW - 12);
     const padX = 8;
@@ -890,7 +922,7 @@ function updateLbHover(mx,my){
 
 /***** Buttons *****/
 function clearButtons(){
-  ['#nextPromptBtn','#nextBtn','#savedFlag','#clearBtn','#saveBtn','#makeCharmBtn','#makeCharmBtnLB'].forEach(id=>{ const el=select(id); if(el) el.remove(); });
+  ['#startBtn','#nextPromptBtn','#nextBtn','#savedFlag','#clearBtn','#saveBtn','#makeCharmBtn','#makeCharmBtnLB'].forEach(id=>{ const el=select(id); if(el) el.remove(); });
 }
 function removeSavedFlag(){ const flag=select('#savedFlag'); if(flag) flag.remove(); }
 function createStyledButton(id,label,x,y,onClick){
@@ -901,7 +933,7 @@ function createStyledButton(id,label,x,y,onClick){
      .style('border','1px solid rgba(255,255,255,.14)').style('border-radius','12px').style('cursor','pointer')
      .style('font-weight','800').style('font-family', "Montserrat, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', Arial, sans-serif")
      .style('backdrop-filter','blur(8px)').style('-webkit-backdrop-filter','blur(8px)');
-  const smallIDs=['nextPromptBtn','nextBtn','clearBtn','saveBtn','makeCharmBtn','makeCharmBtnLB'];
+  const smallIDs=['startBtn','nextPromptBtn','nextBtn','clearBtn','saveBtn','makeCharmBtn','makeCharmBtnLB'];
   const pad=smallIDs.includes(id)?BTN_PAD_SMALL:BTN_PAD_LARGE; const fz=smallIDs.includes(id)?BTN_FZ_SMALL:BTN_FZ_LARGE;
   btn.style('padding', pad).style('font-size', fz);
   btn.mouseOver(()=>btn.style('border-color','rgba(255,255,255,.28)'));
@@ -914,6 +946,21 @@ function removeIfExists(ref){
     try { ref.remove(); } catch(_) {}
   }
   return null;
+}
+function startGameFromInput(){
+  if (COMING_SOON_MODE) return false;
+  const value = (nameInput && nameInput.value ? nameInput.value().trim() : '');
+  if (!value) return false;
+  playerName = value.slice(0,20);
+  inputComplete = true;
+  gameState = 'playing';
+  if (nameInput) nameInput.hide();
+  const startBtn = select('#startBtn');
+  if (startBtn) startBtn.remove();
+  spawnPiece();
+  lastProgressPublishAt = 0;
+  publishActivity('playing');
+  return true;
 }
 function openCheckoutConfirmModal(itemName, totalText){
   return new Promise((resolve)=>{
@@ -1694,7 +1741,7 @@ async function openCharmPreview3D(options = {}){
         alert(T('Checkout URL not set. Please set CHECKOUT_URL.', '尚未設定結帳連結，請設定 CHECKOUT_URL。'));
         return;
       }
-      const ok = await openCheckoutConfirmModal('001 — CCC', '$120');
+      const ok = await openCheckoutConfirmModal('001 — CCC', shopCheckoutPriceLabel());
       if (ok) window.location.href = CHECKOUT_URL;
     });
   }
