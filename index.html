@@ -12,7 +12,7 @@
     />
     <style>
       :root{
-        --bg:#f3f3f3;
+        --bg:#ffffff;
         --panel:#ffffff;
         --line:#d4d8e3;
         --text:#1f2433;
@@ -28,6 +28,7 @@
         --c7:#FCC730;
         --cube-size:12px;
         --cube-gap:1px;
+        --grid-line:rgba(0,0,0,.08);
         --font-sans:'Syne', sans-serif;
         --font-mono:'Space Mono', monospace;
         --font-serif:'Playfair Display', serif;
@@ -38,12 +39,31 @@
       *{ box-sizing:border-box; margin:0; padding:0; }
       html,body{ height:100%; }
       body{
+        position:relative;
         background:var(--bg);
         color:var(--text);
         font-family:var(--font-sans);
         cursor:var(--cursor-cube), auto;
         opacity:0;
         transition:opacity 220ms ease;
+      }
+      body::before{
+        content:'';
+        position:fixed;
+        inset:0;
+        pointer-events:none;
+        z-index:0;
+        background-image:
+          linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+          linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+        background-size:72px 72px;
+        background-position:0 0;
+      }
+      header,
+      main,
+      .marquee-wrap{
+        position:relative;
+        z-index:1;
       }
       a, button, .row, .preview-card{
         cursor:var(--cursor-cube), pointer;
@@ -401,7 +421,7 @@
       .preview-side{
         position:relative;
         overflow:hidden;
-        background:#f7f8fb;
+        background:#ffffff;
         transition:min-height .32s cubic-bezier(.2,.9,.2,1), height .32s cubic-bezier(.2,.9,.2,1), background .2s ease;
         display:none;
       }
