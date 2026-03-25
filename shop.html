@@ -292,9 +292,9 @@
         z-index:2;
       }
       .product-body.is-photo-ready .product-photo-stack{
-        opacity:0;
-        transform: none;
-        pointer-events:auto;
+        opacity:1;
+        transform: translateY(0);
+        pointer-events:none;
       }
       .product-photo-card{
         position:absolute;
@@ -315,8 +315,8 @@
       }
       /* Collapsed / preview state: only the main card is visible */
       .product-body.is-photo-ready .product-photo-card.card-main{
-        opacity:0;
-        transform: none;
+        opacity:1;
+        transform: translate(0,0) rotate(0deg) scale(1.02);
         z-index:3;
       }
       .product-body.is-photo-ready .product-photo-card.card-left,
@@ -327,18 +327,18 @@
       }
       /* Clicked state: cards fly out */
       .product-body.is-cards-out .product-photo-card.card-left{
-        opacity:0;
-        transform: none;
+        opacity:1;
+        transform: translate(-38px,-34px) rotate(-12deg) scale(1);
         z-index:4;
       }
       .product-body.is-cards-out .product-photo-card.card-main{
-        opacity:0;
-        transform: none;
+        opacity:1;
+        transform: translate(0,-8px) rotate(0deg) scale(1.04);
         z-index:5;
       }
       .product-body.is-cards-out .product-photo-card.card-right{
-        opacity:0;
-        transform: none;
+        opacity:1;
+        transform: translate(38px,-34px) rotate(12deg) scale(1);
         z-index:3;
       }
       .product-actions button{
@@ -570,7 +570,9 @@
         const PRICE_TWD = 3600;
         const displayPrice = `NT$${PRICE_TWD} <span class="currency-unit twd">TWD</span>`;
         const PREVIEW_MODE = new URLSearchParams(window.location.search).has('preview');
-        const ECPAY_PAYMENT_LINK = window.ECPAY_PAYMENT_LINK || 'https://p.ecpay.com.tw/D588FF7';
+        // If a custom static payment link is provided, use it.
+        // Otherwise, fall back to the normal `onCheckout()` flow (create-order -> redirect).
+        const ECPAY_PAYMENT_LINK = window.ECPAY_PAYMENT_LINK || '';
         const ECPAY_CREATE_ORDER_API = '/api/ecpay/create-order';
         function postToEcpay(action, fields){
           const form = document.createElement('form');
@@ -700,16 +702,13 @@
           planesTargetOut = !planesTargetOut;
           syncPreviewUiClasses();
         };
-        if (photoStack && info){
-          photoStack.addEventListener('click', (e)=>{
-            e.stopPropagation();
-            togglePlanesOut();
-          });
-          photoStack.addEventListener('keydown', (e)=>{
-            const key = (e && e.key) ? e.key : '';
-            if (key !== 'Enter' && key !== ' ') return;
-            e.preventDefault();
-            e.stopPropagation();
+        if (info){
+          // Click again to retract the preview planes.
+          // Ignore clicks on buttons/links so Add Cart and checkout keep working.
+          info.addEventListener('click', (e)=>{
+            const target = e && e.target;
+            if (!target) return;
+            if (target.closest && (target.closest('button') || target.closest('a'))) return;
             togglePlanesOut();
           });
         }
@@ -724,10 +723,10 @@
         const PREVIEW_PLANE_W = 0.045; // 4.5cm
         const PREVIEW_PLANE_L = 0.08;  // 8cm
 
-        const PREVIEW_SPREAD_X = 0.06;  // horizontal spacing between three planes
-        const PREVIEW_BASE_Y = 0.04;    // vertical position inside the case
-        const PREVIEW_IN_Z = 0.02;      // retracted position (local to case)
-        const PREVIEW_OUT_Z = 0.22;     // extended position (local to case)
+        const PREVIEW_SPREAD_X = 0.09;  // horizontal spacing between three planes
+        const PREVIEW_BASE_Y = 0.0;     // vertical position inside the case
+        const PREVIEW_IN_Z = 0.0;       // retracted position (local to case)
+        const PREVIEW_OUT_Z = 0.62;     // extended position (local to case)
 
         function syncPreviewPlanesToProgress(){
           if (!previewGroup || !previewMeshes.length) return;
@@ -738,7 +737,7 @@
 
         async function initPreviewPlanesIfNeeded(){
           if (previewPlanesInitialized) return;
-          if (!modelState || !modelState.caseNode) return;
+          if (!modelState || !modelRoot) return;
           previewPlanesInitialized = true;
 
           const loader = new THREE.TextureLoader();
@@ -772,7 +771,8 @@
           });
 
           previewGroup = new THREE.Group();
-          modelState.caseNode.add(previewGroup);
+          const anchor = (modelState && modelState.caseNode) ? modelState.caseNode : modelRoot;
+          anchor.add(previewGroup);
           previewGroup.position.set(0, PREVIEW_BASE_Y, PREVIEW_IN_Z);
 
           const x = PREVIEW_SPREAD_X;
@@ -785,8 +785,8 @@
           planes.forEach((p)=>{
             const mesh = new THREE.Mesh(geometry, makeMat(p.tex));
             mesh.position.set(p.x, p.y, 0);
-            // Rotate so the plane faces outward from the case opening.
-            mesh.rotation.x = -Math.PI / 2;
+            // Keep the plane readable from the camera (double-sided, so rotation is mostly for styling).
+            mesh.rotation.x = 0;
             mesh.rotation.y = p.rotY;
             previewGroup.add(mesh);
             previewMeshes.push(mesh);
@@ -1343,6 +1343,12 @@
           hoverAreaWash.material.opacity = 0.0;
           if (!active){
             autoOutLatch = false;
+            // If user is no longer hovering/opening, retract planes for visibility and UX.
+            planesTargetOut = false;
+            planesReady = false;
+            syncPreviewUiClasses();
+            previewProgress = 0;
+            syncPreviewPlanesToProgress();
           }
         }
 
@@ -1432,7 +1438,7 @@
           const target = active ? 1 : 0;
           motionState.progress += (target - motionState.progress) * 0.08;
           // After the opening motion finishes, automatically slide the three preview planes out.
-          if (target === 1 && modelState.caseNode && motionState.progress >= 0.965){
+          if (target === 1 && motionState.progress >= 0.8){
             if (!autoOutLatch){
               setPlanesReady(true);
               planesTargetOut = true;
