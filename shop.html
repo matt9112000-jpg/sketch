@@ -12,9 +12,9 @@
     />
     <style>
       :root{
-        --bg:#000e51;
-        --text:#f4f6ff;
-        --muted:#b8beff;
+        --bg:#ffffff;
+        --text:#1f2433;
+        --muted:#5f6778;
         --accent:#ee00b8;
         --ring: rgba(238,0,184,.35);
         --border:#3340a8;
@@ -422,6 +422,7 @@
         border-color:var(--c7);
       }
       .hint{
+        display:none;
         position:absolute;
         left:50%;
         bottom:16px;
@@ -436,18 +437,17 @@
       .scroll-gallery{
         width:min(980px, 100%);
         margin-top:10px;
-        display:grid;
-        grid-template-columns:repeat(2, minmax(0, 1fr));
-        gap:18px;
+        display:flex;
+        flex-direction:column;
+        gap:14px;
         z-index:1;
       }
       .scroll-gallery-card{
-        background:#ffffff;
-        border-radius:22px;
+        background:transparent;
+        border-radius:0;
         overflow:hidden;
-        box-shadow:0 18px 46px rgba(0,0,0,.07);
-        display:flex;
-        flex-direction:column;
+        box-shadow:none;
+        display:block;
       }
       .scroll-gallery-card img{
         display:block;
@@ -456,6 +456,7 @@
         aspect-ratio: 16 / 9;
         object-fit:cover;
         background:#fff;
+        border-radius:0;
       }
       .scroll-gallery-caption{
         padding:14px 16px 16px;
@@ -477,7 +478,7 @@
         .wrap{ padding:12px 10px; }
         .stage{ min-height: 80vh; }
         .scroll-gallery{
-          grid-template-columns:1fr;
+          gap:12px;
         }
         .home-btn{
           top:16px;
@@ -535,38 +536,18 @@
       <section class="scroll-gallery" aria-label="Preview pictures">
         <div class="scroll-gallery-card">
           <img src="./shop-assets/card-1.png" alt="Preview photo 1" loading="lazy" />
-          <div class="scroll-gallery-caption">
-            <h3>Outdoor Carry</h3>
-            <p>Daylight snapshot of the cartridge case + cable charm.</p>
-          </div>
         </div>
         <div class="scroll-gallery-card">
           <img src="./shop-assets/card-2.png" alt="Preview photo 2" loading="lazy" />
-          <div class="scroll-gallery-caption">
-            <h3>Night Grip</h3>
-            <p>Warm indoor lighting with a close view of the details.</p>
-          </div>
         </div>
         <div class="scroll-gallery-card">
           <img src="./shop-assets/card-3.png" alt="Preview photo 3" loading="lazy" />
-          <div class="scroll-gallery-caption">
-            <h3>Close Detail</h3>
-            <p>Tighter angle showing the front finish and texture.</p>
-          </div>
         </div>
         <div class="scroll-gallery-card">
           <img src="./shop-assets/card-4.png" alt="Preview photo 4" loading="lazy" />
-          <div class="scroll-gallery-caption">
-            <h3>Bridge Moment</h3>
-            <p>A wide shot for motion and perspective.</p>
-          </div>
         </div>
         <div class="scroll-gallery-card">
           <img src="./shop-assets/card-5.png" alt="Preview photo 5" loading="lazy" />
-          <div class="scroll-gallery-caption">
-            <h3>On the Road</h3>
-            <p>Roadside scene with the case in frame.</p>
-          </div>
         </div>
       </section>
     </main>
