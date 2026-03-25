@@ -65,7 +65,7 @@
       }
       .marquee{
         display:inline-block;
-        animation:scroll 18s linear infinite;
+        animation:none;
       }
       .marquee span{ margin-right:2.2rem; }
       @keyframes scroll{ from{ transform:translateX(0);} to{ transform:translateX(-50%);} }
@@ -480,6 +480,10 @@
         height:var(--cube-size);
         border-radius:0;
         box-shadow:none;
+        transition: background .18s ease, filter .18s ease;
+      }
+      .cube-cell.is-flash{
+        filter:brightness(1.25) saturate(1.15);
       }
 
       @media (max-width: 920px){
@@ -687,9 +691,12 @@
           T:['11111','00100','00100','00100','00100','00100','00100'],
           U:['10001','10001','10001','10001','10001','10001','01110']
         };
-        function buildCubeWord(text, seed){
+        function buildCubeWord(text, seed, cubeSizeFactor = 1){
           const word = document.createElement('span');
           word.className = 'cube-word';
+          const baseCubeSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cube-size')) || 8;
+          const nextCubeSize = Math.max(2, baseCubeSize * cubeSizeFactor);
+          word.style.setProperty('--cube-size', `${nextCubeSize}px`);
           let colorIdx = seed;
           for (const ch of text){
             const map = glyph[ch];
@@ -702,6 +709,8 @@
                 cell.className = 'cube-cell';
                 if (map[r][c] === '1'){
                   cell.style.background = cubePalette[(colorIdx + r + c) % cubePalette.length];
+                  cell.dataset.baseColor = cell.style.background;
+                  cell.dataset.color = cell.style.background;
                 } else {
                   cell.style.background = 'transparent';
                   cell.style.boxShadow = 'none';
@@ -714,12 +723,46 @@
           }
           return word;
         }
+        let heroCubeCells = [];
+        let heroCubeFlashTimer = 0;
+        function stopHeroCubeFlash(){
+          if (heroCubeFlashTimer){
+            clearTimeout(heroCubeFlashTimer);
+            heroCubeFlashTimer = 0;
+          }
+        }
+        function scheduleHeroCubeFlash(delay){
+          stopHeroCubeFlash();
+          heroCubeFlashTimer = setTimeout(()=>{
+            if (!heroCubeCells.length) return;
+            const target = heroCubeCells[Math.floor(Math.random() * heroCubeCells.length)];
+            if (!target) return;
+            const prev = target.dataset.color || target.dataset.baseColor || '';
+            let next = cubePalette[Math.floor(Math.random() * cubePalette.length)];
+            if (cubePalette.length > 1 && next === prev){
+              next = cubePalette[(cubePalette.indexOf(next) + 1) % cubePalette.length];
+            }
+            target.classList.add('is-flash');
+            target.style.background = next;
+            target.dataset.color = next;
+            setTimeout(()=>{
+              target.style.background = target.dataset.baseColor || 'transparent';
+              target.dataset.color = target.dataset.baseColor || 'transparent';
+              target.classList.remove('is-flash');
+              scheduleHeroCubeFlash(260 + Math.random() * 520);
+            }, 210);
+          }, delay);
+        }
         const showFinalHeroState = ()=>{
+          stopHeroCubeFlash();
           ins.innerHTML = '';
-          ins.appendChild(buildCubeWord('INSUFFICIENT', 0));
+          const isMobile = window.innerWidth <= 680;
+          const insFactor = isMobile ? 0.9 + Math.random() * 0.2 : 0.85 + Math.random() * 0.3;
+          const spaceFactor = isMobile ? 0.9 + Math.random() * 0.2 : 0.85 + Math.random() * 0.3;
+          ins.appendChild(buildCubeWord('INSUFFICIENT', 0, insFactor));
           ins.classList.remove('transfer-syne', 'transfer-serif', 'transfer-back');
           space.innerHTML = '';
-          space.appendChild(buildCubeWord('SPACE', 2));
+          space.appendChild(buildCubeWord('SPACE', 2, spaceFactor));
           space.classList.remove('is-visible');
           space.classList.remove('is-covering');
           space.classList.add('is-static');
@@ -728,6 +771,13 @@
           heroTitle.classList.add('is-done');
           bannerLinks.classList.remove('intro-glass');
           document.body.classList.add('intro-done');
+
+          // Flash random cube colors (shop-like) after the final hero state is rendered.
+          // Avoid it for reduced-motion users.
+          heroCubeCells = Array.from(heroTitle.querySelectorAll('.cube-cell[data-base-color]'));
+          if (!reduce && heroCubeCells.length){
+            scheduleHeroCubeFlash(700 + Math.random() * 400);
+          }
         };
         const resetHeroIntroState = ()=>{
           document.body.classList.remove('intro-done');
