@@ -43,7 +43,7 @@
         pointer-events:none;
         background:transparent;
         /* Moves the 3D layer on screen. If the top clips, widen FOV / pull camera back in JS (not more translate alone). */
-        transform:translateY(38vh);
+        transform:translateY(41vh);
       }
       #ball-wrap canvas{
         pointer-events:auto;
@@ -94,11 +94,11 @@
         left:0;
         top:0;
         z-index:99;
-        transform:translate(-50%, -130%);
+        transform:translate(-50%, -108%);
         pointer-events:none;
         opacity:0;
         transition:opacity .15s ease;
-        max-width:min(280px, 46vw);
+        max-width:min(340px, 54vw);
         text-align:center;
       }
       .facet-tag.is-visible{
@@ -119,6 +119,15 @@
       .facet-tag__link:hover{
         color:var(--accent);
         border-bottom-color:var(--accent);
+      }
+      .facet-tag__desc{
+        margin:10px auto 0;
+        max-width:22em;
+        font:400 10px/1.5 Montserrat, system-ui, sans-serif;
+        letter-spacing:.04em;
+        color:var(--muted);
+        text-transform:none;
+        pointer-events:none;
       }
 
       #preview-panel{
@@ -183,6 +192,7 @@
       </div>
       <div id="facet-tag" class="facet-tag" aria-hidden="true">
         <a id="facet-tag-link" class="facet-tag__link" href="#">01 SELF-INTRODUCTION</a>
+        <p class="facet-tag__desc" id="facet-tag-desc"></p>
       </div>
     </div>
 
@@ -200,6 +210,13 @@
         const langBtn = document.getElementById('lang-btn');
         const facetTag = document.getElementById('facet-tag');
         const facetTagLink = document.getElementById('facet-tag-link');
+        const facetTagDesc = document.getElementById('facet-tag-desc');
+
+        /** Edit this copy — shown under “01 SELF-INTRODUCTION”. */
+        const INTRO_COPY = {
+          en: 'Interactive introduction to who I am, what I make, and how I work—hover the title above to open a live preview.',
+          zh: '關於我是誰、創作內容與工作方式的互動式自我介紹—將游標懸停於上方標題可開啟即時預覽。'
+        };
 
         const palette = ['#4C4C4C','#6DFF69','#FF3BDA','#FF99B1','#1A26FF','#FF4622','#FCC730'];
         const paletteLen = palette.length;
@@ -214,7 +231,11 @@
           if (!langBtn) return;
           langBtn.textContent = (lang === 'zh') ? 'EN' : '中文';
         }
+        function setIntroDescription(){
+          if (facetTagDesc) facetTagDesc.textContent = lang === 'zh' ? INTRO_COPY.zh : INTRO_COPY.en;
+        }
         setLangLabel();
+        setIntroDescription();
 
         const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true, premultipliedAlpha:false });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -230,7 +251,7 @@
 
         const ballRadius = 1.48;
         // World height of ball center (orbit target). Camera uses lookLift so changing only this used to cancel on-screen; lookLift sets vertical framing.
-        const ballYOffset = -4.58;
+        const ballYOffset = -4.95;
 
         const group = new THREE.Group();
         scene.add(group);
@@ -241,14 +262,15 @@
         group.add(orientGroup);
         orientGroup.add(spinGroup);
 
-        const lookLift = 2.06; // camera above orbit target → ball lower in the canvas
-        const camera = new THREE.PerspectiveCamera(52, window.innerWidth / window.innerHeight, 0.01, 50);
+        const lookLift = 2.22; // camera above orbit target → ball lower in the canvas
+        const cameraFOV = 68; // wide-angle perspective
+        const camera = new THREE.PerspectiveCamera(cameraFOV, window.innerWidth / window.innerHeight, 0.01, 50);
         const nextOrbitTarget = new THREE.Vector3();
         nextOrbitTarget.copy(group.position);
         camera.position.set(
           group.position.x,
-          group.position.y + lookLift + 0.6,
-          group.position.z + 3.38
+          group.position.y + lookLift + 0.62,
+          group.position.z + 3.58
         );
 
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -460,6 +482,7 @@
           lang = nextLang;
           localStorage.setItem('site_lang', lang);
           setLangLabel();
+          setIntroDescription();
           updateFacetTagLink();
           if (previewPanel.classList.contains('is-active')){
             const src = selfIntroPreviewSrc();
