@@ -868,19 +868,21 @@
 
         const electroCaseMat = new THREE.MeshPhysicalMaterial({
           color: '#eef3ff',
-          metalness: 0.98,
-          roughness: 0.06,
+          metalness: 1.0,
+          roughness: 0.045,
           clearcoat: 1.0,
-          clearcoatRoughness: 0.03,
-          envMapIntensity: 2.1
+          clearcoatRoughness: 0.015,
+          envMapIntensity: 2.35,
+          bumpScale: 0.0
         });
         const electroPanelMat = new THREE.MeshPhysicalMaterial({
           color: '#f0f5ff',
-          metalness: 0.98,
+          metalness: 1.0,
           roughness: 0.055,
           clearcoat: 1.0,
-          clearcoatRoughness: 0.025,
-          envMapIntensity: 1.85
+          clearcoatRoughness: 0.02,
+          envMapIntensity: 2.0,
+          bumpScale: 0.0
         });
         // Fallback if textures fail to load.
         const electroFallbackMat = new THREE.MeshPhysicalMaterial({
@@ -891,7 +893,41 @@
           clearcoatRoughness: 0.06,
           envMapIntensity: 1.62
         });
-        function loadElectroMap(url, mat){
+
+        // Create a micro-bump from the same silver texture so it reads like
+        // electroplated/brushed metal instead of flat color.
+        function createMicroBumpFromTexture(tex, strength = 0.08){
+          const img = tex && tex.image;
+          if (!img || !img.width || !img.height) return null;
+          const cv = document.createElement('canvas');
+          cv.width = img.width;
+          cv.height = img.height;
+          const cx = cv.getContext('2d', { willReadFrequently: true });
+          cx.drawImage(img, 0, 0, cv.width, cv.height);
+          const im = cx.getImageData(0, 0, cv.width, cv.height);
+          const d = im.data;
+          for (let i = 0; i < d.length; i += 4){
+            // Convert to luminance.
+            const r = d[i], g = d[i + 1], b = d[i + 2];
+            let v = (r * 0.299 + g * 0.587 + b * 0.114);
+            // Contrast boost around mid-gray to make scratches pop.
+            v = (v - 128) * 2.6 + 128;
+            if (v < 0) v = 0;
+            if (v > 255) v = 255;
+            d[i] = v; d[i + 1] = v; d[i + 2] = v;
+          }
+          cx.putImageData(im, 0, 0);
+          const bumpTex = new THREE.CanvasTexture(cv);
+          bumpTex.colorSpace = THREE.NoColorSpace;
+          bumpTex.flipY = false;
+          bumpTex.wrapS = THREE.ClampToEdgeWrapping;
+          bumpTex.wrapT = THREE.ClampToEdgeWrapping;
+          bumpTex.generateMipmaps = false;
+          bumpTex.needsUpdate = true;
+          return { bumpTex, strength };
+        }
+
+        function loadElectroMapWithBump(url, mat, bumpStrength){
           const texLoader = new THREE.TextureLoader();
           texLoader.load(url, (tex)=>{
             tex.colorSpace = THREE.SRGBColorSpace;
@@ -900,14 +936,23 @@
             tex.wrapT = THREE.ClampToEdgeWrapping;
             tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
             mat.map = tex;
+
+            const res = createMicroBumpFromTexture(tex, bumpStrength);
+            if (res && res.bumpTex){
+              mat.bumpMap = res.bumpTex;
+              mat.bumpScale = res.strength;
+            }
             mat.needsUpdate = true;
           }, undefined, ()=>{
             mat.map = null;
+            mat.bumpMap = null;
+            mat.bumpScale = 0.0;
             mat.needsUpdate = true;
           });
         }
-        loadElectroMap('./shop-assets/silver-case.png', electroCaseMat);
-        loadElectroMap('./shop-assets/silver-panel.png', electroPanelMat);
+
+        loadElectroMapWithBump('./shop-assets/silver-case.png', electroCaseMat, 0.10);
+        loadElectroMapWithBump('./shop-assets/silver-panel.png', electroPanelMat, 0.08);
         function boostStickerImage(image){
           const cv = document.createElement('canvas');
           cv.width = image.width || 1024;
