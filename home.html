@@ -222,7 +222,7 @@
         const TAG_FACET_IV = 2;
 
         const ballRadius = 1.14;
-        const ballYOffset = -1.02; // low in frame; -1.512 pushed the sphere out of view
+        const ballYOffset = -1.224; // ~20% lower than -1.02
 
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 50);
         camera.position.set(0, ballYOffset + 0.14, 2.92);
@@ -230,8 +230,7 @@
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enablePan = false;      // orbit only
         controls.enableZoom = false;     // keep position (no dolly)
-        controls.autoRotate = true;
-        controls.autoRotateSpeed = 0.55;
+        controls.autoRotate = false;     // ball spin is on spinGroup.rotation.x
         controls.target.set(0, ballYOffset, 0);
         controls.update();
 
@@ -240,9 +239,11 @@
         key.position.set(-1.4, 1.6, 1.35);
         scene.add(key);
 
-        // Textured sphere (disco mirror tiles in equirectangular / sphere UV space).
+        // Outer group: world position + 90° on Z. Inner group: continuous spin on X.
         const group = new THREE.Group();
+        const spinGroup = new THREE.Group();
         scene.add(group);
+        group.add(spinGroup);
 
         const sphereGeom = new THREE.SphereGeometry(ballRadius, 96, 64);
 
@@ -331,9 +332,12 @@
           metalness: 0.18
         });
         const ballMesh = new THREE.Mesh(sphereGeom, ballMat);
-        group.add(ballMesh);
+        spinGroup.add(ballMesh);
         group.position.y = ballYOffset;
-        group.rotation.x = Math.PI / 2;
+        group.rotation.z = Math.PI / 2;
+
+        const spinRadPerSec = 0.42;
+        let lastSpinT = performance.now();
 
         /** Facet center in mesh space — matches SphereGeometry vertex math (same as texture UV layout). */
         function facetTileCenterLocal(iu, iv, tilesU, tilesV, radius){
@@ -374,7 +378,6 @@
 
         function setTagPreviewActive(on){
           tagPreviewHover = on;
-          controls.autoRotate = !on;
           if (on){
             renderer.setClearColor(0xffffff, 0);
             previewPanel.classList.add('is-active');
@@ -397,11 +400,16 @@
         }
 
         function tick(){
+          const now = performance.now();
+          const dt = Math.min(0.05, (now - lastSpinT) / 1000);
+          lastSpinT = now;
+          if (!tagPreviewHover) spinGroup.rotation.x += dt * spinRadPerSec;
+
           controls.update();
 
           if (facetTag && facetTagLink){
-            group.updateMatrixWorld(true);
-            tagWorld.copy(tagLocal).applyMatrix4(group.matrixWorld);
+            ballMesh.updateMatrixWorld(true);
+            tagWorld.copy(tagLocal).applyMatrix4(ballMesh.matrixWorld);
             tagNDC.copy(tagWorld).project(camera);
             const rect = renderer.domElement.getBoundingClientRect();
             const px = rect.left + (tagNDC.x * 0.5 + 0.5) * rect.width;
