@@ -53,17 +53,42 @@
         inset:0;
         pointer-events:none;
         z-index:0;
-        background-image:
-          linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
-          linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
-        background-size:48px 48px;
-        background-position:0 0;
+        opacity:0;
       }
       header,
       main,
       .marquee-wrap{
         position:relative;
         z-index:1;
+      }
+
+      #hero-title{
+        position:relative;
+      }
+      .grid-word-text{
+        position:absolute;
+        left:0;
+        top:0;
+        right:0;
+        bottom:0;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        pointer-events:none;
+        color:transparent;
+        background-image:
+          linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+          linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+        background-size:48px 48px;
+        background-position:0 0;
+        -webkit-background-clip:text;
+        background-clip:text;
+        text-transform:uppercase;
+        letter-spacing:-.03em;
+        font-size:clamp(1.75rem, 5.5vw, 4.1rem);
+        line-height:.94;
+        transform: translateY(6px);
+        z-index:0;
       }
       a, button, .row, .preview-card{
         cursor:var(--cursor-cube), pointer;
@@ -622,6 +647,7 @@
       <div class="header-bar">
         <div class="title-wrap">
           <h1 class="title" id="hero-title">
+            <span class="grid-word-text" aria-hidden="true">INSUFFICIENT SPACE</span>
             <span class="word-ins" id="word-ins"></span>
             <em class="word-space" id="word-space">Space</em>
             <span class="title-burst" id="title-burst" aria-hidden="true"></span>
