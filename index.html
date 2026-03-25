@@ -26,7 +26,7 @@
         --c5:#1A26FF;
         --c6:#FF4622;
         --c7:#FCC730;
-        --cube-size:8px;
+        --cube-size:10px;
         --cube-gap:1px;
         --font-sans:'Syne', sans-serif;
         --font-mono:'Space Mono', monospace;
@@ -78,7 +78,7 @@
       .header-bar{
         display:grid;
         grid-template-columns:minmax(0, calc(100% - 250px)) auto;
-        align-items:flex-start;
+        align-items:center;
         gap:16px;
       }
       .title-wrap{
@@ -90,10 +90,11 @@
       .title{
         position:relative;
         display:flex;
-        align-items:flex-start;
+        align-items:center;
         flex-wrap:wrap;
         white-space:normal;
         pointer-events:none;
+        justify-content:center;
         gap:.24em;
         font-size:clamp(1.75rem, 5.5vw, 4.1rem);
         text-transform:uppercase;
@@ -483,8 +484,21 @@
         box-shadow:none;
         transition: background .18s ease, filter .18s ease;
       }
+      .cube-letter{
+        will-change: transform;
+      }
       .cube-cell.is-flash{
         filter:brightness(1.25) saturate(1.15);
+      }
+
+      @keyframes cubePhysicsPulse{
+        0%{ transform: translate(0px, 0px) scale(1); }
+        28%{ transform: translate(var(--px, 0px), var(--py, 0px)) scale(1.06); }
+        58%{ transform: translate(calc(var(--px, 0px) * -0.25), calc(var(--py, 0px) * -0.25)) scale(1.02); }
+        100%{ transform: translate(0px, 0px) scale(1); }
+      }
+      .cube-letter.is-physics-pulse{
+        animation: cubePhysicsPulse 680ms cubic-bezier(.2,.9,.2,1) both;
       }
 
       @media (max-width: 920px){
@@ -501,8 +515,8 @@
       }
       @media (max-width: 680px){
         :root{
-          --cube-size:6px;
-          --cube-gap:2px;
+          --cube-size:7px;
+          --cube-gap:1px;
         }
         .title-wrap{
           max-width:100%;
@@ -728,6 +742,8 @@
                 cell.className = 'cube-cell';
                 if (map[r][c] === '1'){
                   cell.style.background = cubePalette[(colorIdx + r + c) % cubePalette.length];
+                  cell.dataset.r = String(r);
+                  cell.dataset.c = String(c);
                   cell.dataset.baseColor = cell.style.background;
                   cell.dataset.color = cell.style.background;
                 } else {
@@ -751,6 +767,28 @@
             heroCubeFlashTimer = 0;
           }
         }
+
+        function pulseHeroCubeLetter(letter, cell){
+          if (!letter || !cell) return;
+          const r = parseFloat(cell.dataset.r || '0');
+          const c = parseFloat(cell.dataset.c || '0');
+          // Glyph grid is 7 rows x 5 cols; center it for direction.
+          const rCenter = 3;
+          const cCenter = 2;
+          const cubePx = parseFloat(getComputedStyle(letter).getPropertyValue('--cube-size')) || 10;
+          const nx = Math.max(-1, Math.min(1, (c - cCenter) / cCenter));
+          const ny = Math.max(-1, Math.min(1, (r - rCenter) / rCenter));
+          const dx = nx * cubePx * 0.35;
+          const dy = ny * cubePx * 0.22;
+
+          // Restart animation cleanly.
+          letter.style.setProperty('--px', `${dx.toFixed(2)}px`);
+          letter.style.setProperty('--py', `${dy.toFixed(2)}px`);
+          letter.classList.remove('is-physics-pulse');
+          // Force reflow so the animation restarts.
+          void letter.offsetWidth;
+          letter.classList.add('is-physics-pulse');
+        }
         function scheduleHeroCubeFlash(delay){
           stopHeroCubeFlash();
           heroCubeFlashTimer = setTimeout(()=>{
@@ -765,6 +803,7 @@
             target.classList.add('is-flash');
             target.style.background = next;
             target.dataset.color = next;
+            pulseHeroCubeLetter(target.parentElement, target);
             setTimeout(()=>{
               target.style.background = target.dataset.baseColor || 'transparent';
               target.dataset.color = target.dataset.baseColor || 'transparent';
