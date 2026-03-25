@@ -56,16 +56,26 @@
         align-items:flex-start;
         pointer-events:auto;
         user-select:none;
+        -webkit-tap-highlight-color:transparent;
       }
       .hud-btn{
         border:none;
         background:transparent;
         padding:0;
+        margin:0;
         font:800 18px/1.1 "Space Mono", monospace;
         letter-spacing:.06em;
         color:#000;
         text-transform:uppercase;
         cursor:var(--cursor-cube), pointer;
+        -webkit-appearance:none;
+        appearance:none;
+        box-shadow:none;
+        outline:none;
+      }
+      .hud-btn:focus-visible{
+        outline:2px solid var(--line);
+        outline-offset:3px;
       }
       .hud-btn small{
         display:block;
@@ -86,10 +96,6 @@
   <body>
     <div id="ball-wrap">
       <div id="ball"></div>
-    </div>
-
-    <div id="preview-panel" aria-label="Backdrop preview">
-      <iframe id="preview-frame" title="Project preview" loading="lazy" src="about:blank"></iframe>
     </div>
 
     <div id="hud">
@@ -129,16 +135,15 @@
         const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true, premultipliedAlpha:false });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
         renderer.setSize(window.innerWidth, window.innerHeight);
-        /* Alpha 0 so areas outside the sphere show the preview layer (z-index under this wrap). */
-        renderer.setClearColor(0xffffff, 0);
+        renderer.setClearColor(0xffffff, 1);
         wrap.appendChild(renderer.domElement);
 
         const scene = new THREE.Scene();
-        const ballRadius = 0.48;
-        const ballYOffset = -1.22; // tiny ball, low in the window
+        const ballRadius = 1.14;
+        const ballYOffset = -0.72; // large hero ball, sitting low in the frame
 
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 50);
-        camera.position.set(0, ballYOffset + 0.32, 4.35);
+        camera.position.set(0, ballYOffset + 0.12, 2.92);
 
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enablePan = false;      // orbit only
@@ -148,9 +153,9 @@
         controls.target.set(0, ballYOffset, 0);
         controls.update();
 
-        scene.add(new THREE.HemisphereLight(0xffffff, 0xb9c7ff, 1.0));
-        const key = new THREE.DirectionalLight(0xffffff, 1.15);
-        key.position.set(-1.8, 2.1, 1.6);
+        scene.add(new THREE.HemisphereLight(0xffffff, 0xb9c7ff, 0.78));
+        const key = new THREE.DirectionalLight(0xffffff, 0.58);
+        key.position.set(-1.4, 1.6, 1.35);
         scene.add(key);
 
         // Textured sphere (disco mirror tiles in equirectangular / sphere UV space).
@@ -197,9 +202,8 @@
 
               if (edge < groutW){
                 const t = edge / groutW;
-                const g = 55 + Math.round(t * 85);
-                const bl = 70 + Math.round(t * 60);
-                d[i] = g; d[i + 1] = g; d[i + 2] = bl; d[i + 3] = 255;
+                const w = 248 - Math.round(t * 38);
+                d[i] = w; d[i + 1] = w; d[i + 2] = w; d[i + 3] = 255;
                 continue;
               }
 
@@ -211,13 +215,13 @@
               const du = fu - 0.5;
               const dv = fv - 0.5;
               const dist = Math.sqrt(du * du + dv * dv);
-              const spec = Math.pow(Math.max(0, 1 - dist * 1.85), 2.2);
-              const facetShade = 0.82 + (1 - Math.min(1, dist * 1.45)) * 0.22;
+              const spec = Math.pow(Math.max(0, 1 - dist * 1.85), 3.2);
+              const facetShade = 0.82 + (1 - Math.min(1, dist * 1.45)) * 0.18;
               const jitter = 0.96 + ((seed * 0.001) % 1) * 0.08;
 
-              let r = col.r * facetShade * jitter * vivid + spec * 255;
-              let g = col.g * facetShade * jitter * vivid + spec * 255;
-              let b = col.b * facetShade * jitter * vivid + spec * 255;
+              let r = col.r * facetShade * jitter * vivid + spec * 72;
+              let g = col.g * facetShade * jitter * vivid + spec * 76;
+              let b = col.b * facetShade * jitter * vivid + spec * 82;
 
               const rim = Math.min(fu, 1 - fu, fv, 1 - fv);
               const rimDark = 0.96 + rim * 0.08;
@@ -241,8 +245,8 @@
         const ballTexture = createDiscoBallTexture();
         const ballMat = new THREE.MeshStandardMaterial({
           map: ballTexture,
-          roughness: 0.35,
-          metalness: 0.42
+          roughness: 0.58,
+          metalness: 0.18
         });
         const ballMesh = new THREE.Mesh(sphereGeom, ballMat);
         group.add(ballMesh);
