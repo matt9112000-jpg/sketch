@@ -226,7 +226,7 @@
         const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true, premultipliedAlpha:false });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setClearColor(0xffffff, 1); // opaque when preview off; alpha 0 while preview on (iframe behind canvas)
+        renderer.setClearColor(0xffffff, 1); // opaque when preview off
         wrap.appendChild(renderer.domElement);
 
         const scene = new THREE.Scene();
@@ -235,9 +235,9 @@
         const TAG_FACET_IU = 9;
         const TAG_FACET_IV = 2;
 
-        const ballRadius = 2.12;
+        const ballRadius = 2.32;
         // World height of ball center (orbit target). Camera uses lookLift so changing only this used to cancel on-screen; lookLift sets vertical framing.
-        const ballYOffset = -5.68;
+        const ballYOffset = -5.45;
 
         const group = new THREE.Group();
         scene.add(group);
@@ -248,15 +248,15 @@
         group.add(orientGroup);
         orientGroup.add(spinGroup);
 
-        const lookLift = 2.72; // camera above orbit target → ball lower in the canvas
+        const lookLift = 2.56; // camera above orbit target → ball lower in the canvas
         const cameraFOV = 68; // wide-angle perspective
         const camera = new THREE.PerspectiveCamera(cameraFOV, window.innerWidth / window.innerHeight, 0.01, 50);
         const nextOrbitTarget = new THREE.Vector3();
         nextOrbitTarget.copy(group.position);
         camera.position.set(
           group.position.x,
-          group.position.y + lookLift + 0.69,
-          group.position.z + 4.58
+          group.position.y + lookLift + 0.7,
+          group.position.z + 4.75
         );
 
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -407,7 +407,7 @@
         function setTagPreviewActive(on){
           tagPreviewHover = on;
           if (on){
-            renderer.setClearColor(0xffffff, 0);
+            renderer.setClearColor(0, 0);
             previewPanel.classList.add('is-active');
             previewPanel.setAttribute('aria-hidden', 'false');
             const src = selfIntroPreviewSrc();
