@@ -18,6 +18,13 @@
         --accent:#ee00b8;
         --ring: rgba(238,0,184,.35);
         --border:#3340a8;
+        --c1:#4C4C4C;
+        --c2:#6DFF69;
+        --c3:#FF3BDA;
+        --c4:#FF99B1;
+        --c5:#1A26FF;
+        --c6:#FF4622;
+        --c7:#FCC730;
         --cursor-cube:url("./cursor-cube.svg") 9 9;
       }
       *{ box-sizing:border-box; }
@@ -42,39 +49,55 @@
         align-items:center;
         justify-content:center;
         padding:28px 18px;
+        position:relative;
+        overflow:hidden;
+      }
+      .page-grid{
+        position:absolute;
+        inset:0;
+        z-index:0;
+        overflow:hidden;
+        pointer-events:none;
+        opacity:1;
+      }
+      .page-grid-row{
+        position:absolute;
+        left:0;
+        width:100%;
+        overflow:hidden;
+      }
+      .page-grid-track{
+        display:flex;
+        width:max-content;
+      }
+      .page-grid-cell{
+        flex:0 0 var(--grid-size);
+        width:var(--grid-size);
+        height:var(--grid-size);
+        border:1px solid rgba(255,255,255,.12);
+        transition:background-color .22s ease, filter .22s ease;
+      }
+      .page-grid-cell.is-flash{
+        filter:brightness(1.25) saturate(1.15);
       }
       .stage{
         width:min(980px, 100%);
         min-height:640px;
-        background:#0f1b75;
+        background:#f1f2f4;
         border-radius:24px;
-        border:1px solid var(--border);
+        border:1px solid #d5d8e0;
         position:relative;
         overflow:hidden;
-      }
-      .floor-grid{
-        position:absolute;
-        left:50%;
-        bottom:14%;
-        width:min(620px, 78%);
-        height:min(260px, 34%);
-        transform:translateX(-50%);
         z-index:1;
-        display:grid;
-        pointer-events:none;
-        opacity:.42;
-        clip-path: ellipse(50% 62% at 50% 100%);
-      }
-      .floor-grid .cell{
-        border:1px solid rgba(255,255,255,.2);
       }
       .stage::before{
         content:"";
         position:absolute;
         inset:0;
         background:
-          radial-gradient(800px 260px at 50% 100%, rgba(255,59,218,.14), transparent 62%),
-          radial-gradient(500px 220px at 8% 8%, rgba(26,38,255,.22), transparent 70%);
+          radial-gradient(820px 280px at 50% 100%, rgba(190,196,209,.56), transparent 64%),
+          radial-gradient(560px 260px at 8% 8%, rgba(224,228,236,.8), transparent 72%);
+        z-index:1;
         pointer-events:none;
       }
       .stage-head{
@@ -89,9 +112,9 @@
         top:24px;
         right:24px;
         z-index:4;
-        border:1px solid #4a56be;
+        border:1px solid var(--c2);
         border-radius:10px;
-        background:#1a247f;
+        background:var(--c5);
         color:#f4f6ff;
         padding:7px 11px;
         font-size:11px;
@@ -100,21 +123,22 @@
         text-decoration:none;
       }
       .home-btn:hover{
-        border-color:#7784ff;
+        border-color:var(--c4);
       }
       .home-btn:active,
       .home-btn:focus-visible{
-        border-color:#a5adff;
-        background:#2a35a1;
+        border-color:var(--c7);
+        background:#2632ff;
       }
       h1{
         margin:0 0 8px;
         font-size: clamp(26px, 4vw, 34px);
         letter-spacing:-0.04em;
+        color:var(--c5);
       }
       p{
         margin:0;
-        color:var(--muted);
+        color:#5f6778;
         font-size:14px;
         line-height:1.5;
       }
@@ -151,8 +175,8 @@
         transform: translate(-50%, 26px);
         opacity:0;
         transition: transform 440ms cubic-bezier(.2,.9,.2,1), opacity 280ms ease;
-        background: rgba(8,12,46,.76);
-        border:1px solid var(--border);
+        background: rgba(255,255,255,.9);
+        border:1px solid var(--c5);
         border-radius:14px;
         padding:12px 14px 14px;
         z-index:3;
@@ -168,6 +192,7 @@
         font-size:16px;
         font-weight:800;
         letter-spacing:.01em;
+        color:var(--c5);
       }
       .edition-tag{
         display:inline-flex;
@@ -177,9 +202,9 @@
         margin-top:6px;
         padding:4px 10px;
         border-radius:999px;
-        border:1px solid #7b87ff;
-        background:rgba(26, 38, 255, 0.22);
-        color:#b8f0ff;
+        border:1px solid var(--c5);
+        background:rgba(26, 38, 255, 0.1);
+        color:var(--c5);
         font-size:10px;
         font-family:'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
         font-weight:700;
@@ -205,9 +230,9 @@
         font-weight:700;
         font-size:clamp(17px, 2.55vw, 22px);
         line-height:1;
-        color:#ff8be9;
+        color:var(--c3);
         letter-spacing:.01em;
-        text-shadow:0 0 14px rgba(238,0,184,.24);
+        text-shadow:0 0 12px rgba(255,59,218,.22);
       }
       .product-price .currency-unit{
         font-size:.46em;
@@ -235,7 +260,7 @@
       .product-meta{
         margin-top:8px;
         font-size:12px;
-        color:var(--muted);
+        color:#3f4553;
       }
       .product-actions{
         margin-top:10px;
@@ -243,10 +268,10 @@
         gap:8px;
       }
       .product-actions button{
-        border:1px solid #4a56be;
+        border:1px solid var(--c5);
         border-radius:10px;
-        background:#162070;
-        color:#f4f6ff;
+        background:var(--c1);
+        color:#ffffff;
         padding:7px 10px;
         font-size:11px;
         font-weight:700;
@@ -254,16 +279,16 @@
         cursor:pointer;
       }
       .product-actions button:hover{
-        border-color:#7784ff;
+        border-color:var(--c2);
       }
       #add-cart-btn{
-        background:#ee00b8;
-        border-color:#ee00b8;
+        background:var(--c3);
+        border-color:var(--c3);
         color:#ffffff;
       }
       #add-cart-btn:hover{
-        border-color:#ff61e3;
-        background:#ff3bda;
+        border-color:var(--c6);
+        background:var(--c6);
       }
       .cart-sheet{
         position:fixed;
@@ -291,8 +316,8 @@
         right:0;
         width:min(390px, 100vw);
         height:100%;
-        background:linear-gradient(165deg, rgba(22,32,112,.98) 0%, rgba(10,16,66,.99) 100%);
-        border-left:1px solid rgba(122,132,255,.45);
+        background:linear-gradient(165deg, #ffffff 0%, #f2f4f8 100%);
+        border-left:1px solid var(--c5);
         box-shadow:-16px 0 32px rgba(0,0,0,.28);
         transform:translateX(100%);
         transition:transform .28s cubic-bezier(.2,.9,.2,1);
@@ -304,7 +329,7 @@
       }
       .cart-head{
         padding:18px 16px 12px;
-        border-bottom:1px solid rgba(74,86,190,.45);
+        border-bottom:1px solid rgba(26,38,255,.28);
       }
       .cart-head h3{
         margin:0 0 4px;
@@ -314,7 +339,7 @@
       .cart-head p{
         margin:0;
         font-size:12px;
-        color:#aeb8ff;
+        color:#4d5670;
       }
       .cart-body{
         padding:12px 16px;
@@ -322,8 +347,8 @@
       }
       .cart-summary{
         border-radius:12px;
-        border:1px solid rgba(74,86,190,.5);
-        background:rgba(8,12,46,.45);
+        border:1px solid rgba(26,38,255,.28);
+        background:rgba(26,38,255,.06);
         padding:10px 12px;
       }
       .checkout-row{
@@ -333,13 +358,13 @@
         gap:10px;
         margin:5px 0;
         font-size:13px;
-        color:#d7ddff;
+        color:#2f3544;
       }
       .checkout-row:first-child{ margin-top:0; }
       .checkout-row:last-child{ margin-bottom:0; }
       .checkout-row.total strong{
         font-size:20px;
-        color:#ff9ced;
+        color:var(--c3);
         font-family:'Playfair Display',serif;
         font-style:italic;
         font-weight:700;
@@ -350,15 +375,15 @@
         border-radius:10px;
         font-size:11px;
         line-height:1.5;
-        color:#a8b2ff;
-        background:rgba(238,0,184,.08);
-        border:1px solid rgba(238,0,184,.22);
+        color:#3f4553;
+        background:rgba(109,255,105,.12);
+        border:1px solid rgba(109,255,105,.46);
       }
       .cart-foot{
         padding:12px 18px 16px;
-        border-top:1px solid rgba(74,86,190,.45);
+        border-top:1px solid rgba(26,38,255,.28);
         flex-shrink:0;
-        background:rgba(8,12,46,.35);
+        background:rgba(255,255,255,.64);
       }
       .checkout-actions{
         display:flex;
@@ -367,10 +392,10 @@
         gap:8px;
       }
       .checkout-actions button{
-        border:1px solid #4a56be;
+        border:1px solid var(--c5);
         border-radius:10px;
-        background:#162070;
-        color:#f4f6ff;
+        background:var(--c1);
+        color:#ffffff;
         padding:9px 14px;
         font-size:11px;
         font-weight:700;
@@ -380,13 +405,13 @@
       }
       .checkout-actions button:active{ transform:scale(.98); }
       .checkout-actions .go{
-        border-color:#ee00b8;
-        background:linear-gradient(180deg, #ff3bda, #ee00b8);
+        border-color:var(--c6);
+        background:linear-gradient(180deg, var(--c6), var(--c3));
         color:#ffffff;
-        box-shadow:0 6px 18px rgba(238,0,184,.28);
+        box-shadow:0 6px 18px rgba(255,70,34,.25);
       }
       .checkout-actions .go:hover{
-        border-color:#ff8ae8;
+        border-color:var(--c7);
       }
       .hint{
         position:absolute;
@@ -396,7 +421,7 @@
         font-size:11px;
         letter-spacing:.14em;
         text-transform:uppercase;
-        color:var(--muted);
+        color:var(--c5);
         z-index:3;
       }
       @media (max-width: 700px){
@@ -423,18 +448,13 @@
           top:74%;
           width:min(94vw, 520px);
         }
-        .floor-grid{
-          width:min(92%, 520px);
-          height:min(220px, 30%);
-          bottom:15%;
-        }
       }
     </style>
   </head>
   <body>
     <main class="wrap">
+      <div class="page-grid" id="page-grid" aria-hidden="true"></div>
       <section class="stage" aria-label="Product stage" id="product-stage">
-        <div class="floor-grid" id="floor-grid" aria-hidden="true"></div>
         <a class="home-btn" href="./index.html" data-soft-nav>Home</a>
         <div class="stage-head">
           <h1>Shop</h1>
@@ -581,31 +601,80 @@
           target.searchParams.set('lang', lang);
           homeBtn.setAttribute('href', target.pathname + target.search);
         }
+        const wrap = document.querySelector('.wrap');
         const stage = document.getElementById('product-stage');
-        const floorGrid = document.getElementById('floor-grid');
+        const pageGrid = document.getElementById('page-grid');
         const shell = document.getElementById('viewer-shell');
         const info = document.getElementById('product-info');
         const mount = document.getElementById('box-viewer');
-        function buildFloorGrid(){
-          if (!stage || !floorGrid) return;
-          const palette = ['#4C4C4C','#6DFF69','#FF3BDA','#FF99B1','#1A26FF','#FF4622','#FCC730'];
-          const rect = floorGrid.getBoundingClientRect();
-          const cell = (window.innerWidth <= 700) ? 34 : 40;
-          const cols = Math.max(8, Math.ceil(rect.width / cell));
-          const rows = Math.max(8, Math.ceil(rect.height / cell));
-          floorGrid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-          floorGrid.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
-          const total = cols * rows;
-          const frag = document.createDocumentFragment();
-          for (let i = 0; i < total; i++){
-            const c = document.createElement('div');
-            c.className = 'cell';
-            c.style.background = palette[Math.floor(Math.random() * palette.length)];
-            frag.appendChild(c);
+        const gridBaseColor = '#f3f3f3';
+        const gridPalette = ['#4C4C4C','#6DFF69','#FF3BDA','#FF99B1','#1A26FF','#FF4622','#FCC730'];
+        let gridCells = [];
+        let gridFlashTimer = 0;
+        function stopGridFlash(){
+          if (gridFlashTimer){
+            clearTimeout(gridFlashTimer);
+            gridFlashTimer = 0;
           }
-          floorGrid.replaceChildren(frag);
         }
-        buildFloorGrid();
+        function scheduleNextGridFlash(delay){
+          stopGridFlash();
+          gridFlashTimer = setTimeout(()=>{
+            if (!gridCells.length) return;
+            const target = gridCells[Math.floor(Math.random() * gridCells.length)];
+            if (!target) return;
+            const prev = target.dataset.color || '';
+            let next = gridPalette[Math.floor(Math.random() * gridPalette.length)];
+            if (gridPalette.length > 1 && next === prev){
+              next = gridPalette[(gridPalette.indexOf(next) + 1) % gridPalette.length];
+            }
+            target.classList.add('is-flash');
+            setTimeout(()=>{
+              target.style.background = next;
+              target.dataset.color = next;
+              setTimeout(()=>{
+                target.style.background = gridBaseColor;
+                target.dataset.color = gridBaseColor;
+                target.classList.remove('is-flash');
+                // Start next flash only after this one completes and resets.
+                scheduleNextGridFlash(260 + Math.random() * 520);
+              }, 210);
+            }, 180);
+          }, delay);
+        }
+        function buildPageGrid(){
+          if (!wrap || !pageGrid) return;
+          stopGridFlash();
+          gridCells = [];
+          const rect = wrap.getBoundingClientRect();
+          const cell = (window.innerWidth <= 700) ? 64 : 72; // slightly smaller on mobile
+          const cols = Math.max(6, Math.ceil(rect.width / cell) + 2);
+          const rows = Math.max(6, Math.ceil(rect.height / cell) + 1);
+          const frag = document.createDocumentFragment();
+          pageGrid.style.setProperty('--grid-size', `${cell}px`);
+          for (let r = 0; r < rows; r++){
+            const row = document.createElement('div');
+            row.className = 'page-grid-row';
+            row.style.top = `${r * cell}px`;
+            row.style.height = `${cell}px`;
+            const track = document.createElement('div');
+            track.className = 'page-grid-track';
+            for (let i = 0; i < cols; i++){
+              const c = document.createElement('div');
+              c.className = 'page-grid-cell';
+              const color = gridBaseColor;
+              c.style.background = color;
+              c.dataset.color = color;
+              gridCells.push(c);
+              track.appendChild(c);
+            }
+            row.appendChild(track);
+            frag.appendChild(row);
+          }
+          pageGrid.replaceChildren(frag);
+          scheduleNextGridFlash(700 + Math.random() * 400);
+        }
+        buildPageGrid();
         const addCartBtn = document.getElementById('add-cart-btn');
         if (addCartBtn){
           addCartBtn.addEventListener('click', ()=>{
@@ -1214,7 +1283,7 @@
         });
 
         window.addEventListener('resize', ()=>{
-          buildFloorGrid();
+          buildPageGrid();
           const w = mount.clientWidth;
           const h = mount.clientHeight;
           renderer.setSize(w, h);
