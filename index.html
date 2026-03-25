@@ -26,7 +26,7 @@
         --c5:#1A26FF;
         --c6:#FF4622;
         --c7:#FCC730;
-        --cube-size:12px;
+        --cube-size:8px;
         --cube-gap:1px;
         --grid-line:rgba(0,0,0,.08);
         --font-sans:'Syne', sans-serif;
@@ -64,31 +64,6 @@
 
       #hero-title{
         position:relative;
-      }
-      .grid-word-text{
-        position:absolute;
-        left:0;
-        top:0;
-        right:0;
-        bottom:0;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        pointer-events:none;
-        color:transparent;
-        background-image:
-          linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
-          linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
-        background-size:48px 48px;
-        background-position:0 0;
-        -webkit-background-clip:text;
-        background-clip:text;
-        text-transform:uppercase;
-        letter-spacing:-.03em;
-        font-size:clamp(1.75rem, 5.5vw, 4.1rem);
-        line-height:.94;
-        transform: translateY(6px);
-        z-index:0;
       }
       a, button, .row, .preview-card{
         cursor:var(--cursor-cube), pointer;
@@ -129,20 +104,19 @@
       .title-wrap{
         min-width:0;
         width:100%;
-        overflow:visible;
+        overflow:hidden;
         max-width:none;
         position:relative;
-        z-index:4;
-        padding-top:16px;
+        padding-top:0;
       }
       .title{
         position:relative;
         display:flex;
-        align-items:center;
+        align-items:flex-start;
         flex-wrap:wrap;
         white-space:normal;
         pointer-events:none;
-        justify-content:center;
+        justify-content:flex-start;
         gap:.24em;
         font-size:clamp(1.75rem, 5.5vw, 4.1rem);
         text-transform:uppercase;
@@ -542,22 +516,7 @@
         filter:brightness(1.25) saturate(1.15);
       }
 
-      @keyframes cubePhysicsPulse{
-        0%{ transform: translate(0px, 0px) scale(1); }
-        24%{
-          transform: translate(var(--px, 0px), var(--py, 0px)) scale(1.12, .94);
-        }
-        52%{
-          transform: translate(calc(var(--px, 0px) * -0.28), calc(var(--py, 0px) * -0.28)) scale(.98, 1.06);
-        }
-        74%{
-          transform: translate(calc(var(--px, 0px) * .08), calc(var(--py, 0px) * .08)) scale(1.04, .98);
-        }
-        100%{ transform: translate(0px, 0px) scale(1); }
-      }
-      .cube-letter.is-physics-pulse{
-        animation: cubePhysicsPulse 680ms cubic-bezier(.2,.9,.2,1) both;
-      }
+      /* cubePhysicsPulse removed for a cleaner hero motion */
 
       @media (max-width: 920px){
         .header-bar{
@@ -647,7 +606,6 @@
       <div class="header-bar">
         <div class="title-wrap">
           <h1 class="title" id="hero-title">
-            <span class="grid-word-text" aria-hidden="true">INSUFFICIENT SPACE</span>
             <span class="word-ins" id="word-ins"></span>
             <em class="word-space" id="word-space">Space</em>
             <span class="title-burst" id="title-burst" aria-hidden="true"></span>
@@ -827,27 +785,6 @@
           }
         }
 
-        function pulseHeroCubeLetter(letter, cell){
-          if (!letter || !cell) return;
-          const r = parseFloat(cell.dataset.r || '0');
-          const c = parseFloat(cell.dataset.c || '0');
-          // Glyph grid is 7 rows x 5 cols; center it for direction.
-          const rCenter = 3;
-          const cCenter = 2;
-          const cubePx = parseFloat(getComputedStyle(letter).getPropertyValue('--cube-size')) || 10;
-          const nx = Math.max(-1, Math.min(1, (c - cCenter) / cCenter));
-          const ny = Math.max(-1, Math.min(1, (r - rCenter) / rCenter));
-          const dx = nx * cubePx * 0.65;
-          const dy = ny * cubePx * 0.38;
-
-          // Restart animation cleanly.
-          letter.style.setProperty('--px', `${dx.toFixed(2)}px`);
-          letter.style.setProperty('--py', `${dy.toFixed(2)}px`);
-          letter.classList.remove('is-physics-pulse');
-          // Force reflow so the animation restarts.
-          void letter.offsetWidth;
-          letter.classList.add('is-physics-pulse');
-        }
         function scheduleHeroCubeFlash(delay){
           stopHeroCubeFlash();
           heroCubeFlashTimer = setTimeout(()=>{
@@ -862,7 +799,6 @@
             target.classList.add('is-flash');
             target.style.background = next;
             target.dataset.color = next;
-            pulseHeroCubeLetter(target.parentElement, target);
             setTimeout(()=>{
               target.style.background = target.dataset.baseColor || 'transparent';
               target.dataset.color = target.dataset.baseColor || 'transparent';
