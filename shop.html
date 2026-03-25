@@ -97,7 +97,27 @@
           radial-gradient(820px 280px at 50% 100%, rgba(190,196,209,.56), transparent 64%),
           radial-gradient(560px 260px at 8% 8%, rgba(224,228,236,.8), transparent 72%);
         z-index:1;
+        opacity:1;
+        transition: opacity .42s ease;
         pointer-events:none;
+      }
+      #preview-photo-bg{
+        position:absolute;
+        inset:0;
+        background-image:url('./shop-assets/card-2.png');
+        background-size:cover;
+        background-position:center;
+        filter: saturate(1.02) contrast(1.04) brightness(1.04);
+        opacity:0;
+        transition: opacity .42s ease;
+        z-index:1;
+        pointer-events:none;
+      }
+      .stage.is-bg-preview #preview-photo-bg{
+        opacity:1;
+      }
+      .stage.is-bg-preview::before{
+        opacity:0;
       }
       .stage-head{
         position:absolute;
@@ -278,6 +298,7 @@
         pointer-events:none;
       }
       .product-photo-stack{
+        display:none;
         position:absolute;
         left:14px;
         right:14px;
@@ -531,6 +552,7 @@
     <main class="wrap">
       <div class="page-grid" id="page-grid" aria-hidden="true"></div>
       <section class="stage" aria-label="Product stage" id="product-stage">
+        <div id="preview-photo-bg" aria-hidden="true"></div>
         <a class="home-btn" href="./index.html" data-soft-nav>Home</a>
         <div class="stage-head">
           <h1>Shop</h1>
@@ -695,6 +717,15 @@
         let planesReady = false;
         let planesTargetOut = false; // toggled by click; driven to 3D position each frame.
         let autoOutLatch = false; // ensure auto-out only happens once per hover/open cycle
+        let bgPreviewEnabled = false;
+        let bgPreviewProgress = 0;
+        let modelBaseX = 0;
+        let modelBaseY = 0;
+        let modelBaseZ = 0;
+        let modelBaseScale = 1;
+        let cameraOffset = null;
+        const PREVIEW_SHIFT_X = (window.innerWidth <= 700) ? 0.75 : 1.25;
+        const PREVIEW_SCALE = (window.innerWidth <= 700) ? 0.86 : 0.80;
         const syncPreviewUiClasses = ()=>{
           if (!info) return;
           info.classList.toggle('is-photo-ready', planesReady);
@@ -1312,6 +1343,13 @@
           root.updateWorldMatrix(true, true);
           focusControlsOnMeshes(root, parts);
 
+          // Cache model transform so we can shift+shrink on preview and restore later.
+          modelBaseX = root.position.x;
+          modelBaseY = root.position.y;
+          modelBaseZ = root.position.z;
+          modelBaseScale = root.scale.x || 1;
+          cameraOffset = camera.position.clone().sub(controls.target.clone());
+
           modelRoot = root;
           scene.add(root);
           motionState.initialized = false;
@@ -1382,12 +1420,24 @@
           hoverAreaWash.material.opacity = 0.0;
           if (!active){
             autoOutLatch = false;
-            // If user is no longer hovering/opening, retract planes for visibility and UX.
-            planesTargetOut = false;
-            planesReady = false;
-            syncPreviewUiClasses();
-            previewProgress = 0;
-            syncPreviewPlanesToProgress();
+            // Cancel the background preview and restore model.
+            bgPreviewEnabled = false;
+            bgPreviewProgress = 0;
+            if (stage){
+              stage.classList.remove('is-bg-preview');
+            }
+            if (modelRoot){
+              modelRoot.position.set(modelBaseX, modelBaseY, modelBaseZ);
+              modelRoot.scale.setScalar(modelBaseScale);
+              stageGlow.position.x = modelBaseX;
+              hoverAreaWash.position.x = modelBaseX;
+              if (cameraOffset){
+                controls.target.copy(modelRoot.position);
+                camera.position.copy(modelRoot.position.clone().add(cameraOffset));
+                controls.update();
+              }
+              modelRoot.updateWorldMatrix(true, true);
+            }
           }
         }
 
@@ -1476,12 +1526,11 @@
           }
           const target = active ? 1 : 0;
           motionState.progress += (target - motionState.progress) * 0.08;
-          // After the opening motion finishes, reveal the preview stack (center card only).
-          if (target === 1 && motionState.progress >= 0.8){
+          // After the opening motion finishes, start the "background picture + shift+shrink model" preview.
+          if (target === 1 && modelState.caseNode && motionState.progress >= 0.8){
             if (!autoOutLatch){
-              setPlanesReady(true);
-              planesTargetOut = false;
-              syncPreviewUiClasses();
+              bgPreviewEnabled = true;
+              if (stage) stage.classList.add('is-bg-preview');
               autoOutLatch = true;
             }
           }
@@ -1519,6 +1568,28 @@
             const planesTarget = (planesTargetOut && modelState && modelState.caseVisible) ? 1 : 0;
             previewProgress += (planesTarget - previewProgress) * 0.08;
             syncPreviewPlanesToProgress();
+          }
+
+          // Background-preview transform: shift right + shrink.
+          const previewTarget = bgPreviewEnabled ? 1 : 0;
+          bgPreviewProgress += (previewTarget - bgPreviewProgress) * 0.08;
+          if (modelRoot && cameraOffset){
+            const nextX = modelBaseX + (PREVIEW_SHIFT_X * bgPreviewProgress);
+            const nextScale = modelBaseScale * (1 - (1 - PREVIEW_SCALE) * bgPreviewProgress);
+            modelRoot.position.set(nextX, modelBaseY, modelBaseZ);
+            modelRoot.scale.setScalar(nextScale);
+
+            // Keep stage glow + hover wash aligned with the moving model.
+            stageGlow.position.x = nextX;
+            hoverAreaWash.position.x = nextX;
+
+            hoverTopLightL.target.position.x = nextX;
+            hoverTopLightR.target.position.x = nextX;
+
+            // Keep camera framing centered on the moving model.
+            controls.target.copy(modelRoot.position);
+            camera.position.copy(modelRoot.position.clone().add(cameraOffset));
+            modelRoot.updateWorldMatrix(true, true);
           }
           controls.update();
           renderer.render(scene, camera);
