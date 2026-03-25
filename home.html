@@ -133,7 +133,9 @@
       #preview-panel{
         position:fixed;
         left:50%;
-        top:42%;
+        top:47%;
+        display:flex;
+        flex-direction:column;
         width:min(1180px, 96vw);
         height:min(780px, 78vh);
         z-index:5;
@@ -147,6 +149,7 @@
           transform .42s cubic-bezier(0.22, 1, 0.36, 1);
         overflow:hidden;
         will-change:opacity, transform;
+        border-radius:14px;
         -webkit-mask-image:radial-gradient(ellipse 82% 80% at 50% 48%,#000 46%,#000 76%,transparent 100%);
         mask-image:radial-gradient(ellipse 82% 80% at 50% 48%,#000 46%,#000 76%,transparent 100%);
         -webkit-mask-repeat:no-repeat;
@@ -158,11 +161,21 @@
         opacity:1;
         transform:translate(-50%, -50%) scale(1);
       }
+      .preview-caption{
+        flex:0 0 auto;
+        padding:14px 20px 12px;
+        font:500 12px/1.5 Montserrat, system-ui, sans-serif;
+        letter-spacing:.03em;
+        color:var(--text);
+        text-align:center;
+        background:rgba(255,255,255,.94);
+        border-bottom:1px solid rgba(0,0,0,.08);
+        pointer-events:none;
+      }
       #preview-frame{
-        position:absolute;
-        inset:0;
+        flex:1 1 auto;
+        min-height:0;
         width:100%;
-        height:100%;
         border:0;
         background:#fff;
         pointer-events:none;
@@ -181,6 +194,7 @@
     </div>
 
     <div id="preview-panel" aria-hidden="true">
+      <p class="preview-caption" id="preview-caption" aria-live="polite"></p>
       <iframe id="preview-frame" title="Self-introduction preview" src="about:blank"></iframe>
     </div>
 
@@ -211,11 +225,12 @@
         const facetTag = document.getElementById('facet-tag');
         const facetTagLink = document.getElementById('facet-tag-link');
         const facetTagDesc = document.getElementById('facet-tag-desc');
+        const previewCaption = document.getElementById('preview-caption');
 
-        /** Edit this copy — shown under “01 SELF-INTRODUCTION”. */
+        /** Edit this copy — ball label, preview header, and mobile hint. */
         const INTRO_COPY = {
-          en: 'Interactive introduction to who I am, what I make, and how I work—hover the title above to open a live preview.',
-          zh: '關於我是誰、創作內容與工作方式的互動式自我介紹—將游標懸停於上方標題可開啟即時預覽。'
+          en: 'Interactive introduction to who I am, what I make, and how I work. Hover the title on desktop to preview; on phones and tablets, tap once to preview and tap again to open the full page.',
+          zh: '關於我是誰、創作內容與工作方式的互動式自我介紹。桌機上將游標懸停於標題可預覽；手機與平板請點一下預覽，再點一次開啟完整頁面。'
         };
 
         const palette = ['#4C4C4C','#6DFF69','#FF3BDA','#FF99B1','#1A26FF','#FF4622','#FCC730'];
@@ -232,7 +247,9 @@
           langBtn.textContent = (lang === 'zh') ? 'EN' : '中文';
         }
         function setIntroDescription(){
-          if (facetTagDesc) facetTagDesc.textContent = lang === 'zh' ? INTRO_COPY.zh : INTRO_COPY.en;
+          const t = lang === 'zh' ? INTRO_COPY.zh : INTRO_COPY.en;
+          if (facetTagDesc) facetTagDesc.textContent = t;
+          if (previewCaption) previewCaption.textContent = t;
         }
         setLangLabel();
         setIntroDescription();
@@ -249,7 +266,7 @@
         const TAG_FACET_IU = 9;
         const TAG_FACET_IV = 2;
 
-        const ballRadius = 1.48;
+        const ballRadius = 1.68;
         // World height of ball center (orbit target). Camera uses lookLift so changing only this used to cancel on-screen; lookLift sets vertical framing.
         const ballYOffset = -4.95;
 
@@ -270,7 +287,7 @@
         camera.position.set(
           group.position.x,
           group.position.y + lookLift + 0.62,
-          group.position.z + 3.58
+          group.position.z + 3.88
         );
 
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -433,11 +450,37 @@
           }
         }
 
+        const coarsePointer = window.matchMedia('(hover: none), (pointer: coarse)').matches;
+
         if (facetTagLink){
-          facetTagLink.addEventListener('mouseenter', ()=> setTagPreviewActive(true));
-          facetTagLink.addEventListener('mouseleave', ()=> setTagPreviewActive(false));
-          facetTagLink.addEventListener('focusin', ()=> setTagPreviewActive(true));
-          facetTagLink.addEventListener('focusout', ()=> setTagPreviewActive(false));
+          if (!coarsePointer){
+            facetTagLink.addEventListener('mouseenter', ()=> setTagPreviewActive(true));
+            facetTagLink.addEventListener('mouseleave', ()=> setTagPreviewActive(false));
+            facetTagLink.addEventListener('focusin', ()=> setTagPreviewActive(true));
+            facetTagLink.addEventListener('focusout', (e)=>{
+              if (e.relatedTarget && facetTag.contains(e.relatedTarget)) return;
+              setTagPreviewActive(false);
+            });
+          } else {
+            facetTagLink.addEventListener('click', (e)=>{
+              e.preventDefault();
+              e.stopPropagation();
+              if (tagPreviewHover){
+                window.location.href = selfIntroHref();
+              } else {
+                setTagPreviewActive(true);
+              }
+            });
+            document.addEventListener('click', (e)=>{
+              if (!coarsePointer || !tagPreviewHover) return;
+              const el = e.target;
+              if (facetTag.contains(el)) return;
+              if (shopBtn && shopBtn.contains(el)) return;
+              if (contactBtn && contactBtn.contains(el)) return;
+              if (langBtn && langBtn.contains(el)) return;
+              setTagPreviewActive(false);
+            }, true);
+          }
         }
 
         function tick(){
