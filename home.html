@@ -39,16 +39,12 @@
       #ball-wrap{
         position:fixed;
         inset:0;
-        z-index:25;
+        z-index:10;
         pointer-events:none;
         background:transparent;
       }
       #ball-wrap canvas{
         pointer-events:auto;
-        display:block;
-        width:100%;
-        height:100%;
-        vertical-align:top;
       }
       #top-buttons{
         position:absolute;
@@ -190,11 +186,7 @@
         const wrap = document.getElementById('ball');
         const previewPanel = document.getElementById('preview-panel');
         const previewFrame = document.getElementById('preview-frame');
-        if (!wrap) return;
-        if (typeof THREE === 'undefined'){
-          wrap.textContent = 'THREE.js failed to load (check network / CDN).';
-          return;
-        }
+        if (!wrap || !previewPanel || !previewFrame) return;
 
         const shopBtn = document.getElementById('shop-btn');
         const contactBtn = document.getElementById('contact-btn');
@@ -217,16 +209,10 @@
         }
         setLangLabel();
 
-        let renderer;
-        try {
-          renderer = new THREE.WebGLRenderer({ antialias:true, alpha:false, premultipliedAlpha:false });
-        } catch (err){
-          wrap.textContent = 'WebGL could not start in this browser.';
-          return;
-        }
+        const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true, premultipliedAlpha:false });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setClearColor(0xf4f4f4, 1);
+        renderer.setClearColor(0xffffff, 1);
         wrap.appendChild(renderer.domElement);
 
         const scene = new THREE.Scene();
@@ -235,40 +221,30 @@
         const TAG_FACET_IU = 9;
         const TAG_FACET_IV = 2;
 
-        const ballRadius = 1.05;
-        const ballYOffset = 0; // centered vertically — negative values were pulling the ball out of view
+        const ballRadius = 1.14;
+        const ballYOffset = -1.52 * 1.35; // ~35% lower; orbit target follows group.position
 
         const group = new THREE.Group();
         scene.add(group);
         group.position.set(0, ballYOffset, 0);
+        group.rotation.x = Math.PI / 2;
 
-        const lookLift = 0.38;
-        const camBackZ = 4.75;
-        const camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.05, 100);
+        const lookLift = 0.52; // camera offset only — orbit target stays at ball center
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 50);
         const nextOrbitTarget = new THREE.Vector3();
         nextOrbitTarget.copy(group.position);
         camera.position.set(
           group.position.x,
-          group.position.y + lookLift + 0.55,
-          group.position.z + camBackZ
+          group.position.y + lookLift + 0.38,
+          group.position.z + 2.88
         );
 
-        const prevOrbitTarget = new THREE.Vector3().copy(group.position);
-
-        let controls = null;
-        try {
-          if (THREE.OrbitControls){
-            controls = new THREE.OrbitControls(camera, renderer.domElement);
-            controls.enablePan = false;
-            controls.enableZoom = false;
-            controls.autoRotate = false;
-            controls.target.copy(nextOrbitTarget);
-            controls.update();
-          }
-        } catch (err){
-          controls = null;
-        }
-        if (!controls) camera.lookAt(nextOrbitTarget);
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enablePan = false;      // orbit only
+        controls.enableZoom = false;     // keep position (no dolly)
+        controls.autoRotate = false;     // spin: ballSpinY → group.rotation.z
+        controls.target.copy(nextOrbitTarget);
+        controls.update();
 
         const sphereGeom = new THREE.SphereGeometry(ballRadius, 96, 64);
 
@@ -285,9 +261,7 @@
           const canvas = document.createElement('canvas');
           canvas.width = size;
           canvas.height = size;
-          let ctx = canvas.getContext('2d', { willReadFrequently: true });
-          if (!ctx) ctx = canvas.getContext('2d');
-          if (!ctx) throw new Error('Canvas2D unavailable');
+          const ctx = canvas.getContext('2d', { willReadFrequently: true });
           const im = ctx.createImageData(size, size);
           const d = im.data;
 
@@ -317,15 +291,10 @@
                 continue;
               }
 
-              let h = (iu * 374761393 + iv * 668265263 + (iu ^ iv) * 2246822519) >>> 0;
-              h ^= h >>> 16;
-              h = (((h * 2246822519) | 0) + 0) >>> 0;
-              h ^= h >>> 13;
-              h = (((h * 3266489917) | 0) + 0) >>> 0;
-              h ^= h >>> 16;
-              const cIdx = h % paletteLen;
+              const seed = iu * 73 + iv * 179;
+              const cIdx = Math.abs(seed) % paletteLen;
               const col = palRgb[cIdx];
-              const vivid = 1.06 + (h % 280) / 700;
+              const vivid = cIdx === 0 ? 1.12 : 1.22;
 
               const r = Math.min(255, Math.round(col.r * vivid));
               const g = Math.min(255, Math.round(col.g * vivid));
@@ -342,31 +311,12 @@
           const tex = new THREE.CanvasTexture(canvas);
           if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
           else tex.encoding = THREE.sRGBEncoding;
-          const maxA = (renderer.capabilities && renderer.capabilities.getMaxAnisotropy)
-            ? renderer.capabilities.getMaxAnisotropy()
-            : 1;
-          tex.anisotropy = Math.min(8, maxA);
+          tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
           return tex;
         }
 
-        let ballTexture;
-        try {
-          ballTexture = createDiscoBallTexture();
-        } catch (err){
-          const fb = document.createElement('canvas');
-          fb.width = fb.height = 4;
-          const fx = fb.getContext('2d');
-          if (fx){
-            fx.fillStyle = '#ff3366';
-            fx.fillRect(0, 0, 4, 4);
-          }
-          ballTexture = new THREE.CanvasTexture(fb);
-          ballTexture.needsUpdate = true;
-        }
-        const ballMat = new THREE.MeshBasicMaterial({
-          map: ballTexture,
-          side: THREE.DoubleSide
-        });
+        const ballTexture = createDiscoBallTexture();
+        const ballMat = new THREE.MeshBasicMaterial({ map: ballTexture });
         const ballMesh = new THREE.Mesh(sphereGeom, ballMat);
         group.add(ballMesh);
 
@@ -376,11 +326,10 @@
 
         function syncOrbitToBall(){
           nextOrbitTarget.copy(group.position);
-          camera.position.x += nextOrbitTarget.x - prevOrbitTarget.x;
-          camera.position.y += nextOrbitTarget.y - prevOrbitTarget.y;
-          camera.position.z += nextOrbitTarget.z - prevOrbitTarget.z;
-          prevOrbitTarget.copy(nextOrbitTarget);
-          if (controls) controls.target.copy(nextOrbitTarget);
+          camera.position.x += nextOrbitTarget.x - controls.target.x;
+          camera.position.y += nextOrbitTarget.y - controls.target.y;
+          camera.position.z += nextOrbitTarget.z - controls.target.z;
+          controls.target.copy(nextOrbitTarget);
         }
 
         /** Facet center in mesh space — matches SphereGeometry vertex math (same as texture UV layout). */
@@ -422,7 +371,6 @@
 
         function setTagPreviewActive(on){
           tagPreviewHover = on;
-          if (!previewPanel || !previewFrame) return;
           if (on){
             renderer.setClearColor(0xffffff, 0);
             previewPanel.classList.add('is-active');
@@ -430,7 +378,7 @@
             const src = selfIntroPreviewSrc();
             if (previewFrame.getAttribute('src') !== src) previewFrame.src = src;
           } else {
-            renderer.setClearColor(0xf4f4f4, 1);
+            renderer.setClearColor(0xffffff, 1);
             previewPanel.classList.remove('is-active');
             previewPanel.setAttribute('aria-hidden', 'true');
             previewFrame.src = 'about:blank';
@@ -449,12 +397,11 @@
           const dt = Math.min(0.05, (now - lastSpinT) / 1000);
           lastSpinT = now;
           if (!tagPreviewHover) ballSpinY += dt * spinRadPerSec;
-          group.rotation.x = 0;
-          group.rotation.y = ballSpinY;
+          group.rotation.x = Math.PI / 2;
+          group.rotation.z = ballSpinY;
 
           syncOrbitToBall();
-          if (controls) controls.update();
-          else camera.lookAt(prevOrbitTarget);
+          controls.update();
 
           if (facetTag && facetTagLink){
             ballMesh.updateMatrixWorld(true);
@@ -486,7 +433,7 @@
           localStorage.setItem('site_lang', lang);
           setLangLabel();
           updateFacetTagLink();
-          if (tagPreviewHover && previewFrame){
+          if (tagPreviewHover){
             const src = selfIntroPreviewSrc();
             if (previewFrame.getAttribute('src') !== src) previewFrame.src = src;
           }
