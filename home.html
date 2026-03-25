@@ -236,20 +236,20 @@
         const TAG_FACET_IV = 2;
 
         const ballRadius = 1.05;
-        const ballYOffset = -0.42; // orbit pivot / ball center — keep in a safe band for the frustum
+        const ballYOffset = 0; // centered vertically — negative values were pulling the ball out of view
 
         const group = new THREE.Group();
         scene.add(group);
         group.position.set(0, ballYOffset, 0);
 
-        const lookLift = 0.48;
-        const camBackZ = 4.05;
-        const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.08, 80);
+        const lookLift = 0.38;
+        const camBackZ = 4.75;
+        const camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.05, 100);
         const nextOrbitTarget = new THREE.Vector3();
         nextOrbitTarget.copy(group.position);
         camera.position.set(
           group.position.x,
-          group.position.y + lookLift + 0.42,
+          group.position.y + lookLift + 0.55,
           group.position.z + camBackZ
         );
 
