@@ -87,7 +87,7 @@
         min-height:640px;
         background:#f1f2f4;
         border-radius:24px;
-        border:1px solid #d5d8e0;
+        border:none;
         position:relative;
         overflow:hidden;
         z-index:1;
@@ -867,21 +867,21 @@
         }
 
         const electroCaseMat = new THREE.MeshPhysicalMaterial({
-          color: '#eef3ff',
-          metalness: 1.0,
-          roughness: 0.045,
-          clearcoat: 1.0,
-          clearcoatRoughness: 0.015,
-          envMapIntensity: 2.35,
+          color: '#f7fbff',
+          metalness: 0.88,
+          roughness: 0.14,
+          clearcoat: 0.95,
+          clearcoatRoughness: 0.06,
+          envMapIntensity: 1.7,
           bumpScale: 0.0
         });
         const electroPanelMat = new THREE.MeshPhysicalMaterial({
-          color: '#f0f5ff',
-          metalness: 1.0,
-          roughness: 0.055,
-          clearcoat: 1.0,
-          clearcoatRoughness: 0.02,
-          envMapIntensity: 2.0,
+          color: '#f7fbff',
+          metalness: 0.88,
+          roughness: 0.155,
+          clearcoat: 0.95,
+          clearcoatRoughness: 0.055,
+          envMapIntensity: 1.55,
           bumpScale: 0.0
         });
         // Fallback if textures fail to load.
@@ -896,12 +896,15 @@
 
         // Create a micro-bump from the same silver texture so it reads like
         // electroplated/brushed metal instead of flat color.
-        function createMicroBumpFromTexture(tex, strength = 0.08){
+        function createMicroBumpFromTexture(tex, strength = 0.03){
           const img = tex && tex.image;
           if (!img || !img.width || !img.height) return null;
           const cv = document.createElement('canvas');
-          cv.width = img.width;
-          cv.height = img.height;
+          // Downscale to reduce tiny noise so the surface doesn't turn dark.
+          const maxDim = 280;
+          const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+          cv.width = Math.max(2, Math.round(img.width * scale));
+          cv.height = Math.max(2, Math.round(img.height * scale));
           const cx = cv.getContext('2d', { willReadFrequently: true });
           cx.drawImage(img, 0, 0, cv.width, cv.height);
           const im = cx.getImageData(0, 0, cv.width, cv.height);
@@ -910,8 +913,8 @@
             // Convert to luminance.
             const r = d[i], g = d[i + 1], b = d[i + 2];
             let v = (r * 0.299 + g * 0.587 + b * 0.114);
-            // Contrast boost around mid-gray to make scratches pop.
-            v = (v - 128) * 2.6 + 128;
+            // Gentle contrast boost to enhance micro-scratch feel.
+            v = (v - 128) * 1.45 + 128;
             if (v < 0) v = 0;
             if (v > 255) v = 255;
             d[i] = v; d[i + 1] = v; d[i + 2] = v;
@@ -951,8 +954,9 @@
           });
         }
 
-        loadElectroMapWithBump('./shop-assets/silver-case.png', electroCaseMat, 0.10);
-        loadElectroMapWithBump('./shop-assets/silver-panel.png', electroPanelMat, 0.08);
+        // Use the close-up silver texture you provided.
+        loadElectroMapWithBump('./shop-assets/silver-metal.png', electroCaseMat, 0.03);
+        loadElectroMapWithBump('./shop-assets/silver-metal.png', electroPanelMat, 0.025);
         function boostStickerImage(image){
           const cv = document.createElement('canvas');
           cv.width = image.width || 1024;
