@@ -708,24 +708,44 @@
         const shell = document.getElementById('viewer-shell');
         const info = document.getElementById('product-info');
         const photoStack = document.getElementById('product-photo-stack');
+        const previewBgEl = document.getElementById('preview-photo-bg');
         const mount = document.getElementById('box-viewer');
         const gridBaseColor = '#f3f3f3';
         const gridPalette = ['#4C4C4C','#6DFF69','#FF3BDA','#FF99B1','#1A26FF','#FF4622','#FCC730'];
         let gridCells = [];
         let gridFlashTimer = 0;
 
+        const PREVIEW_BG_IMAGES = [
+          './shop-assets/card-1.png',
+          './shop-assets/card-2.png',
+          './shop-assets/card-3.png'
+        ];
+        const setPreviewBgIndex = (i)=>{
+          const next = Math.max(0, Math.min(2, i|0));
+          bgIndex = next;
+          if (previewBgEl){
+            previewBgEl.style.backgroundImage = `url('${PREVIEW_BG_IMAGES[next]}')`;
+          }
+        };
+
         let planesReady = false;
         let planesTargetOut = false; // toggled by click; driven to 3D position each frame.
         let autoOutLatch = false; // ensure auto-out only happens once per hover/open cycle
         let bgPreviewEnabled = false;
         let bgPreviewProgress = 0;
+        let bgIndex = 1; // 0..2 (card-1 / card-2 / card-3)
+        let bgDragActive = false;
+        let bgDragStartX = 0;
+        let bgDragStartIndex = 1;
         let modelBaseX = 0;
         let modelBaseY = 0;
         let modelBaseZ = 0;
         let modelBaseScale = 1;
         let cameraOffset = null;
-        const PREVIEW_SHIFT_X = (window.innerWidth <= 700) ? 0.75 : 1.25;
-        const PREVIEW_SCALE = (window.innerWidth <= 700) ? 0.86 : 0.80;
+        const PREVIEW_SHIFT_X = (window.innerWidth <= 700) ? 1.05 : 2.25; // center shift (matches circled target)
+        const PREVIEW_SHIFT_PER_INDEX = (window.innerWidth <= 700) ? 0.22 : 0.5;
+        const PREVIEW_SCALE = (window.innerWidth <= 700) ? 0.78 : 0.62; // shrink more on desktop
+        const PREVIEW_SHIFT_Y = (window.innerWidth <= 700) ? -0.02 : -0.06;
         const syncPreviewUiClasses = ()=>{
           if (!info) return;
           info.classList.toggle('is-photo-ready', planesReady);
@@ -1426,22 +1446,22 @@
             if (stage){
               stage.classList.remove('is-bg-preview');
             }
+            setPreviewBgIndex(1);
             if (modelRoot){
               modelRoot.position.set(modelBaseX, modelBaseY, modelBaseZ);
               modelRoot.scale.setScalar(modelBaseScale);
               stageGlow.position.x = modelBaseX;
               hoverAreaWash.position.x = modelBaseX;
-              if (cameraOffset){
-                controls.target.copy(modelRoot.position);
-                camera.position.copy(modelRoot.position.clone().add(cameraOffset));
-                controls.update();
-              }
+            controls.target.copy(modelRoot.position);
+            controls.update();
               modelRoot.updateWorldMatrix(true, true);
             }
           }
         }
 
         function checkProximity(clientX, clientY){
+          // While dragging the preview background, don't cancel the hover/open state.
+          if (bgPreviewEnabled && bgDragActive) return;
           const r = shell.getBoundingClientRect();
           const cx = r.left + r.width/2;
           const cy = r.top + r.height/2;
@@ -1462,6 +1482,28 @@
         info.classList.add('is-active');
         shell.addEventListener('pointermove', (e)=>checkProximity(e.clientX, e.clientY));
         stage.addEventListener('pointermove', (e)=>checkProximity(e.clientX, e.clientY));
+        stage.addEventListener('pointerdown', (e)=>{
+          if (!bgPreviewEnabled) return;
+          const target = e && e.target;
+          if (target && target.closest && (target.closest('#viewer-shell') || target.closest('#box-viewer'))) return;
+          bgDragActive = true;
+          bgDragStartX = e.clientX;
+          bgDragStartIndex = bgIndex;
+          try{ stage.setPointerCapture && stage.setPointerCapture(e.pointerId); } catch(err){}
+        });
+        stage.addEventListener('pointermove', (e)=>{
+          if (!bgDragActive) return;
+          const rect = stage.getBoundingClientRect();
+          const deltaNorm = (e.clientX - bgDragStartX) / Math.max(1, rect.width / 2);
+          const next = bgDragStartIndex + Math.round(deltaNorm);
+          setPreviewBgIndex(next);
+        });
+        const endBgDrag = ()=>{
+          bgDragActive = false;
+          try{ stage.releasePointerCapture && stage.releasePointerCapture(); } catch(err){}
+        };
+        stage.addEventListener('pointerup', endBgDrag);
+        stage.addEventListener('pointercancel', endBgDrag);
         shell.addEventListener('pointerleave', ()=>{
           setActive(false);
           shell.classList.remove('is-info-hover');
@@ -1531,6 +1573,7 @@
             if (!autoOutLatch){
               bgPreviewEnabled = true;
               if (stage) stage.classList.add('is-bg-preview');
+              setPreviewBgIndex(1);
               autoOutLatch = true;
             }
           }
@@ -1573,10 +1616,12 @@
           // Background-preview transform: shift right + shrink.
           const previewTarget = bgPreviewEnabled ? 1 : 0;
           bgPreviewProgress += (previewTarget - bgPreviewProgress) * 0.08;
-          if (modelRoot && cameraOffset){
-            const nextX = modelBaseX + (PREVIEW_SHIFT_X * bgPreviewProgress);
+          if (modelRoot){
+            const indexOffset = bgIndex - 1; // -1 left / 0 center / +1 right
+            const nextX = modelBaseX + bgPreviewProgress * (PREVIEW_SHIFT_X + indexOffset * PREVIEW_SHIFT_PER_INDEX);
+            const nextY = modelBaseY + PREVIEW_SHIFT_Y * bgPreviewProgress;
             const nextScale = modelBaseScale * (1 - (1 - PREVIEW_SCALE) * bgPreviewProgress);
-            modelRoot.position.set(nextX, modelBaseY, modelBaseZ);
+            modelRoot.position.set(nextX, nextY, modelBaseZ);
             modelRoot.scale.setScalar(nextScale);
 
             // Keep stage glow + hover wash aligned with the moving model.
@@ -1586,9 +1631,8 @@
             hoverTopLightL.target.position.x = nextX;
             hoverTopLightR.target.position.x = nextX;
 
-            // Keep camera framing centered on the moving model.
+            // Keep orbit target on the moving model (doesn't lock camera position).
             controls.target.copy(modelRoot.position);
-            camera.position.copy(modelRoot.position.clone().add(cameraOffset));
             modelRoot.updateWorldMatrix(true, true);
           }
           controls.update();
