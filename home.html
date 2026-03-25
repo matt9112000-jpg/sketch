@@ -222,7 +222,7 @@
         const TAG_FACET_IV = 2;
 
         const ballRadius = 1.14;
-        const ballYOffset = -1.52; // edit group.position to move ball; orbit follows each frame
+        const ballYOffset = -2.052; // -1.52 × 1.35 (~35% lower); orbit follows group.position
 
         const group = new THREE.Group();
         scene.add(group);
@@ -241,7 +241,7 @@
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enablePan = false;      // orbit only
         controls.enableZoom = false;     // keep position (no dolly)
-        controls.autoRotate = false;     // spin: ballSpinY → group.rotation.z
+        controls.autoRotate = false;     // fixed tilt X=90°, spin: ballSpinY → rotation.z
         controls.target.copy(nextOrbitTarget);
         controls.update();
 
@@ -396,6 +396,7 @@
           const dt = Math.min(0.05, (now - lastSpinT) / 1000);
           lastSpinT = now;
           if (!tagPreviewHover) ballSpinY += dt * spinRadPerSec;
+          group.rotation.x = Math.PI / 2;
           group.rotation.z = ballSpinY;
 
           syncOrbitToBall();
