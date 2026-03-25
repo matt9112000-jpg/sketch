@@ -281,7 +281,7 @@
         position:absolute;
         left:14px;
         right:14px;
-        top:92px;
+        top:44px;
         margin-top:0;
         width:auto;
         aspect-ratio: 16 / 10;
@@ -308,6 +308,8 @@
         filter: saturate(1.02) contrast(1.04) brightness(1.03);
         mix-blend-mode:multiply;
         user-select:none;
+        pointer-events:auto;
+        cursor:pointer;
         transform-origin:50% 70%;
         transition: transform .55s cubic-bezier(.2,.9,.2,1), opacity .35s ease;
         opacity:0;
@@ -328,18 +330,23 @@
       /* Clicked state: cards fly out */
       .product-body.is-cards-out .product-photo-card.card-left{
         opacity:1;
-        transform: translate(-38px,-34px) rotate(-12deg) scale(1);
+        transform: translate(-38px,-62px) rotate(-12deg) scale(1);
         z-index:4;
       }
       .product-body.is-cards-out .product-photo-card.card-main{
         opacity:1;
-        transform: translate(0,-8px) rotate(0deg) scale(1.04);
+        transform: translate(0,-34px) rotate(0deg) scale(1.04);
         z-index:5;
       }
       .product-body.is-cards-out .product-photo-card.card-right{
         opacity:1;
-        transform: translate(38px,-34px) rotate(12deg) scale(1);
+        transform: translate(38px,-62px) rotate(12deg) scale(1);
         z-index:3;
+      }
+      .product-photo-card.is-front{
+        z-index:8 !important;
+        transform: translate(0,-56px) rotate(0deg) scale(1.10) !important;
+        box-shadow: 0 18px 46px rgba(0,0,0,.10);
       }
       .product-actions button{
         border:none;
@@ -697,10 +704,23 @@
           planesReady = !!v;
           syncPreviewUiClasses();
         };
+        const setFrontCard = (cardEl)=>{
+          if (!photoStack) return;
+          const cards = photoStack.querySelectorAll('.product-photo-card');
+          cards.forEach((c)=>c.classList.remove('is-front'));
+          if (cardEl) cardEl.classList.add('is-front');
+        };
         const togglePlanesOut = ()=>{
           if (!planesReady) return;
           planesTargetOut = !planesTargetOut;
           syncPreviewUiClasses();
+          if (planesTargetOut){
+            // Default to the center card when fanning out.
+            const main = photoStack && photoStack.querySelector('.product-photo-card.card-main');
+            setFrontCard(main);
+          } else {
+            setFrontCard(null);
+          }
         };
         if (info){
           // Click again to retract the preview planes.
@@ -709,6 +729,19 @@
             const target = e && e.target;
             if (!target) return;
             if (target.closest && (target.closest('button') || target.closest('a'))) return;
+            const clickedCard = target.closest && target.closest('.product-photo-card');
+            if (clickedCard){
+              // If the cards are already out, bring the clicked card to the front only.
+              if (planesTargetOut){
+                setFrontCard(clickedCard);
+                return;
+              }
+              // If not yet out, fan out and bring the clicked card to front.
+              planesTargetOut = true;
+              syncPreviewUiClasses();
+              setFrontCard(clickedCard);
+              return;
+            }
             togglePlanesOut();
           });
         }
