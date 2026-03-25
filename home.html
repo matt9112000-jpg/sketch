@@ -174,15 +174,18 @@
         wrap.appendChild(renderer.domElement);
 
         const scene = new THREE.Scene();
+        const ballRadius = 1.38;
+        const ballYOffset = -1.05; // lower in the window (toward bottom)
+
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 50);
-        camera.position.set(0, 0.8, 3.2);
+        camera.position.set(0, ballYOffset + 0.55, 3.15);
 
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enablePan = false;      // orbit only
         controls.enableZoom = false;     // keep position (no dolly)
         controls.autoRotate = true;
         controls.autoRotateSpeed = 0.55;
-        controls.target.set(0, 0, 0);
+        controls.target.set(0, ballYOffset, 0);
         controls.update();
 
         scene.add(new THREE.HemisphereLight(0xffffff, 0xb9c7ff, 1.0));
@@ -194,7 +197,6 @@
         const group = new THREE.Group();
         scene.add(group);
 
-        const ballRadius = 2.35;
         const sphereGeom = new THREE.SphereGeometry(ballRadius, 96, 64);
 
         function hexToRgb(hex){
@@ -276,9 +278,11 @@
         });
         const ballMesh = new THREE.Mesh(sphereGeom, ballMat);
         group.add(ballMesh);
+        group.position.y = ballYOffset;
 
         // Interactive project cubes (separate meshes so raycasting works).
-        const markerGeom = new THREE.BoxGeometry(0.22, 0.22, 0.22);
+        const markerSize = 0.14;
+        const markerGeom = new THREE.BoxGeometry(markerSize, markerSize, markerSize);
         const interactive = [];
         let selfMarker = null;
         let shopMarker = null;
