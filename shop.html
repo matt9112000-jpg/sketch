@@ -46,11 +46,13 @@
       .wrap{
         min-height:100%;
         display:flex;
+        flex-direction:column;
         align-items:center;
-        justify-content:center;
+        justify-content:flex-start;
         padding:28px 18px;
         position:relative;
-        overflow:hidden;
+        overflow:visible;
+        gap:44px;
       }
       .page-grid{
         position:absolute;
@@ -74,6 +76,7 @@
         flex:0 0 var(--grid-size);
         width:var(--grid-size);
         height:var(--grid-size);
+        border:1px solid rgba(255,255,255,.12);
         transition:background-color .22s ease, filter .22s ease;
       }
       .page-grid-cell.is-flash{
@@ -82,9 +85,9 @@
       .stage{
         width:min(980px, 100%);
         min-height:640px;
-        background:#f3f3f3;
+        background:#f1f2f4;
         border-radius:24px;
-        border:none;
+        border:1px solid #d5d8e0;
         position:relative;
         overflow:hidden;
         z-index:1;
@@ -97,27 +100,7 @@
           radial-gradient(820px 280px at 50% 100%, rgba(190,196,209,.56), transparent 64%),
           radial-gradient(560px 260px at 8% 8%, rgba(224,228,236,.8), transparent 72%);
         z-index:1;
-        opacity:1;
-        transition: opacity .42s ease;
         pointer-events:none;
-      }
-      #preview-photo-bg{
-        position:absolute;
-        inset:0;
-        background-image:url('./shop-assets/card-2.png');
-        background-size:cover;
-        background-position:center;
-        filter: saturate(1.02) contrast(1.04) brightness(1.04);
-        opacity:0;
-        transition: opacity .42s ease;
-        z-index:1;
-        pointer-events:none;
-      }
-      .stage.is-bg-preview #preview-photo-bg{
-        opacity:1;
-      }
-      .stage.is-bg-preview::before{
-        opacity:0;
       }
       .stage-head{
         position:absolute;
@@ -131,7 +114,7 @@
         top:24px;
         right:24px;
         z-index:4;
-        border:none;
+        border:1px solid var(--c2);
         border-radius:10px;
         background:var(--c5);
         color:#f4f6ff;
@@ -142,10 +125,11 @@
         text-decoration:none;
       }
       .home-btn:hover{
-        background:#1f2be6;
+        border-color:var(--c4);
       }
       .home-btn:active,
       .home-btn:focus-visible{
+        border-color:var(--c7);
         background:#2632ff;
       }
       h1{
@@ -194,6 +178,7 @@
         opacity:0;
         transition: transform 440ms cubic-bezier(.2,.9,.2,1), opacity 280ms ease;
         background: rgba(255,255,255,.9);
+        border:1px solid var(--c5);
         border-radius:14px;
         padding:12px 14px 14px;
         z-index:3;
@@ -219,6 +204,7 @@
         margin-top:6px;
         padding:4px 10px;
         border-radius:999px;
+        border:1px solid var(--c5);
         background:rgba(26, 38, 255, 0.1);
         color:var(--c5);
         font-size:10px;
@@ -265,7 +251,7 @@
         justify-content:center;
         padding:4px 8px;
         border-radius:999px;
-        border:none;
+        border:1px solid #ff99e8;
         background:rgba(238,0,184,.18);
         color:#ffd3f4;
         font-size:11px;
@@ -283,94 +269,8 @@
         display:flex;
         gap:8px;
       }
-      .product-photo{
-        width:100%;
-        margin-top:12px;
-        border-radius:14px;
-        background:rgba(255,255,255,.88);
-        padding:10px;
-        object-fit:cover;
-        aspect-ratio: 16 / 10;
-        filter: saturate(1.02) contrast(1.04) brightness(1.03);
-        opacity:.92;
-        mix-blend-mode:multiply;
-        user-select:none;
-        pointer-events:none;
-      }
-      .product-photo-stack{
-        display:none;
-        position:absolute;
-        left:14px;
-        right:14px;
-        top:44px;
-        margin-top:0;
-        width:auto;
-        aspect-ratio: 16 / 10;
-        opacity:0;
-        transform:none;
-        transition:none;
-        pointer-events:none;
-        z-index:10;
-      }
-      .product-body.is-photo-ready .product-photo-stack{
-        opacity:1;
-        transform: translateY(0);
-        pointer-events:auto;
-      }
-      .product-photo-card{
-        position:absolute;
-        inset:0;
-        width:100%;
-        height:100%;
-        object-fit:cover;
-        border-radius:14px;
-        padding:10px;
-        background:rgba(255,255,255,.88);
-        filter: saturate(1.02) contrast(1.04) brightness(1.03);
-        mix-blend-mode:multiply;
-        user-select:none;
-        pointer-events:auto;
-        cursor:pointer;
-        transform-origin:50% 70%;
-        transition: transform .55s cubic-bezier(.2,.9,.2,1), opacity .35s ease;
-        opacity:0;
-        box-shadow: 0 12px 30px rgba(0,0,0,.06);
-      }
-      /* Collapsed / preview state: only the main card is visible */
-      .product-body.is-photo-ready .product-photo-card.card-main{
-        opacity:1;
-        transform: translate(0,0) rotate(0deg) scale(1.02);
-        z-index:3;
-      }
-      .product-body.is-photo-ready .product-photo-card.card-left,
-      .product-body.is-photo-ready .product-photo-card.card-right{
-        opacity:0;
-        transform: translate(0, 14px) rotate(0deg) scale(.98);
-        z-index:1;
-      }
-      /* Clicked state: cards fly out */
-      .product-body.is-cards-out .product-photo-card.card-left{
-        opacity:1;
-        transform: translate(-38px,-62px) rotate(-12deg) scale(1);
-        z-index:4;
-      }
-      .product-body.is-cards-out .product-photo-card.card-main{
-        opacity:1;
-        transform: translate(0,-34px) rotate(0deg) scale(1.04);
-        z-index:5;
-      }
-      .product-body.is-cards-out .product-photo-card.card-right{
-        opacity:1;
-        transform: translate(38px,-62px) rotate(12deg) scale(1);
-        z-index:3;
-      }
-      .product-photo-card.is-front{
-        z-index:8 !important;
-        transform: translate(0,-56px) rotate(0deg) scale(1.10) !important;
-        box-shadow: 0 18px 46px rgba(0,0,0,.10);
-      }
       .product-actions button{
-        border:none;
+        border:1px solid var(--c5);
         border-radius:10px;
         background:var(--c1);
         color:#ffffff;
@@ -381,13 +281,15 @@
         cursor:pointer;
       }
       .product-actions button:hover{
-        background:#2a2a2a;
+        border-color:var(--c2);
       }
       #add-cart-btn{
         background:var(--c3);
+        border-color:var(--c3);
         color:#ffffff;
       }
       #add-cart-btn:hover{
+        border-color:var(--c6);
         background:var(--c6);
       }
       .cart-sheet{
@@ -417,7 +319,7 @@
         width:min(390px, 100vw);
         height:100%;
         background:linear-gradient(165deg, #ffffff 0%, #f2f4f8 100%);
-        border-left:none;
+        border-left:1px solid var(--c5);
         box-shadow:-16px 0 32px rgba(0,0,0,.28);
         transform:translateX(100%);
         transition:transform .28s cubic-bezier(.2,.9,.2,1);
@@ -429,7 +331,7 @@
       }
       .cart-head{
         padding:18px 16px 12px;
-        border-bottom:none;
+        border-bottom:1px solid rgba(26,38,255,.28);
       }
       .cart-head h3{
         margin:0 0 4px;
@@ -447,6 +349,7 @@
       }
       .cart-summary{
         border-radius:12px;
+        border:1px solid rgba(26,38,255,.28);
         background:rgba(26,38,255,.06);
         padding:10px 12px;
       }
@@ -476,11 +379,11 @@
         line-height:1.5;
         color:#3f4553;
         background:rgba(109,255,105,.12);
-        border:none;
+        border:1px solid rgba(109,255,105,.46);
       }
       .cart-foot{
         padding:12px 18px 16px;
-        border-top:none;
+        border-top:1px solid rgba(26,38,255,.28);
         flex-shrink:0;
         background:rgba(255,255,255,.64);
       }
@@ -491,7 +394,7 @@
         gap:8px;
       }
       .checkout-actions button{
-        border:none;
+        border:1px solid var(--c5);
         border-radius:10px;
         background:var(--c1);
         color:#ffffff;
@@ -500,15 +403,17 @@
         font-weight:700;
         letter-spacing:.04em;
         cursor:pointer;
-        transition:transform .12s ease, background .15s ease;
+        transition:transform .12s ease, border-color .15s ease, background .15s ease;
       }
       .checkout-actions button:active{ transform:scale(.98); }
       .checkout-actions .go{
+        border-color:var(--c6);
         background:linear-gradient(180deg, var(--c6), var(--c3));
         color:#ffffff;
         box-shadow:0 6px 18px rgba(255,70,34,.25);
       }
       .checkout-actions .go:hover{
+        border-color:var(--c7);
       }
       .hint{
         position:absolute;
@@ -520,6 +425,29 @@
         text-transform:uppercase;
         color:var(--c5);
         z-index:3;
+      }
+
+      .scroll-gallery{
+        width:min(980px, 100%);
+        margin-top:10px;
+        display:flex;
+        flex-direction:column;
+        gap:18px;
+        z-index:1;
+      }
+      .scroll-gallery-card{
+        background:#ffffff;
+        border-radius:22px;
+        overflow:hidden;
+        box-shadow:0 18px 46px rgba(0,0,0,.07);
+      }
+      .scroll-gallery-card img{
+        display:block;
+        width:100%;
+        height:auto;
+        aspect-ratio: 16 / 9;
+        object-fit:cover;
+        background:#fff;
       }
       @media (max-width: 700px){
         .wrap{ padding:12px 10px; }
@@ -552,7 +480,6 @@
     <main class="wrap">
       <div class="page-grid" id="page-grid" aria-hidden="true"></div>
       <section class="stage" aria-label="Product stage" id="product-stage">
-        <div id="preview-photo-bg" aria-hidden="true"></div>
         <a class="home-btn" href="./index.html" data-soft-nav>Home</a>
         <div class="stage-head">
           <h1>Shop</h1>
@@ -571,17 +498,23 @@
             </div>
             <div class="product-price" id="product-price">NT$3600 <span class="currency-unit twd">TWD</span></div>
           </div>
-          <div class="product-photo-stack" id="product-photo-stack" role="button" tabindex="0" aria-label="Preview photos">
-            <img class="product-photo-card card-left" src="./shop-assets/card-1.png" alt="Preview card 1" />
-            <img class="product-photo-card card-main" src="./shop-assets/card-2.png" alt="Preview card 2" />
-            <img class="product-photo-card card-right" src="./shop-assets/card-3.png" alt="Preview card 3" />
-          </div>
           <p class="product-meta" id="product-meta">3D-printed with a vintage GBA cartridge (1 of 25),<br>featuring a one-to-multi cable charm.</p>
           <div class="product-actions">
             <button id="add-cart-btn" type="button">Add Cart</button>
           </div>
         </div>
         <div class="hint">Hover near the model</div>
+      </section>
+      <section class="scroll-gallery" aria-label="Preview pictures">
+        <div class="scroll-gallery-card">
+          <img src="./shop-assets/card-1.png" alt="Preview image 1" loading="lazy" />
+        </div>
+        <div class="scroll-gallery-card">
+          <img src="./shop-assets/card-2.png" alt="Preview image 2" loading="lazy" />
+        </div>
+        <div class="scroll-gallery-card">
+          <img src="./shop-assets/card-3.png" alt="Preview image 3" loading="lazy" />
+        </div>
       </section>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
@@ -599,8 +532,6 @@
         const PRICE_TWD = 3600;
         const displayPrice = `NT$${PRICE_TWD} <span class="currency-unit twd">TWD</span>`;
         const PREVIEW_MODE = new URLSearchParams(window.location.search).has('preview');
-        // If a custom static payment link is provided, use it.
-        // Otherwise, fall back to the normal `onCheckout()` flow (create-order -> redirect).
         const ECPAY_PAYMENT_LINK = window.ECPAY_PAYMENT_LINK || 'https://p.ecpay.com.tw/D588FF7';
         const ECPAY_CREATE_ORDER_API = '/api/ecpay/create-order';
         function postToEcpay(action, fields){
@@ -707,183 +638,11 @@
         const pageGrid = document.getElementById('page-grid');
         const shell = document.getElementById('viewer-shell');
         const info = document.getElementById('product-info');
-        const photoStack = document.getElementById('product-photo-stack');
-        const previewBgEl = document.getElementById('preview-photo-bg');
         const mount = document.getElementById('box-viewer');
         const gridBaseColor = '#f3f3f3';
         const gridPalette = ['#4C4C4C','#6DFF69','#FF3BDA','#FF99B1','#1A26FF','#FF4622','#FCC730'];
         let gridCells = [];
         let gridFlashTimer = 0;
-
-        const PREVIEW_BG_IMAGES = [
-          './shop-assets/card-1.png',
-          './shop-assets/card-2.png',
-          './shop-assets/card-3.png'
-        ];
-        const setPreviewBgIndex = (i)=>{
-          const next = Math.max(0, Math.min(2, i|0));
-          bgIndex = next;
-          if (previewBgEl){
-            previewBgEl.style.backgroundImage = `url('${PREVIEW_BG_IMAGES[next]}')`;
-          }
-        };
-
-        let planesReady = false;
-        let planesTargetOut = false; // toggled by click; driven to 3D position each frame.
-        let autoOutLatch = false; // ensure auto-out only happens once per hover/open cycle
-        let bgPreviewEnabled = false;
-        let bgPreviewProgress = 0;
-        let bgIndex = 1; // 0..2 (card-1 / card-2 / card-3)
-        let bgDragActive = false;
-        let bgDragStartX = 0;
-        let bgDragStartIndex = 1;
-        let modelBaseX = 0;
-        let modelBaseY = 0;
-        let modelBaseZ = 0;
-        let modelBaseScale = 1;
-        let cameraOffset = null;
-        const PREVIEW_SHIFT_X = (window.innerWidth <= 700) ? 1.05 : 2.25; // center shift (matches circled target)
-        const PREVIEW_SHIFT_PER_INDEX = (window.innerWidth <= 700) ? 0.22 : 0.5;
-        const PREVIEW_SCALE = (window.innerWidth <= 700) ? 0.78 : 0.62; // shrink more on desktop
-        const PREVIEW_SHIFT_Y = (window.innerWidth <= 700) ? -0.02 : -0.06;
-        const syncPreviewUiClasses = ()=>{
-          if (!info) return;
-          info.classList.toggle('is-photo-ready', planesReady);
-          info.classList.toggle('is-cards-out', planesTargetOut);
-        };
-        const setPlanesReady = (v)=>{
-          planesReady = !!v;
-          syncPreviewUiClasses();
-        };
-        const setFrontCard = (cardEl)=>{
-          if (!photoStack) return;
-          const cards = photoStack.querySelectorAll('.product-photo-card');
-          cards.forEach((c)=>c.classList.remove('is-front'));
-          if (cardEl) cardEl.classList.add('is-front');
-        };
-        const togglePlanesOut = ()=>{
-          if (!planesReady) return;
-          planesTargetOut = !planesTargetOut;
-          syncPreviewUiClasses();
-          if (planesTargetOut){
-            // Default to the center card when fanning out.
-            const main = photoStack && photoStack.querySelector('.product-photo-card.card-main');
-            setFrontCard(main);
-          } else {
-            setFrontCard(null);
-          }
-        };
-        if (info){
-          // Click again to retract the preview planes.
-          // Ignore clicks on buttons/links so Add Cart and checkout keep working.
-          info.addEventListener('click', (e)=>{
-            const target = e && e.target;
-            if (!target) return;
-            if (target.closest && (target.closest('button') || target.closest('a'))) return;
-            const clickedCard = target.closest && target.closest('.product-photo-card');
-            if (clickedCard){
-              // First click fans out + brings clicked card forward.
-              // Second click collapses back to a single center card.
-              if (planesTargetOut){
-                planesTargetOut = false;
-                syncPreviewUiClasses();
-                setFrontCard(null);
-                return;
-              }
-              planesTargetOut = true;
-              syncPreviewUiClasses();
-              setFrontCard(clickedCard);
-              return;
-            }
-            togglePlanesOut();
-          });
-        }
-
-        // 3D preview planes (the three picture cards that slide out from the opened case).
-        let previewPlanesInitialized = false;
-        let previewGroup = null;
-        let previewMeshes = [];
-        let previewProgress = 0; // 0..1 (retracted -> out)
-
-        const USE_3D_PREVIEW = false;
-
-        // Requested sizes in cm (Three.js units are assumed meters: 1 unit = 1m).
-        const PREVIEW_PLANE_W = 0.045; // 4.5cm
-        const PREVIEW_PLANE_L = 0.08;  // 8cm
-
-        const PREVIEW_SPREAD_X = 0.09;  // horizontal spacing between three planes
-        const PREVIEW_BASE_Y = 0.0;     // vertical position inside the case
-        const PREVIEW_IN_Z = 0.0;       // retracted position (local to case)
-        const PREVIEW_OUT_Z = 0.62;     // extended position (local to case)
-
-        function syncPreviewPlanesToProgress(){
-          if (!previewGroup || !previewMeshes.length) return;
-          previewGroup.position.z = PREVIEW_IN_Z + (PREVIEW_OUT_Z - PREVIEW_IN_Z) * previewProgress;
-          const opacity = Math.max(0, Math.min(1, previewProgress));
-          previewMeshes.forEach((m)=>{ if (m && m.material) m.material.opacity = opacity; });
-        }
-
-        async function initPreviewPlanesIfNeeded(){
-          if (previewPlanesInitialized) return;
-          if (!modelState || !modelRoot) return;
-          previewPlanesInitialized = true;
-
-          const loader = new THREE.TextureLoader();
-          const loadTexture = (url)=>new Promise((resolve)=>{
-            loader.load(url, (tex)=>{
-              tex.colorSpace = THREE.SRGBColorSpace;
-              tex.flipY = false;
-              tex.wrapS = THREE.ClampToEdgeWrapping;
-              tex.wrapT = THREE.ClampToEdgeWrapping;
-              tex.anisotropy = Math.min(8, renderer && renderer.capabilities ? renderer.capabilities.getMaxAnisotropy() : 1);
-              resolve(tex);
-            }, undefined, ()=>{
-              resolve(null);
-            });
-          });
-
-          const [texLeft, texMain, texRight] = await Promise.all([
-            loadTexture('./shop-assets/card-1.png'),
-            loadTexture('./shop-assets/card-2.png'),
-            loadTexture('./shop-assets/card-3.png')
-          ]);
-
-          const geometry = new THREE.PlaneGeometry(PREVIEW_PLANE_W, PREVIEW_PLANE_L);
-          const makeMat = (tex)=>new THREE.MeshBasicMaterial({
-            map: tex || null,
-            color: 0xffffff,
-            transparent: true,
-            opacity: 0,
-            side: THREE.DoubleSide,
-            toneMapped: false
-          });
-
-          previewGroup = new THREE.Group();
-          const anchor = (modelState && modelState.caseNode) ? modelState.caseNode : modelRoot;
-          anchor.add(previewGroup);
-          previewGroup.position.set(0, PREVIEW_BASE_Y, PREVIEW_IN_Z);
-
-          const x = PREVIEW_SPREAD_X;
-          const planes = [
-            { tex: texLeft,  x: -x, rotY: -0.08, y: 0.00 },
-            { tex: texMain,  x:  0, rotY:  0.00, y: 0.00 },
-            { tex: texRight, x:  x, rotY:  0.08, y: 0.00 },
-          ];
-
-          planes.forEach((p)=>{
-            const mesh = new THREE.Mesh(geometry, makeMat(p.tex));
-            mesh.position.set(p.x, p.y, 0);
-            // Keep the plane readable from the camera (double-sided, so rotation is mostly for styling).
-            mesh.rotation.x = 0;
-            mesh.rotation.y = p.rotY;
-            previewGroup.add(mesh);
-            previewMeshes.push(mesh);
-          });
-
-          // If we already decided to show them out before textures finished, apply immediately.
-          previewProgress = planesTargetOut ? 1 : 0;
-          syncPreviewPlanesToProgress();
-        }
         function stopGridFlash(){
           if (gridFlashTimer){
             clearTimeout(gridFlashTimer);
@@ -1363,20 +1122,9 @@
           root.updateWorldMatrix(true, true);
           focusControlsOnMeshes(root, parts);
 
-          // Cache model transform so we can shift+shrink on preview and restore later.
-          modelBaseX = root.position.x;
-          modelBaseY = root.position.y;
-          modelBaseZ = root.position.z;
-          modelBaseScale = root.scale.x || 1;
-          cameraOffset = camera.position.clone().sub(controls.target.clone());
-
           modelRoot = root;
           scene.add(root);
           motionState.initialized = false;
-          // Optional: 3D preview planes (disabled by default to keep DOM preview clean).
-          if (USE_3D_PREVIEW){
-            initPreviewPlanesIfNeeded();
-          }
         };
 
         (async ()=>{
@@ -1407,9 +1155,6 @@
             const p1 = meshListOf(caseGltf.scene).concat(meshListOf(bodyGltf.scene));
             const p2 = meshListOf(panelGltf.scene);
             const p3 = meshListOf(part3Gltf.scene);
-            // Make sure case/panel meshes have UVs so the silver textures display nicely.
-            p1.forEach(ensureUvForMesh);
-            p2.forEach(ensureUvForMesh);
             const used = new Set([].concat(p1, p2, p3));
             const all = meshListOf(root);
             const parts = { '1':p1, '2':p2, '3':p3, other: all.filter((m)=>!used.has(m)) };
@@ -1438,30 +1183,9 @@
           hoverTopLightL.intensity = active ? 3.4 : 0;
           hoverTopLightR.intensity = active ? 3.4 : 0;
           hoverAreaWash.material.opacity = 0.0;
-          if (!active){
-            autoOutLatch = false;
-            // Cancel the background preview and restore model.
-            bgPreviewEnabled = false;
-            bgPreviewProgress = 0;
-            if (stage){
-              stage.classList.remove('is-bg-preview');
-            }
-            setPreviewBgIndex(1);
-            if (modelRoot){
-              modelRoot.position.set(modelBaseX, modelBaseY, modelBaseZ);
-              modelRoot.scale.setScalar(modelBaseScale);
-              stageGlow.position.x = modelBaseX;
-              hoverAreaWash.position.x = modelBaseX;
-            controls.target.copy(modelRoot.position);
-            controls.update();
-              modelRoot.updateWorldMatrix(true, true);
-            }
-          }
         }
 
         function checkProximity(clientX, clientY){
-          // While dragging the preview background, don't cancel the hover/open state.
-          if (bgPreviewEnabled && bgDragActive) return;
           const r = shell.getBoundingClientRect();
           const cx = r.left + r.width/2;
           const cy = r.top + r.height/2;
@@ -1482,28 +1206,6 @@
         info.classList.add('is-active');
         shell.addEventListener('pointermove', (e)=>checkProximity(e.clientX, e.clientY));
         stage.addEventListener('pointermove', (e)=>checkProximity(e.clientX, e.clientY));
-        stage.addEventListener('pointerdown', (e)=>{
-          if (!bgPreviewEnabled) return;
-          const target = e && e.target;
-          if (target && target.closest && (target.closest('#viewer-shell') || target.closest('#box-viewer'))) return;
-          bgDragActive = true;
-          bgDragStartX = e.clientX;
-          bgDragStartIndex = bgIndex;
-          try{ stage.setPointerCapture && stage.setPointerCapture(e.pointerId); } catch(err){}
-        });
-        stage.addEventListener('pointermove', (e)=>{
-          if (!bgDragActive) return;
-          const rect = stage.getBoundingClientRect();
-          const deltaNorm = (e.clientX - bgDragStartX) / Math.max(1, rect.width / 2);
-          const next = bgDragStartIndex + Math.round(deltaNorm);
-          setPreviewBgIndex(next);
-        });
-        const endBgDrag = ()=>{
-          bgDragActive = false;
-          try{ stage.releasePointerCapture && stage.releasePointerCapture(); } catch(err){}
-        };
-        stage.addEventListener('pointerup', endBgDrag);
-        stage.addEventListener('pointercancel', endBgDrag);
         shell.addEventListener('pointerleave', ()=>{
           setActive(false);
           shell.classList.remove('is-info-hover');
@@ -1568,15 +1270,6 @@
           }
           const target = active ? 1 : 0;
           motionState.progress += (target - motionState.progress) * 0.08;
-          // After the opening motion finishes, start the "background picture + shift+shrink model" preview.
-          if (target === 1 && modelState.caseNode && motionState.progress >= 0.8){
-            if (!autoOutLatch){
-              bgPreviewEnabled = true;
-              if (stage) stage.classList.add('is-bg-preview');
-              setPreviewBgIndex(1);
-              autoOutLatch = true;
-            }
-          }
           if (modelState.part3Node){
             // Step 1: X-led slide, reversed direction.
             modelState.part3Node.position.x = motionState.part3BaseX + (motionState.part3SlideX * motionState.progress);
@@ -1604,36 +1297,6 @@
             modelState.caseNode.position.x = motionState.caseBaseX + offset.x;
             modelState.caseNode.position.y = motionState.caseBaseY + offset.y + (motionState.caseLiftY * motionState.progress);
             modelState.caseNode.position.z = motionState.caseBaseZ + offset.z;
-          }
-
-          if (USE_3D_PREVIEW){
-            // Slide the three preview planes in/out from the opened case.
-            const planesTarget = (planesTargetOut && modelState && modelState.caseVisible) ? 1 : 0;
-            previewProgress += (planesTarget - previewProgress) * 0.08;
-            syncPreviewPlanesToProgress();
-          }
-
-          // Background-preview transform: shift right + shrink.
-          const previewTarget = bgPreviewEnabled ? 1 : 0;
-          bgPreviewProgress += (previewTarget - bgPreviewProgress) * 0.08;
-          if (modelRoot){
-            const indexOffset = bgIndex - 1; // -1 left / 0 center / +1 right
-            const nextX = modelBaseX + bgPreviewProgress * (PREVIEW_SHIFT_X + indexOffset * PREVIEW_SHIFT_PER_INDEX);
-            const nextY = modelBaseY + PREVIEW_SHIFT_Y * bgPreviewProgress;
-            const nextScale = modelBaseScale * (1 - (1 - PREVIEW_SCALE) * bgPreviewProgress);
-            modelRoot.position.set(nextX, nextY, modelBaseZ);
-            modelRoot.scale.setScalar(nextScale);
-
-            // Keep stage glow + hover wash aligned with the moving model.
-            stageGlow.position.x = nextX;
-            hoverAreaWash.position.x = nextX;
-
-            hoverTopLightL.target.position.x = nextX;
-            hoverTopLightR.target.position.x = nextX;
-
-            // Keep orbit target on the moving model (doesn't lock camera position).
-            controls.target.copy(modelRoot.position);
-            modelRoot.updateWorldMatrix(true, true);
           }
           controls.update();
           renderer.render(scene, camera);
