@@ -43,7 +43,7 @@
         pointer-events:none;
         background:transparent;
         /* Moves the 3D layer on screen; changing ballYOffset alone keeps the same view (camera follows target). */
-        transform:translateY(22vh);
+        transform:translateY(30vh);
       }
       #ball-wrap canvas{
         pointer-events:auto;
@@ -225,7 +225,7 @@
 
         const ballRadius = 1.48;
         // World height of ball center (orbit target). Camera uses lookLift so changing only this used to cancel on-screen; lookLift sets vertical framing.
-        const ballYOffset = -3.55;
+        const ballYOffset = -4.12;
 
         const group = new THREE.Group();
         scene.add(group);
@@ -236,13 +236,13 @@
         group.add(orientGroup);
         orientGroup.add(spinGroup);
 
-        const lookLift = 1.55; // camera above orbit target → ball lower in the canvas
+        const lookLift = 1.78; // camera above orbit target → ball lower in the canvas
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 50);
         const nextOrbitTarget = new THREE.Vector3();
         nextOrbitTarget.copy(group.position);
         camera.position.set(
           group.position.x,
-          group.position.y + lookLift + 0.52,
+          group.position.y + lookLift + 0.56,
           group.position.z + 2.48
         );
 
