@@ -278,14 +278,18 @@
         pointer-events:none;
       }
       .product-photo-stack{
-        width:100%;
-        margin-top:12px;
-        position:relative;
+        position:absolute;
+        left:14px;
+        right:14px;
+        top:92px;
+        margin-top:0;
+        width:auto;
         aspect-ratio: 16 / 10;
         opacity:0;
-        transform: translateY(10px);
-        transition: opacity .26s ease, transform .42s cubic-bezier(.2,.9,.2,1);
+        transform:none;
+        transition:none;
         pointer-events:none;
+        z-index:2;
       }
       .product-body.is-photo-ready .product-photo-stack{
         opacity:0;
@@ -721,9 +725,9 @@
         const PREVIEW_PLANE_L = 0.08;  // 8cm
 
         const PREVIEW_SPREAD_X = 0.06;  // horizontal spacing between three planes
-        const PREVIEW_BASE_Y = 0.02;    // vertical position inside the case
-        const PREVIEW_IN_Z = -0.01;     // retracted position (local to case)
-        const PREVIEW_OUT_Z = -0.22;    // extended position (local to case)
+        const PREVIEW_BASE_Y = 0.04;    // vertical position inside the case
+        const PREVIEW_IN_Z = 0.02;      // retracted position (local to case)
+        const PREVIEW_OUT_Z = 0.22;     // extended position (local to case)
 
         function syncPreviewPlanesToProgress(){
           if (!previewGroup || !previewMeshes.length) return;
@@ -781,6 +785,8 @@
           planes.forEach((p)=>{
             const mesh = new THREE.Mesh(geometry, makeMat(p.tex));
             mesh.position.set(p.x, p.y, 0);
+            // Rotate so the plane faces outward from the case opening.
+            mesh.rotation.x = -Math.PI / 2;
             mesh.rotation.y = p.rotY;
             previewGroup.add(mesh);
             previewMeshes.push(mesh);
