@@ -83,9 +83,9 @@
       .stage{
         width:min(980px, 100%);
         min-height:640px;
-        background:#f1f2f4;
+        background:#f3f3f3;
         border-radius:24px;
-        border:1px solid #d5d8e0;
+        border:none;
         position:relative;
         overflow:hidden;
         z-index:1;
@@ -112,7 +112,7 @@
         top:24px;
         right:24px;
         z-index:4;
-        border:1px solid var(--c2);
+        border:none;
         border-radius:10px;
         background:var(--c5);
         color:#f4f6ff;
@@ -123,11 +123,10 @@
         text-decoration:none;
       }
       .home-btn:hover{
-        border-color:var(--c4);
+        background:#1f2be6;
       }
       .home-btn:active,
       .home-btn:focus-visible{
-        border-color:var(--c7);
         background:#2632ff;
       }
       h1{
@@ -176,7 +175,6 @@
         opacity:0;
         transition: transform 440ms cubic-bezier(.2,.9,.2,1), opacity 280ms ease;
         background: rgba(255,255,255,.9);
-        border:1px solid var(--c5);
         border-radius:14px;
         padding:12px 14px 14px;
         z-index:3;
@@ -202,7 +200,6 @@
         margin-top:6px;
         padding:4px 10px;
         border-radius:999px;
-        border:1px solid var(--c5);
         background:rgba(26, 38, 255, 0.1);
         color:var(--c5);
         font-size:10px;
@@ -268,7 +265,7 @@
         gap:8px;
       }
       .product-actions button{
-        border:1px solid var(--c5);
+        border:none;
         border-radius:10px;
         background:var(--c1);
         color:#ffffff;
@@ -279,15 +276,13 @@
         cursor:pointer;
       }
       .product-actions button:hover{
-        border-color:var(--c2);
+        background:#2a2a2a;
       }
       #add-cart-btn{
         background:var(--c3);
-        border-color:var(--c3);
         color:#ffffff;
       }
       #add-cart-btn:hover{
-        border-color:var(--c6);
         background:var(--c6);
       }
       .cart-sheet{
@@ -317,7 +312,7 @@
         width:min(390px, 100vw);
         height:100%;
         background:linear-gradient(165deg, #ffffff 0%, #f2f4f8 100%);
-        border-left:1px solid var(--c5);
+        border-left:none;
         box-shadow:-16px 0 32px rgba(0,0,0,.28);
         transform:translateX(100%);
         transition:transform .28s cubic-bezier(.2,.9,.2,1);
@@ -329,7 +324,7 @@
       }
       .cart-head{
         padding:18px 16px 12px;
-        border-bottom:1px solid rgba(26,38,255,.28);
+        border-bottom:none;
       }
       .cart-head h3{
         margin:0 0 4px;
@@ -347,7 +342,6 @@
       }
       .cart-summary{
         border-radius:12px;
-        border:1px solid rgba(26,38,255,.28);
         background:rgba(26,38,255,.06);
         padding:10px 12px;
       }
@@ -377,11 +371,11 @@
         line-height:1.5;
         color:#3f4553;
         background:rgba(109,255,105,.12);
-        border:1px solid rgba(109,255,105,.46);
+        border:none;
       }
       .cart-foot{
         padding:12px 18px 16px;
-        border-top:1px solid rgba(26,38,255,.28);
+        border-top:none;
         flex-shrink:0;
         background:rgba(255,255,255,.64);
       }
@@ -392,7 +386,7 @@
         gap:8px;
       }
       .checkout-actions button{
-        border:1px solid var(--c5);
+        border:none;
         border-radius:10px;
         background:var(--c1);
         color:#ffffff;
@@ -401,17 +395,15 @@
         font-weight:700;
         letter-spacing:.04em;
         cursor:pointer;
-        transition:transform .12s ease, border-color .15s ease, background .15s ease;
+        transition:transform .12s ease, background .15s ease;
       }
       .checkout-actions button:active{ transform:scale(.98); }
       .checkout-actions .go{
-        border-color:var(--c6);
         background:linear-gradient(180deg, var(--c6), var(--c3));
         color:#ffffff;
         box-shadow:0 6px 18px rgba(255,70,34,.25);
       }
       .checkout-actions .go:hover{
-        border-color:var(--c7);
       }
       .hint{
         position:absolute;
@@ -471,7 +463,7 @@
                 <div class="edition-tag" id="edition-tag">LIMITED CARTRIDGE EDITION</div>
               </div>
             </div>
-            <div class="product-price" id="product-price">$114 USD</div>
+            <div class="product-price" id="product-price">NT$3600 <span class="currency-unit twd">TWD</span></div>
           </div>
           <p class="product-meta" id="product-meta">3D-printed with a vintage GBA cartridge (1 of 25),<br>featuring a one-to-multi cable charm.</p>
           <div class="product-actions">
@@ -494,11 +486,7 @@
         const isZh = lang === 'zh';
         const t = (en, zh)=> isZh ? zh : en;
         const PRICE_TWD = 3600;
-        const TWD_PER_USD = 31.5; // NT$ per US$ for display only; ECPay charge uses PRICE_TWD
-        const priceUsdRounded = Math.round(PRICE_TWD / TWD_PER_USD);
-        const displayAmount = isZh ? `$${PRICE_TWD}` : `$${priceUsdRounded}`;
-        const displayUnit = isZh ? 'TWD' : 'USD';
-        const displayPrice = `${displayAmount} ${displayUnit}`;
+        const displayPrice = `NT$${PRICE_TWD} <span class="currency-unit twd">TWD</span>`;
         const PREVIEW_MODE = new URLSearchParams(window.location.search).has('preview');
         const ECPAY_PAYMENT_LINK = window.ECPAY_PAYMENT_LINK || 'https://p.ecpay.com.tw/D588FF7';
         const ECPAY_CREATE_ORDER_API = '/api/ecpay/create-order';
@@ -590,7 +578,7 @@
         if (stageDesc) stageDesc.textContent = t('Clean stage preview. Move cursor near model.', '商品展示區。將游標移到模型附近可查看光效。');
         if (hintEl) hintEl.textContent = t('Hover near the model', '將游標移到模型附近');
         if (addCartBtnEl) addCartBtnEl.textContent = t('Add Cart', '加入購物車');
-        if (productPrice) productPrice.innerHTML = `${displayAmount} <span class="currency-unit${isZh ? ' twd' : ''}">${displayUnit}</span>`;
+        if (productPrice) productPrice.innerHTML = displayPrice;
         if (editionTag) editionTag.textContent = t('LIMITED CARTRIDGE EDITION', '限量卡匣特別版');
         if (productMeta) productMeta.innerHTML = t(
           '3D-printed with a vintage GBA cartridge (1 of 25),<br>featuring a one-to-multi cable charm.',
@@ -828,14 +816,45 @@
           controls.update();
         }
 
-        const silverMat = new THREE.MeshPhysicalMaterial({
+        const silverCaseMat = new THREE.MeshPhysicalMaterial({
           color: '#eef3ff',
           metalness: 0.94,
-          roughness: 0.12,
-          clearcoat: 0.82,
-          clearcoatRoughness: 0.06,
-          envMapIntensity: 1.62
+          roughness: 0.10,
+          clearcoat: 0.86,
+          clearcoatRoughness: 0.05,
+          envMapIntensity: 1.7
         });
+        const silverPanelMat = new THREE.MeshPhysicalMaterial({
+          color: '#f0f5ff',
+          metalness: 0.92,
+          roughness: 0.14,
+          clearcoat: 0.84,
+          clearcoatRoughness: 0.08,
+          envMapIntensity: 1.55
+        });
+
+        // Use your silver reference images for case/panel surfaces.
+        // Absolute `file://` URLs keep it working when the page is opened locally.
+        const silverCaseTexUrl = 'file:///Users/matt/.cursor/projects/Users-matt-Downloads-sketch2695852/assets/___2026-03-25___3.00.00-4ff9e11d-263b-4c44-b81d-c84809983f82.png';
+        const silverPanelTexUrl = 'file:///Users/matt/.cursor/projects/Users-matt-Downloads-sketch2695852/assets/___2026-03-25___3.00.43-de2d1e9d-96fc-4235-bcc7-ce1a150958ef.png';
+        const silverTexLoader = new THREE.TextureLoader();
+        function applySilverTex(url, mat){
+          silverTexLoader.load(url, (tex)=>{
+            tex.colorSpace = THREE.SRGBColorSpace;
+            tex.flipY = false;
+            tex.wrapS = THREE.ClampToEdgeWrapping;
+            tex.wrapT = THREE.ClampToEdgeWrapping;
+            tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+            mat.map = tex;
+            mat.needsUpdate = true;
+          }, undefined, ()=>{
+            // Fall back to solid silver if the local texture can't be loaded.
+            mat.map = null;
+            mat.needsUpdate = true;
+          });
+        }
+        applySilverTex(silverCaseTexUrl, silverCaseMat);
+        applySilverTex(silverPanelTexUrl, silverPanelMat);
         function boostStickerImage(image){
           const cv = document.createElement('canvas');
           cv.width = image.width || 1024;
@@ -990,10 +1009,10 @@
         function applyShopParts(){
           if (!modelState.parts) return;
           const parts = modelState.parts;
-          parts['1'].forEach((m)=>{ m.material = silverMat; m.visible = modelState.caseVisible; });
-          parts['2'].forEach((m)=>{ m.material = silverMat; m.visible = true; });
+          parts['1'].forEach((m)=>{ m.material = silverCaseMat; m.visible = modelState.caseVisible; });
+          parts['2'].forEach((m)=>{ m.material = silverPanelMat; m.visible = true; });
           parts['3'].forEach((m)=>{ m.material = blackMat; m.visible = modelState.showPart3; });
-          parts.other.forEach((m)=>{ m.material = silverMat; m.visible = true; });
+          parts.other.forEach((m)=>{ m.material = silverCaseMat; m.visible = true; });
           if (modelState.cartridgeMeshes && modelState.cartridgeMeshes.length){
             modelState.cartridgeMeshes.forEach((m)=>{ m.material = cartridgeDarkMat; m.visible = true; });
           }
@@ -1123,6 +1142,9 @@
             const p1 = meshListOf(caseGltf.scene).concat(meshListOf(bodyGltf.scene));
             const p2 = meshListOf(panelGltf.scene);
             const p3 = meshListOf(part3Gltf.scene);
+            // Make sure case/panel meshes have UVs so the silver textures display nicely.
+            p1.forEach(ensureUvForMesh);
+            p2.forEach(ensureUvForMesh);
             const used = new Set([].concat(p1, p2, p3));
             const all = meshListOf(root);
             const parts = { '1':p1, '2':p2, '3':p3, other: all.filter((m)=>!used.has(m)) };
