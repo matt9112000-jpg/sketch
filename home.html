@@ -118,6 +118,39 @@
         border-bottom-color:var(--accent);
       }
 
+      #preview-panel{
+        position:fixed;
+        left:50%;
+        top:44%;
+        transform:translate(-50%, -50%);
+        width:min(960px, 92vw);
+        height:min(600px, 62vh);
+        z-index:5;
+        pointer-events:none;
+        background:transparent;
+        opacity:0;
+        transition:opacity .22s ease;
+        overflow:hidden;
+        -webkit-mask-image:radial-gradient(ellipse 80% 78% at 50% 46%,#000 48%,#000 74%,transparent 100%);
+        mask-image:radial-gradient(ellipse 80% 78% at 50% 46%,#000 48%,#000 74%,transparent 100%);
+        -webkit-mask-repeat:no-repeat;
+        mask-repeat:no-repeat;
+        -webkit-mask-size:100% 100%;
+        mask-size:100% 100%;
+      }
+      #preview-panel.is-active{
+        opacity:1;
+      }
+      #preview-frame{
+        position:absolute;
+        inset:0;
+        width:100%;
+        height:100%;
+        border:0;
+        background:#fff;
+        pointer-events:none;
+      }
+
       #ball{
         width:100%;
         height:100%;
@@ -146,7 +179,9 @@
     <script>
       (function(){
         const wrap = document.getElementById('ball');
-        if (!wrap) return;
+        const previewPanel = document.getElementById('preview-panel');
+        const previewFrame = document.getElementById('preview-frame');
+        if (!wrap || !previewPanel || !previewFrame) return;
 
         const shopBtn = document.getElementById('shop-btn');
         const contactBtn = document.getElementById('contact-btn');
@@ -176,8 +211,13 @@
         wrap.appendChild(renderer.domElement);
 
         const scene = new THREE.Scene();
+        const DISCO_TILES_U = 12;
+        const DISCO_TILES_V = 6;
+        const TAG_FACET_IU = 9;
+        const TAG_FACET_IV = 2;
+
         const ballRadius = 1.14;
-        const ballYOffset = -1.08; // ~50% lower than prior (-0.72)
+        const ballYOffset = -1.512; // 40% lower than -1.08
 
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 50);
         camera.position.set(0, ballYOffset + 0.12, 2.92);
@@ -218,8 +258,8 @@
           const im = ctx.createImageData(size, size);
           const d = im.data;
 
-          const tilesU = 12;
-          const tilesV = 6;
+          const tilesU = DISCO_TILES_U;
+          const tilesV = DISCO_TILES_V;
           const groutW = 0.055;
 
           for (let y = 0; y < size; y++){
@@ -288,20 +328,68 @@
         const ballMesh = new THREE.Mesh(sphereGeom, ballMat);
         group.add(ballMesh);
         group.position.y = ballYOffset;
-        group.rotation.y = Math.PI / 2;
+        group.rotation.x = Math.PI / 2;
 
-        const tagLocal = new THREE.Vector3(0.52, 0.78, 0.35).normalize().multiplyScalar(ballRadius * 1.015);
+        /** Facet center in mesh space — matches SphereGeometry vertex math (same as texture UV layout). */
+        function facetTileCenterLocal(iu, iv, tilesU, tilesV, radius){
+          const u = (iu + 0.5) / tilesU;
+          const v = (iv + 0.5) / tilesV;
+          const phi = u * Math.PI * 2;
+          const theta = v * Math.PI;
+          return new THREE.Vector3(
+            -Math.cos(phi) * Math.sin(theta),
+            Math.cos(theta),
+            Math.sin(phi) * Math.sin(theta)
+          ).multiplyScalar(radius * 1.012);
+        }
+        const tagLocal = facetTileCenterLocal(
+          TAG_FACET_IU, TAG_FACET_IV, DISCO_TILES_U, DISCO_TILES_V, ballRadius
+        );
         const tagWorld = new THREE.Vector3();
         const tagNDC = new THREE.Vector3();
         const groupCenter = new THREE.Vector3();
+        const vOut = new THREE.Vector3();
+        const vToCam = new THREE.Vector3();
+
+        let tagPreviewHover = false;
 
         function selfIntroHref(){
           return `./game.html?lang=${lang}`;
+        }
+        function selfIntroPreviewSrc(){
+          const u = new URL('./game.html', window.location.href);
+          u.searchParams.set('lang', lang);
+          u.searchParams.set('preview', '1');
+          return u.toString();
         }
         function updateFacetTagLink(){
           if (facetTagLink) facetTagLink.href = selfIntroHref();
         }
         updateFacetTagLink();
+
+        function setTagPreviewActive(on){
+          tagPreviewHover = on;
+          controls.autoRotate = !on;
+          if (on){
+            renderer.setClearColor(0xffffff, 0);
+            previewPanel.classList.add('is-active');
+            previewPanel.setAttribute('aria-hidden', 'false');
+            const src = selfIntroPreviewSrc();
+            if (previewFrame.getAttribute('src') !== src) previewFrame.src = src;
+          } else {
+            renderer.setClearColor(0xffffff, 1);
+            previewPanel.classList.remove('is-active');
+            previewPanel.setAttribute('aria-hidden', 'true');
+            previewFrame.src = 'about:blank';
+          }
+        }
+
+        if (facetTagLink){
+          facetTagLink.addEventListener('mouseenter', ()=> setTagPreviewActive(true));
+          facetTagLink.addEventListener('mouseleave', ()=> setTagPreviewActive(false));
+          facetTagLink.addEventListener('focusin', ()=> setTagPreviewActive(true));
+          facetTagLink.addEventListener('focusout', ()=> setTagPreviewActive(false));
+        }
 
         function tick(){
           controls.update();
@@ -314,9 +402,9 @@
             const px = rect.left + (tagNDC.x * 0.5 + 0.5) * rect.width;
             const py = rect.top + (-tagNDC.y * 0.5 + 0.5) * rect.height;
             group.getWorldPosition(groupCenter);
-            const outward = tagWorld.clone().sub(groupCenter).normalize();
-            const toCam = camera.position.clone().sub(tagWorld).normalize();
-            const facing = outward.dot(toCam) > 0.18;
+            vOut.copy(tagWorld).sub(groupCenter).normalize();
+            vToCam.copy(camera.position).sub(tagWorld).normalize();
+            const facing = vOut.dot(vToCam) > 0.18;
             const inView = facing &&
               tagNDC.z > -1 && tagNDC.z < 1 &&
               tagNDC.x > -0.92 && tagNDC.x < 0.92 &&
@@ -336,6 +424,10 @@
           localStorage.setItem('site_lang', lang);
           setLangLabel();
           updateFacetTagLink();
+          if (tagPreviewHover){
+            const src = selfIntroPreviewSrc();
+            if (previewFrame.getAttribute('src') !== src) previewFrame.src = src;
+          }
         }
 
         if (shopBtn){
