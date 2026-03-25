@@ -76,40 +76,29 @@
         text-transform:uppercase;
       }
 
+      /* Behind the WebGL layer (z-index); ball draws on top via transparent canvas clear. */
       #preview-panel{
         position:fixed;
         left:50%;
         top:44%;
         transform:translate(-50%, -50%);
-        width:min(920px, 90vw);
-        height:min(580px, 58vh);
+        width:min(960px, 92vw);
+        height:min(600px, 62vh);
         z-index:5;
-        background:rgba(255,255,255,.88);
+        background:transparent;
         border:none;
-        border-radius:18px;
+        border-radius:0;
         overflow:hidden;
-        opacity:0;
-        pointer-events:none;
-        transition:opacity .14s ease;
-        backdrop-filter: blur(12px);
-        box-shadow:
-          0 0 0 2px rgba(26,38,255,.16),
-          0 26px 80px rgba(0,0,0,.10);
-      }
-      #preview-panel.is-visible{
         opacity:1;
-        z-index:15; /* above WebGL canvas so iframe is never painted underneath */
-      }
-      #preview-panel::before{
-        content:'';
-        position:absolute;
-        inset:-26px;
-        background:
-          radial-gradient(circle at center, rgba(26,38,255,.22) 0%, rgba(26,38,255,0) 62%);
-        filter: blur(18px);
-        opacity:.9;
         pointer-events:none;
-        z-index:0;
+        box-shadow:none;
+        /* Feather edges into white page — no hard frame */
+        -webkit-mask-image:radial-gradient(ellipse 78% 76% at 50% 44%,#000 52%,#000 72%,transparent 100%);
+        mask-image:radial-gradient(ellipse 78% 76% at 50% 44%,#000 52%,#000 72%,transparent 100%);
+        -webkit-mask-repeat:no-repeat;
+        mask-repeat:no-repeat;
+        -webkit-mask-size:100% 100%;
+        mask-size:100% 100%;
       }
       #preview-frame{
         position:absolute;
@@ -133,12 +122,12 @@
       <div id="ball"></div>
     </div>
 
-    <div id="preview-panel" aria-label="Preview panel">
+    <div id="preview-panel" aria-label="Backdrop preview">
       <iframe id="preview-frame" title="Project preview" loading="lazy" src="about:blank"></iframe>
     </div>
 
     <div id="hud">
-      <div id="top-buttons" aria-label="Project buttons">
+      <div id="top-buttons" aria-label="Site navigation">
         <button class="hud-btn" type="button" id="shop-btn">SHOP</button>
         <button class="hud-btn" type="button" id="contact-btn">CONTACT</button>
         <button class="hud-btn" type="button" id="lang-btn">中文</button>
@@ -200,7 +189,7 @@
         key.position.set(-1.8, 2.1, 1.6);
         scene.add(key);
 
-        // Huge ball as a textured sphere (cube-like colors via procedural texture).
+        // Textured sphere (disco mirror tiles in equirectangular / sphere UV space).
         const group = new THREE.Group();
         scene.add(group);
 
@@ -213,8 +202,9 @@
         }
         const palRgb = palette.map(hexToRgb);
 
-        function createCubeTextureTexture(){
-          const size = 768;
+        /** Facet grid in standard sphere UV (matches SphereGeometry mapping). */
+        function createDiscoBallTexture(){
+          const size = 1024;
           const canvas = document.createElement('canvas');
           canvas.width = size;
           canvas.height = size;
@@ -222,207 +212,95 @@
           const im = ctx.createImageData(size, size);
           const d = im.data;
 
-          const gridScale = 15; // higher => more "cubes"
-          const edgeWidth = 0.085; // edge darkening width in cell-space
+          const tilesU = 32;
+          const tilesV = 16;
+          const groutW = 0.11;
 
           for (let y = 0; y < size; y++){
             const v = y / (size - 1);
-            const phi = v * Math.PI; // 0..PI
-            const sy = Math.cos(phi);
-            const sinPhi = Math.sin(phi);
-
             for (let x = 0; x < size; x++){
               const u = x / (size - 1);
-              const theta = u * Math.PI * 2; // 0..2PI
 
-              const sx = Math.cos(theta) * sinPhi;
-              const sz = Math.sin(theta) * sinPhi;
+              const tu = u * tilesU;
+              const tv = v * tilesV;
+              const iu = Math.floor(tu);
+              const iv = Math.floor(tv);
+              const fu = tu - iu;
+              const fv = tv - iv;
 
-              // Map direction components [-1..1] to cell-space [0..gridScale]
-              const tx = (sx * 0.5 + 0.5) * gridScale;
-              const ty = (sy * 0.5 + 0.5) * gridScale;
-              const tz = (sz * 0.5 + 0.5) * gridScale;
-
-              const ix = Math.floor(tx);
-              const iy = Math.floor(ty);
-              const iz = Math.floor(tz);
-
-              const cIdx = Math.abs((ix * 3 + iy * 5 + iz * 7) % paletteLen);
-
-              const fx = tx - ix;
-              const fy = ty - iy;
-              const fz = tz - iz;
-              const ex = Math.min(fx, 1 - fx);
-              const ey = Math.min(fy, 1 - fy);
-              const ez = Math.min(fz, 1 - fz);
-              const edge = Math.min(ex, ey, ez);
-
-              // Darken near cell edges for a cube-ish feel.
-              const tEdge = Math.min(1, edge / edgeWidth);
-              const shade = 0.62 + tEdge * 0.38;
-
-              const col = palRgb[cIdx];
+              const edge = Math.min(fu, 1 - fu, fv, 1 - fv);
               const i = (y * size + x) * 4;
-              d[i] = Math.round(col.r * shade);
-              d[i + 1] = Math.round(col.g * shade);
-              d[i + 2] = Math.round(col.b * shade);
+
+              if (edge < groutW){
+                const g = 18 + Math.round(edge / groutW * 40);
+                d[i] = g; d[i + 1] = g; d[i + 2] = g + 8; d[i + 3] = 255;
+                continue;
+              }
+
+              const seed = iu * 73 + iv * 179;
+              const cIdx = Math.abs(seed) % paletteLen;
+              const col = palRgb[cIdx];
+
+              const du = fu - 0.5;
+              const dv = fv - 0.5;
+              const dist = Math.sqrt(du * du + dv * dv);
+              const spec = Math.pow(Math.max(0, 1 - dist * 2.15), 2.8);
+              const facetShade = 0.55 + (1 - Math.min(1, dist * 1.9)) * 0.28;
+              const jitter = 0.92 + ((seed * 0.001) % 1) * 0.14;
+
+              let r = col.r * facetShade * jitter + spec * 220;
+              let g = col.g * facetShade * jitter + spec * 235;
+              let b = col.b * facetShade * jitter + spec * 255;
+
+              const rim = Math.min(fu, 1 - fu, fv, 1 - fv);
+              const rimDark = 0.88 + rim * 0.24;
+              r *= rimDark; g *= rimDark; b *= rimDark;
+
+              d[i] = Math.min(255, Math.round(r));
+              d[i + 1] = Math.min(255, Math.round(g));
+              d[i + 2] = Math.min(255, Math.round(b));
               d[i + 3] = 255;
             }
           }
 
           ctx.putImageData(im, 0, 0);
           const tex = new THREE.CanvasTexture(canvas);
-          tex.colorSpace = THREE.SRGBColorSpace;
+          if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
+          else tex.encoding = THREE.sRGBEncoding;
           tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
           return tex;
         }
 
-        const ballTexture = createCubeTextureTexture();
+        const ballTexture = createDiscoBallTexture();
         const ballMat = new THREE.MeshStandardMaterial({
           map: ballTexture,
-          roughness: 0.78,
-          metalness: 0.06
+          roughness: 0.22,
+          metalness: 0.78
         });
         const ballMesh = new THREE.Mesh(sphereGeom, ballMat);
         group.add(ballMesh);
         group.position.y = ballYOffset;
 
-        // Interactive project cubes (separate meshes so raycasting works).
-        const markerSize = 0.056;
-        const markerGeom = new THREE.BoxGeometry(markerSize, markerSize, markerSize);
-        const interactive = [];
-        let selfMarker = null;
-        let shopMarker = null;
-        let contactMarker = null;
-        const markerPositions = [
-          { // self introduction
-            x: 0.0,
-            y: ballRadius * 1.03,
-            z: 0.0,
-            url: `./game.html?lang=${lang}`
-          },
-          { // shop
-            x: ballRadius * 0.90,
-            y: -ballRadius * 0.14,
-            z: ballRadius * 0.68,
-            url: `./shop.html?lang=${lang}`
-          },
-          { // contact
-            x: -ballRadius * 0.80,
-            y: ballRadius * 0.10,
-            z: ballRadius * 0.92,
-            url: `./contact-preview.html?lang=${lang}`
-          }
-        ];
-
-        function addMarker(p, colorIndex){
-          const mat = new THREE.MeshStandardMaterial({
-            color: palette[colorIndex % paletteLen],
-            roughness: 0.25,
-            metalness: 0.05,
-            emissive: palette[colorIndex % paletteLen],
-            emissiveIntensity: 0.25
-          });
-          const mesh = new THREE.Mesh(markerGeom, mat);
-          mesh.position.set(p.x, p.y, p.z);
-          mesh.userData = { url: p.url, isMarker:true };
-          group.add(mesh);
-          interactive.push(mesh);
-          return mesh;
+        function setBackdropPreviewSrc(){
+          const u = new URL('./shop.html', window.location.href);
+          u.searchParams.set('lang', lang);
+          u.searchParams.set('preview', '1');
+          const next = u.toString();
+          if (previewFrame.getAttribute('src') !== next) previewFrame.src = next;
         }
-
-        selfMarker = addMarker(markerPositions[0], 2);
-        shopMarker = addMarker(markerPositions[1], 4);
-        contactMarker = addMarker(markerPositions[2], 6);
-
-        const raycaster = new THREE.Raycaster();
-        const pointer = new THREE.Vector2(-10, -10);
-        let hovered = null;
-
-        const PREVIEW_PARAM = 'preview=1';
-        function withPreview(url){
-          try {
-            const u = new URL(url, window.location.href);
-            if (!u.searchParams.get('preview')) u.searchParams.set('preview', '1');
-            return u.toString();
-          } catch {
-            if (url.includes('?')) return url + '&' + PREVIEW_PARAM;
-            return url + '?' + PREVIEW_PARAM;
-          }
-        }
-
-        let pendingHide = null;
-        function showPreview(url){
-          const src = withPreview(url);
-          if (previewFrame.getAttribute('src') !== src){
-            previewFrame.src = src;
-          }
-          previewPanel.classList.add('is-visible');
-        }
-        function hidePreview(){
-          previewPanel.classList.remove('is-visible');
-          previewFrame.src = 'about:blank';
-        }
-
-        function onPointerMove(ev){
-          const rect = renderer.domElement.getBoundingClientRect();
-          const x = (ev.clientX - rect.left) / rect.width;
-          const y = (ev.clientY - rect.top) / rect.height;
-          pointer.x = x * 2 - 1;
-          pointer.y = -(y * 2 - 1);
-        }
+        setBackdropPreviewSrc();
 
         function tick(){
-          raycaster.setFromCamera(pointer, camera);
-          const hits = raycaster.intersectObjects(interactive, false);
-          const hit = hits[0] ? hits[0].object : null;
-
-          if (hit !== hovered){
-            // reset previous
-            if (hovered){
-              hovered.scale.set(1,1,1);
-              if (hovered.material && hovered.material.emissive){
-                hovered.material.emissiveIntensity = 0.25;
-              }
-            }
-
-            hovered = hit;
-            if (hovered){
-              // small "pop"
-              hovered.scale.set(1.08, 1.08, 1.08);
-              if (hovered.material && hovered.material.emissive){
-                hovered.material.emissiveIntensity = 0.55;
-              }
-              if (pendingHide) clearTimeout(pendingHide);
-              pendingHide = null;
-              showPreview(hovered.userData.url);
-            } else {
-              pendingHide = setTimeout(()=>hidePreview(), 120);
-            }
-          }
-
           controls.update();
           renderer.render(scene, camera);
           requestAnimationFrame(tick);
         }
 
-        renderer.domElement.addEventListener('pointermove', onPointerMove, { passive:true });
-        renderer.domElement.addEventListener('pointerleave', ()=>{
-          pointer.x = -10; pointer.y = -10;
-        });
-
         function setLang(nextLang){
           lang = nextLang;
           localStorage.setItem('site_lang', lang);
           setLangLabel();
-          if (selfMarker) selfMarker.userData.url = `./game.html?lang=${lang}`;
-          if (shopMarker) shopMarker.userData.url = `./shop.html?lang=${lang}`;
-          if (contactMarker) contactMarker.userData.url = `./contact-preview.html?lang=${lang}`;
-
-          // If a marker is currently hovered, update the preview in-place.
-          if (hovered && hovered.userData && hovered.userData.url){
-            showPreview(hovered.userData.url);
-          }
+          setBackdropPreviewSrc();
         }
 
         if (shopBtn){
