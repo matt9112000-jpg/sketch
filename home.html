@@ -222,21 +222,32 @@
         const TAG_FACET_IV = 2;
 
         const ballRadius = 1.14;
-        const ballYOffset = -1.52; // world position (low)
+        const ballYOffset = -1.52; // edit group.position to move ball; orbit follows each frame
 
+        const group = new THREE.Group();
+        scene.add(group);
+        group.position.set(0, ballYOffset, 0);
+
+        const lookLift = 0.52; // orbit target above ball center → ball toward bottom of frame
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 50);
-        const lookLift = 0.52; // orbit target above ball center → ball sits toward bottom of window
-        camera.position.set(0, ballYOffset + lookLift + 0.38, 2.88);
+        const nextOrbitTarget = new THREE.Vector3();
+        nextOrbitTarget.set(
+          group.position.x,
+          group.position.y + lookLift,
+          group.position.z
+        );
+        camera.position.set(
+          nextOrbitTarget.x,
+          nextOrbitTarget.y + 0.38,
+          nextOrbitTarget.z + 2.88
+        );
 
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enablePan = false;      // orbit only
         controls.enableZoom = false;     // keep position (no dolly)
-        controls.autoRotate = false;     // spin is group.rotation.z
-        controls.target.set(0, ballYOffset + lookLift, 0);
+        controls.autoRotate = false;     // spin is group.rotation.y
+        controls.target.copy(nextOrbitTarget);
         controls.update();
-
-        const group = new THREE.Group();
-        scene.add(group);
 
         const sphereGeom = new THREE.SphereGeometry(ballRadius, 96, 64);
 
@@ -259,7 +270,7 @@
 
           const tilesU = DISCO_TILES_U;
           const tilesV = DISCO_TILES_V;
-          const groutW = 0.055;
+          const groutW = 0.028;
 
           for (let y = 0; y < size; y++){
             const v = y / (size - 1);
@@ -311,11 +322,22 @@
         const ballMat = new THREE.MeshBasicMaterial({ map: ballTexture });
         const ballMesh = new THREE.Mesh(sphereGeom, ballMat);
         group.add(ballMesh);
-        group.position.y = ballYOffset;
 
         const spinRadPerSec = 0.16;
-        let ballSpinZ = Math.PI / 2;
+        let ballSpinY = 0;
         let lastSpinT = performance.now();
+
+        function syncOrbitToBall(){
+          nextOrbitTarget.set(
+            group.position.x,
+            group.position.y + lookLift,
+            group.position.z
+          );
+          camera.position.x += nextOrbitTarget.x - controls.target.x;
+          camera.position.y += nextOrbitTarget.y - controls.target.y;
+          camera.position.z += nextOrbitTarget.z - controls.target.z;
+          controls.target.copy(nextOrbitTarget);
+        }
 
         /** Facet center in mesh space — matches SphereGeometry vertex math (same as texture UV layout). */
         function facetTileCenterLocal(iu, iv, tilesU, tilesV, radius){
@@ -381,9 +403,10 @@
           const now = performance.now();
           const dt = Math.min(0.05, (now - lastSpinT) / 1000);
           lastSpinT = now;
-          if (!tagPreviewHover) ballSpinZ += dt * spinRadPerSec;
-          group.rotation.z = ballSpinZ;
+          if (!tagPreviewHover) ballSpinY += dt * spinRadPerSec;
+          group.rotation.y = ballSpinY;
 
+          syncOrbitToBall();
           controls.update();
 
           if (facetTag && facetTagLink){
