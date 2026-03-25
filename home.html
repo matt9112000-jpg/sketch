@@ -228,7 +228,7 @@
         scene.add(group);
         group.position.set(0, ballYOffset, 0);
 
-        const lookLift = 0.52; // camera offset only — orbit target stays at ball center
+        const lookLift = 0.92; // higher camera vs ball → ball reads lower in the window
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 50);
         const nextOrbitTarget = new THREE.Vector3();
         nextOrbitTarget.copy(group.position);
@@ -241,7 +241,7 @@
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enablePan = false;      // orbit only
         controls.enableZoom = false;     // keep position (no dolly)
-        controls.autoRotate = false;     // fixed tilt X=90°, spin: ballSpinY → rotation.z
+        controls.autoRotate = false;     // fixed tilt X=90°, spin: ballSpinY → rotation.y
         controls.target.copy(nextOrbitTarget);
         controls.update();
 
@@ -290,10 +290,15 @@
                 continue;
               }
 
-              const seed = iu * 73 + iv * 179;
-              const cIdx = Math.abs(seed) % paletteLen;
+              let h = (iu * 374761393 + iv * 668265263 + (iu ^ iv) * 2246822519) >>> 0;
+              h ^= h >>> 16;
+              h = Math.imul(h, 2246822519);
+              h ^= h >>> 13;
+              h = Math.imul(h, 3266489917);
+              h ^= h >>> 16;
+              const cIdx = h % paletteLen;
               const col = palRgb[cIdx];
-              const vivid = cIdx === 0 ? 1.12 : 1.22;
+              const vivid = 1.06 + (h % 280) / 700;
 
               const r = Math.min(255, Math.round(col.r * vivid));
               const g = Math.min(255, Math.round(col.g * vivid));
@@ -397,7 +402,7 @@
           lastSpinT = now;
           if (!tagPreviewHover) ballSpinY += dt * spinRadPerSec;
           group.rotation.x = Math.PI / 2;
-          group.rotation.z = ballSpinY;
+          group.rotation.y = ballSpinY;
 
           syncOrbitToBall();
           controls.update();
