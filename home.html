@@ -216,17 +216,13 @@
         wrap.appendChild(renderer.domElement);
 
         const scene = new THREE.Scene();
-        scene.add(new THREE.HemisphereLight(0xffffff, 0xc8d4ff, 0.95));
-        const key = new THREE.DirectionalLight(0xffffff, 0.62);
-        key.position.set(-1.2, 1.4, 1.1);
-        scene.add(key);
         const DISCO_TILES_U = 12;
         const DISCO_TILES_V = 6;
         const TAG_FACET_IU = 9;
         const TAG_FACET_IV = 2;
 
         const ballRadius = 1.14;
-        const ballYOffset = -1.52 * 1.35; // ~35% lower; orbit target follows group.position
+        const ballYOffset = -1.52 * 1.58; // lower — ball + orbit toward bottom of window
 
         const group = new THREE.Group();
         scene.add(group);
@@ -269,6 +265,14 @@
           const im = ctx.createImageData(size, size);
           const d = im.data;
 
+          const perm = [0, 1, 2, 3, 4, 5, 6];
+          for (let i = perm.length - 1; i > 0; i--){
+            const j = Math.floor(Math.random() * (i + 1));
+            const t = perm[i];
+            perm[i] = perm[j];
+            perm[j] = t;
+          }
+
           const tilesU = DISCO_TILES_U;
           const tilesV = DISCO_TILES_V;
           const groutW = 0.028;
@@ -296,9 +300,10 @@
               }
 
               const seed = iu * 73 + iv * 179;
-              const cIdx = Math.abs(seed) % paletteLen;
+              const cIdx = perm[Math.abs(seed) % paletteLen];
               const col = palRgb[cIdx];
-              const vivid = cIdx === 0 ? 1.2 : 1.45;
+              const lum = (col.r + col.g + col.b) / 3;
+              const vivid = lum < 95 ? 1.22 : 1.48;
 
               const du = fu - 0.5;
               const dv = fv - 0.5;
@@ -325,11 +330,7 @@
         }
 
         const ballTexture = createDiscoBallTexture();
-        const ballMat = new THREE.MeshStandardMaterial({
-          map: ballTexture,
-          roughness: 0.42,
-          metalness: 0.14
-        });
+        const ballMat = new THREE.MeshBasicMaterial({ map: ballTexture });
         const ballMesh = new THREE.Mesh(sphereGeom, ballMat);
         group.add(ballMesh);
 
