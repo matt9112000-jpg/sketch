@@ -344,7 +344,12 @@
 
       .index-side{
         border-right:none;
-        background:var(--panel);
+        background:transparent;
+        position:fixed;
+        right:26px;
+        bottom:26px;
+        z-index:10;
+        padding:0;
       }
       .index-head{
         display:none;
@@ -358,6 +363,7 @@
       .rows{
         display:flex;
         flex-direction:column;
+        align-items:flex-end;
       }
       .row{
         display:grid;
@@ -368,9 +374,11 @@
         text-decoration:none;
         color:var(--text);
         background:transparent;
-        padding:1.1rem 1rem;
+        padding:0;
         transition:filter .12s linear;
         justify-content:center;
+        width:92px;
+        height:92px;
       }
       .row:hover, .row.active{
         background:transparent;
@@ -409,9 +417,12 @@
       }
 
       .preview-side{
-        position:relative;
+        position:fixed;
+        inset:0;
         overflow:hidden;
-        background:#ffffff;
+        background:transparent;
+        z-index:9;
+        pointer-events:none;
         transition:min-height .32s cubic-bezier(.2,.9,.2,1), height .32s cubic-bezier(.2,.9,.2,1), background .2s ease;
       }
       .preview-grid{
@@ -431,14 +442,18 @@
       }
 
       .preview-card{
-        position:absolute;
-        inset:26px;
+        position:fixed;
+        left:50%;
+        top:50%;
+        width:min(900px, 92vw);
+        height:min(560px, 60vh);
+        inset:auto;
+        transform: translate(-50%, -50%) scale(.98);
         border:2px solid var(--c3);
         border-radius:14px;
         background:#ffffff;
         cursor:pointer;
         opacity:0;
-        transform: translateX(18px) scale(.98);
         clip-path: inset(0 0 0 0);
         transition:opacity .2s linear, transform .28s cubic-bezier(.2,.9,.2,1), clip-path .34s cubic-bezier(.2,.9,.2,1);
       }
@@ -464,7 +479,7 @@
       .preview-handle--br{ right:-2px; bottom:-2px; }
       .preview-card.visible{
         opacity:1;
-        transform: translateX(0) scale(1);
+        transform: translate(-50%, -50%) scale(1);
       }
       .preview-frame{
         position:absolute;
@@ -1013,7 +1028,9 @@
 
         rows.forEach((row)=>{
           row.addEventListener('mouseenter', ()=>setPreview(row));
+          row.addEventListener('mouseleave', closePreview);
           row.addEventListener('focus', ()=>setPreview(row));
+          row.addEventListener('blur', closePreview);
           row.addEventListener('touchstart', ()=>setPreview(row), { passive:true });
         });
         if (previewSide) previewSide.addEventListener('mouseleave', closePreview);
