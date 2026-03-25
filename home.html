@@ -36,6 +36,11 @@
         pointer-events:none;
         z-index:20;
       }
+      #ball-wrap{
+        position:fixed;
+        inset:0;
+        z-index:10;
+      }
       #top-buttons{
         position:absolute;
         top:18px;
@@ -73,16 +78,32 @@
         transform:translate(-50%, -50%);
         width:min(980px, 92vw);
         height:min(640px, 62vh);
-        background:#ffffff;
-        border:2px dashed var(--line);
-        border-radius:10px;
+        z-index:5;
+        background:rgba(255,255,255,.72);
+        border:none;
+        border-radius:18px;
         overflow:hidden;
         opacity:0;
         pointer-events:none;
         transition:opacity .14s ease;
+        backdrop-filter: blur(12px);
+        box-shadow:
+          0 0 0 2px rgba(26,38,255,.16),
+          0 26px 80px rgba(0,0,0,.10);
       }
       #preview-panel.is-visible{
         opacity:1;
+      }
+      #preview-panel::before{
+        content:'';
+        position:absolute;
+        inset:-26px;
+        background:
+          radial-gradient(circle at center, rgba(26,38,255,.22) 0%, rgba(26,38,255,0) 62%);
+        filter: blur(18px);
+        opacity:.9;
+        pointer-events:none;
+        z-index:0;
       }
       #preview-frame{
         position:absolute;
@@ -92,11 +113,7 @@
         border:0;
         background:#fff;
         pointer-events:none;
-      }
-
-      #ball-wrap{
-        position:fixed;
-        inset:0;
+        z-index:1;
       }
       #ball{
         width:100%;
@@ -110,21 +127,15 @@
       <div id="ball"></div>
     </div>
 
+    <div id="preview-panel" aria-label="Preview panel">
+      <iframe id="preview-frame" title="Project preview" loading="lazy" src="about:blank"></iframe>
+    </div>
+
     <div id="hud">
       <div id="top-buttons" aria-label="Project buttons">
-        <button class="hud-btn" type="button" data-preview-url="./shop.html">
-          SHOP
-        </button>
-        <button class="hud-btn" type="button" data-preview-url="./contact-preview.html">
-          CONTACT
-        </button>
-        <button class="hud-btn" type="button" data-preview-url="./game.html?lang=zh">
-          中文
-        </button>
-      </div>
-
-      <div id="preview-panel" aria-label="Preview panel">
-        <iframe id="preview-frame" title="Project preview" loading="lazy" src="about:blank"></iframe>
+        <button class="hud-btn" type="button" id="shop-btn">SHOP</button>
+        <button class="hud-btn" type="button" id="contact-btn">CONTACT</button>
+        <button class="hud-btn" type="button" id="lang-btn">中文</button>
       </div>
     </div>
 
@@ -137,8 +148,24 @@
         const previewFrame = document.getElementById('preview-frame');
         if (!wrap || !previewPanel || !previewFrame) return;
 
+        const shopBtn = document.getElementById('shop-btn');
+        const contactBtn = document.getElementById('contact-btn');
+        const langBtn = document.getElementById('lang-btn');
+
         const palette = ['#4C4C4C','#6DFF69','#FF3BDA','#FF99B1','#1A26FF','#FF4622','#FCC730'];
         const paletteLen = palette.length;
+
+        // Language: default en, zh if ?lang=zh or localStorage site_lang === 'zh'
+        const params = new URLSearchParams(window.location.search);
+        const urlLang = params.get('lang');
+        let lang = (urlLang === 'zh' || (!urlLang && localStorage.getItem('site_lang') === 'zh')) ? 'zh' : 'en';
+        localStorage.setItem('site_lang', lang);
+
+        function setLangLabel(){
+          if (!langBtn) return;
+          langBtn.textContent = (lang === 'zh') ? 'EN' : '中文';
+        }
+        setLangLabel();
 
         const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -163,67 +190,117 @@
         key.position.set(-1.8, 2.1, 1.6);
         scene.add(key);
 
-        // Build a "cube-filled" sphere using InstancedMesh boxes.
+        // Huge ball as a textured sphere (cube-like colors via procedural texture).
         const group = new THREE.Group();
         scene.add(group);
 
-        const cellSize = 0.12; // cube size
-        const gridN = 16; // number of steps per axis (roughly)
-        const half = (gridN - 1) / 2;
-        const radius = half * cellSize * 0.92; // sphere radius inside grid
-        const boxGeom = new THREE.BoxGeometry(cellSize, cellSize, cellSize);
+        const ballRadius = 2.35;
+        const sphereGeom = new THREE.SphereGeometry(ballRadius, 96, 64);
 
-        const transformsByColor = Array.from({ length: paletteLen }, ()=>[]);
+        function hexToRgb(hex){
+          const h = hex.replace('#','');
+          const n = parseInt(h, 16);
+          return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+        }
+        const palRgb = palette.map(hexToRgb);
 
-        for (let ix = 0; ix < gridN; ix++){
-          for (let iy = 0; iy < gridN; iy++){
-            for (let iz = 0; iz < gridN; iz++){
-              const x = (ix - half) * cellSize;
-              const y = (iy - half) * cellSize;
-              const z = (iz - half) * cellSize;
-              const dist2 = x*x + y*y + z*z;
-              if (dist2 > radius*radius) continue;
+        function createCubeTextureTexture(){
+          const size = 768;
+          const canvas = document.createElement('canvas');
+          canvas.width = size;
+          canvas.height = size;
+          const ctx = canvas.getContext('2d', { willReadFrequently: true });
+          const im = ctx.createImageData(size, size);
+          const d = im.data;
 
-              // Deterministic 7-color fill.
-              const cIdx = Math.abs((ix*3 + iy*5 + iz*7) % paletteLen);
-              transformsByColor[cIdx].push({ x, y, z });
+          const gridScale = 15; // higher => more "cubes"
+          const edgeWidth = 0.085; // edge darkening width in cell-space
+
+          for (let y = 0; y < size; y++){
+            const v = y / (size - 1);
+            const phi = v * Math.PI; // 0..PI
+            const sy = Math.cos(phi);
+            const sinPhi = Math.sin(phi);
+
+            for (let x = 0; x < size; x++){
+              const u = x / (size - 1);
+              const theta = u * Math.PI * 2; // 0..2PI
+
+              const sx = Math.cos(theta) * sinPhi;
+              const sz = Math.sin(theta) * sinPhi;
+
+              // Map direction components [-1..1] to cell-space [0..gridScale]
+              const tx = (sx * 0.5 + 0.5) * gridScale;
+              const ty = (sy * 0.5 + 0.5) * gridScale;
+              const tz = (sz * 0.5 + 0.5) * gridScale;
+
+              const ix = Math.floor(tx);
+              const iy = Math.floor(ty);
+              const iz = Math.floor(tz);
+
+              const cIdx = Math.abs((ix * 3 + iy * 5 + iz * 7) % paletteLen);
+
+              const fx = tx - ix;
+              const fy = ty - iy;
+              const fz = tz - iz;
+              const ex = Math.min(fx, 1 - fx);
+              const ey = Math.min(fy, 1 - fy);
+              const ez = Math.min(fz, 1 - fz);
+              const edge = Math.min(ex, ey, ez);
+
+              // Darken near cell edges for a cube-ish feel.
+              const tEdge = Math.min(1, edge / edgeWidth);
+              const shade = 0.62 + tEdge * 0.38;
+
+              const col = palRgb[cIdx];
+              const i = (y * size + x) * 4;
+              d[i] = Math.round(col.r * shade);
+              d[i + 1] = Math.round(col.g * shade);
+              d[i + 2] = Math.round(col.b * shade);
+              d[i + 3] = 255;
             }
           }
+
+          ctx.putImageData(im, 0, 0);
+          const tex = new THREE.CanvasTexture(canvas);
+          tex.colorSpace = THREE.SRGBColorSpace;
+          tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+          return tex;
         }
 
-        const dummy = new THREE.Object3D();
-        transformsByColor.forEach((list, cIdx)=>{
-          const mat = new THREE.MeshStandardMaterial({
-            color: palette[cIdx],
-            roughness: 0.55,
-            metalness: 0.05
-          });
-          const mesh = new THREE.InstancedMesh(boxGeom, mat, list.length);
-          mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-          list.forEach((p, i)=>{
-            dummy.position.set(p.x, p.y, p.z);
-            dummy.rotation.set(0,0,0);
-            dummy.scale.set(1,1,1);
-            dummy.updateMatrix();
-            mesh.setMatrixAt(i, dummy.matrix);
-          });
-          mesh.castShadow = false;
-          mesh.receiveShadow = false;
-          group.add(mesh);
+        const ballTexture = createCubeTextureTexture();
+        const ballMat = new THREE.MeshStandardMaterial({
+          map: ballTexture,
+          roughness: 0.78,
+          metalness: 0.06
         });
+        const ballMesh = new THREE.Mesh(sphereGeom, ballMat);
+        group.add(ballMesh);
 
         // Interactive project cubes (separate meshes so raycasting works).
         const markerGeom = new THREE.BoxGeometry(0.22, 0.22, 0.22);
         const interactive = [];
+        let selfMarker = null;
+        let shopMarker = null;
+        let contactMarker = null;
         const markerPositions = [
           { // self introduction
-            x: 0.0, y: radius * 1.05, z: 0.0, url: './game.html'
+            x: 0.0,
+            y: ballRadius * 1.03,
+            z: 0.0,
+            url: `./game.html?lang=${lang}`
           },
           { // shop
-            x: radius * 0.95, y: -radius * 0.06, z: radius * 0.66, url: './shop.html'
+            x: ballRadius * 0.90,
+            y: -ballRadius * 0.14,
+            z: ballRadius * 0.68,
+            url: `./shop.html?lang=${lang}`
           },
           { // contact
-            x: -radius * 0.82, y: radius * 0.06, z: radius * 0.92, url: './contact-preview.html'
+            x: -ballRadius * 0.80,
+            y: ballRadius * 0.10,
+            z: ballRadius * 0.92,
+            url: `./contact-preview.html?lang=${lang}`
           }
         ];
 
@@ -240,11 +317,12 @@
           mesh.userData = { url: p.url, isMarker:true };
           group.add(mesh);
           interactive.push(mesh);
+          return mesh;
         }
 
-        addMarker(markerPositions[0], 2);
-        addMarker(markerPositions[1], 4);
-        addMarker(markerPositions[2], 6);
+        selfMarker = addMarker(markerPositions[0], 2);
+        shopMarker = addMarker(markerPositions[1], 4);
+        contactMarker = addMarker(markerPositions[2], 6);
 
         const raycaster = new THREE.Raycaster();
         const pointer = new THREE.Vector2(-10, -10);
@@ -322,24 +400,36 @@
           pointer.x = -10; pointer.y = -10;
         });
 
-        // Header buttons: hover previews too.
-        const btns = document.querySelectorAll('[data-preview-url]');
-        btns.forEach(btn=>{
-          const url = btn.getAttribute('data-preview-url');
-          btn.addEventListener('pointerenter', ()=>{
-            if (pendingHide) clearTimeout(pendingHide);
-            pendingHide = null;
-            hovered = null;
-            showPreview(url);
+        function setLang(nextLang){
+          lang = nextLang;
+          localStorage.setItem('site_lang', lang);
+          setLangLabel();
+          if (selfMarker) selfMarker.userData.url = `./game.html?lang=${lang}`;
+          if (shopMarker) shopMarker.userData.url = `./shop.html?lang=${lang}`;
+          if (contactMarker) contactMarker.userData.url = `./contact-preview.html?lang=${lang}`;
+
+          // If a marker is currently hovered, update the preview in-place.
+          if (hovered && hovered.userData && hovered.userData.url){
+            showPreview(hovered.userData.url);
+          }
+        }
+
+        if (shopBtn){
+          shopBtn.addEventListener('click', ()=>{
+            window.location.href = `./shop.html?lang=${lang}`;
           });
-          btn.addEventListener('pointerleave', ()=>{
-            pendingHide = setTimeout(()=>hidePreview(), 80);
+        }
+        if (contactBtn){
+          contactBtn.addEventListener('click', ()=>{
+            window.location.href = `./contact-preview.html?lang=${lang}`;
           });
-          btn.addEventListener('click', ()=>{
-            // keep normal navigation behavior
-            window.location.href = url;
+        }
+        if (langBtn){
+          langBtn.addEventListener('click', ()=>{
+            const next = (lang === 'zh') ? 'en' : 'zh';
+            setLang(next);
           });
-        });
+        }
 
         function onResize(){
           camera.aspect = window.innerWidth / window.innerHeight;
