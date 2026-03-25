@@ -41,10 +41,9 @@
         inset:0;
         z-index:10;
         pointer-events:none;
-        background:transparent;
+        /* Solid match to WebGL clear — no CSS “hole” above a translated canvas on mobile */
+        background:#fff;
         padding-bottom:env(safe-area-inset-bottom, 0px);
-        /* Moves the 3D layer on screen. If the top clips, widen FOV / pull camera back in JS (not more translate alone). */
-        transform:translateY(44vh);
       }
       #ball-wrap canvas{
         pointer-events:auto;
@@ -149,8 +148,10 @@
         mask-size:100% 100%;
       }
       #preview-panel.is-active{
+        z-index:20;
         opacity:1;
         transform:translate(-50%, -50%) scale(1);
+        pointer-events:auto;
       }
       #preview-frame{
         position:absolute;
@@ -163,6 +164,9 @@
         display:block;
         background:#fff;
         pointer-events:none;
+      }
+      #preview-panel.is-active #preview-frame{
+        pointer-events:auto;
       }
 
       #ball{
@@ -222,10 +226,10 @@
         }
         setLangLabel();
 
-        const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true, premultipliedAlpha:false });
+        const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:false });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setClearColor(0xffffff, 1); // opaque until self-intro hover (then alpha 0 for preview)
+        renderer.setClearColor(0xffffff, 1);
         wrap.appendChild(renderer.domElement);
 
         const scene = new THREE.Scene();
@@ -236,7 +240,7 @@
 
         const ballRadius = 1.88;
         // World height of ball center (orbit target). Camera uses lookLift so changing only this used to cancel on-screen; lookLift sets vertical framing.
-        const ballYOffset = -5.28;
+        const ballYOffset = -5.42;
 
         const group = new THREE.Group();
         scene.add(group);
@@ -247,15 +251,15 @@
         group.add(orientGroup);
         orientGroup.add(spinGroup);
 
-        const lookLift = 2.38; // camera above orbit target → ball lower in the canvas
+        const lookLift = 2.52; // camera above orbit target → ball lower in the canvas
         const cameraFOV = 68; // wide-angle perspective
         const camera = new THREE.PerspectiveCamera(cameraFOV, window.innerWidth / window.innerHeight, 0.01, 50);
         const nextOrbitTarget = new THREE.Vector3();
         nextOrbitTarget.copy(group.position);
         camera.position.set(
           group.position.x,
-          group.position.y + lookLift + 0.64,
-          group.position.z + 4.22
+          group.position.y + lookLift + 0.66,
+          group.position.z + 4.35
         );
 
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -406,13 +410,11 @@
         function setTagPreviewActive(on){
           tagPreviewHover = on;
           if (on){
-            renderer.setClearColor(0xffffff, 0);
             previewPanel.classList.add('is-active');
             previewPanel.setAttribute('aria-hidden', 'false');
             const src = selfIntroPreviewSrc();
             if (previewFrame.getAttribute('src') !== src) previewFrame.src = src;
           } else {
-            renderer.setClearColor(0xffffff, 1);
             previewPanel.classList.remove('is-active');
             previewPanel.setAttribute('aria-hidden', 'true');
           }
