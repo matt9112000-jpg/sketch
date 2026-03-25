@@ -221,27 +221,28 @@
         const TAG_FACET_IU = 9;
         const TAG_FACET_IV = 2;
 
-        const ballRadius = 1.14;
-        const ballYOffset = -1.22; // raised so ball + orbit stay in view (was -2.052)
+        const ballRadius = 1.05;
+        const ballYOffset = -0.42; // orbit pivot / ball center — keep in a safe band for the frustum
 
         const group = new THREE.Group();
         scene.add(group);
         group.position.set(0, ballYOffset, 0);
 
-        const lookLift = 0.62; // camera above ball center; keeps ball visible with X tilt
-        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 50);
+        const lookLift = 0.48;
+        const camBackZ = 4.05;
+        const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.08, 80);
         const nextOrbitTarget = new THREE.Vector3();
         nextOrbitTarget.copy(group.position);
         camera.position.set(
           group.position.x,
-          group.position.y + lookLift + 0.38,
-          group.position.z + 2.88
+          group.position.y + lookLift + 0.42,
+          group.position.z + camBackZ
         );
 
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enablePan = false;      // orbit only
         controls.enableZoom = false;     // keep position (no dolly)
-        controls.autoRotate = false;     // fixed tilt X=90°, spin: ballSpinY → rotation.y
+        controls.autoRotate = false;     // spin: ballSpinY → rotation.y (no X tilt — was hiding ball)
         controls.target.copy(nextOrbitTarget);
         controls.update();
 
@@ -292,9 +293,9 @@
 
               let h = (iu * 374761393 + iv * 668265263 + (iu ^ iv) * 2246822519) >>> 0;
               h ^= h >>> 16;
-              h = Math.imul(h, 2246822519);
+              h = (((h * 2246822519) | 0) + 0) >>> 0;
               h ^= h >>> 13;
-              h = Math.imul(h, 3266489917);
+              h = (((h * 3266489917) | 0) + 0) >>> 0;
               h ^= h >>> 16;
               const cIdx = h % paletteLen;
               const col = palRgb[cIdx];
@@ -320,7 +321,10 @@
         }
 
         const ballTexture = createDiscoBallTexture();
-        const ballMat = new THREE.MeshBasicMaterial({ map: ballTexture });
+        const ballMat = new THREE.MeshBasicMaterial({
+          map: ballTexture,
+          side: THREE.DoubleSide
+        });
         const ballMesh = new THREE.Mesh(sphereGeom, ballMat);
         group.add(ballMesh);
 
@@ -401,7 +405,7 @@
           const dt = Math.min(0.05, (now - lastSpinT) / 1000);
           lastSpinT = now;
           if (!tagPreviewHover) ballSpinY += dt * spinRadPerSec;
-          group.rotation.x = Math.PI / 2;
+          group.rotation.x = 0;
           group.rotation.y = ballSpinY;
 
           syncOrbitToBall();
