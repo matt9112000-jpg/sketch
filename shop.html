@@ -289,12 +289,12 @@
         transform:none;
         transition:none;
         pointer-events:none;
-        z-index:2;
+        z-index:10;
       }
       .product-body.is-photo-ready .product-photo-stack{
         opacity:1;
         transform: translateY(0);
-        pointer-events:none;
+        pointer-events:auto;
       }
       .product-photo-card{
         position:absolute;
@@ -550,9 +550,9 @@
             <div class="product-price" id="product-price">NT$3600 <span class="currency-unit twd">TWD</span></div>
           </div>
           <div class="product-photo-stack" id="product-photo-stack" role="button" tabindex="0" aria-label="Preview photos">
-            <img class="product-photo-card card-left" src="./shop-assets/silver-case.png" alt="Case silver preview" />
-            <img class="product-photo-card card-main" src="./shop-assets/product-photo.png" alt="CCC product photo" />
-            <img class="product-photo-card card-right" src="./shop-assets/silver-panel.png" alt="Panel silver preview" />
+            <img class="product-photo-card card-left" src="./shop-assets/card-1.png" alt="Preview card 1" />
+            <img class="product-photo-card card-main" src="./shop-assets/card-2.png" alt="Preview card 2" />
+            <img class="product-photo-card card-right" src="./shop-assets/card-3.png" alt="Preview card 3" />
           </div>
           <p class="product-meta" id="product-meta">3D-printed with a vintage GBA cartridge (1 of 25),<br>featuring a one-to-multi cable charm.</p>
           <div class="product-actions">
@@ -579,7 +579,7 @@
         const PREVIEW_MODE = new URLSearchParams(window.location.search).has('preview');
         // If a custom static payment link is provided, use it.
         // Otherwise, fall back to the normal `onCheckout()` flow (create-order -> redirect).
-        const ECPAY_PAYMENT_LINK = window.ECPAY_PAYMENT_LINK || '';
+        const ECPAY_PAYMENT_LINK = window.ECPAY_PAYMENT_LINK || 'https://p.ecpay.com.tw/D588FF7';
         const ECPAY_CREATE_ORDER_API = '/api/ecpay/create-order';
         function postToEcpay(action, fields){
           const form = document.createElement('form');
@@ -731,12 +731,14 @@
             if (target.closest && (target.closest('button') || target.closest('a'))) return;
             const clickedCard = target.closest && target.closest('.product-photo-card');
             if (clickedCard){
-              // If the cards are already out, bring the clicked card to the front only.
+              // First click fans out + brings clicked card forward.
+              // Second click collapses back to a single center card.
               if (planesTargetOut){
-                setFrontCard(clickedCard);
+                planesTargetOut = false;
+                syncPreviewUiClasses();
+                setFrontCard(null);
                 return;
               }
-              // If not yet out, fan out and bring the clicked card to front.
               planesTargetOut = true;
               syncPreviewUiClasses();
               setFrontCard(clickedCard);
@@ -751,6 +753,8 @@
         let previewGroup = null;
         let previewMeshes = [];
         let previewProgress = 0; // 0..1 (retracted -> out)
+
+        const USE_3D_PREVIEW = false;
 
         // Requested sizes in cm (Three.js units are assumed meters: 1 unit = 1m).
         const PREVIEW_PLANE_W = 0.045; // 4.5cm
@@ -788,9 +792,9 @@
           });
 
           const [texLeft, texMain, texRight] = await Promise.all([
-            loadTexture('./shop-assets/silver-case.png'),
-            loadTexture('./shop-assets/product-photo.png'),
-            loadTexture('./shop-assets/silver-panel.png')
+            loadTexture('./shop-assets/card-1.png'),
+            loadTexture('./shop-assets/card-2.png'),
+            loadTexture('./shop-assets/card-3.png')
           ]);
 
           const geometry = new THREE.PlaneGeometry(PREVIEW_PLANE_W, PREVIEW_PLANE_L);
@@ -1311,8 +1315,10 @@
           modelRoot = root;
           scene.add(root);
           motionState.initialized = false;
-          // Prepare the 3D preview planes (textures loaded asynchronously).
-          initPreviewPlanesIfNeeded();
+          // Optional: 3D preview planes (disabled by default to keep DOM preview clean).
+          if (USE_3D_PREVIEW){
+            initPreviewPlanesIfNeeded();
+          }
         };
 
         (async ()=>{
@@ -1470,11 +1476,11 @@
           }
           const target = active ? 1 : 0;
           motionState.progress += (target - motionState.progress) * 0.08;
-          // After the opening motion finishes, automatically slide the three preview planes out.
+          // After the opening motion finishes, reveal the preview stack (center card only).
           if (target === 1 && motionState.progress >= 0.8){
             if (!autoOutLatch){
               setPlanesReady(true);
-              planesTargetOut = true;
+              planesTargetOut = false;
               syncPreviewUiClasses();
               autoOutLatch = true;
             }
@@ -1508,10 +1514,12 @@
             modelState.caseNode.position.z = motionState.caseBaseZ + offset.z;
           }
 
-          // Slide the three preview planes in/out from the opened case.
-          const planesTarget = (planesTargetOut && modelState && modelState.caseVisible) ? 1 : 0;
-          previewProgress += (planesTarget - previewProgress) * 0.08;
-          syncPreviewPlanesToProgress();
+          if (USE_3D_PREVIEW){
+            // Slide the three preview planes in/out from the opened case.
+            const planesTarget = (planesTargetOut && modelState && modelState.caseVisible) ? 1 : 0;
+            previewProgress += (planesTarget - previewProgress) * 0.08;
+            syncPreviewPlanesToProgress();
+          }
           controls.update();
           renderer.render(scene, camera);
           rafId = requestAnimationFrame(tick);
