@@ -228,24 +228,20 @@
         scene.add(group);
         group.position.set(0, ballYOffset, 0);
 
-        const lookLift = 0.52; // orbit target above ball center → ball toward bottom of frame
+        const lookLift = 0.52; // camera offset only — orbit target stays at ball center
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 50);
         const nextOrbitTarget = new THREE.Vector3();
-        nextOrbitTarget.set(
-          group.position.x,
-          group.position.y + lookLift,
-          group.position.z
-        );
+        nextOrbitTarget.copy(group.position);
         camera.position.set(
-          nextOrbitTarget.x,
-          nextOrbitTarget.y + 0.38,
-          nextOrbitTarget.z + 2.88
+          group.position.x,
+          group.position.y + lookLift + 0.38,
+          group.position.z + 2.88
         );
 
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enablePan = false;      // orbit only
         controls.enableZoom = false;     // keep position (no dolly)
-        controls.autoRotate = false;     // spin is group.rotation.y
+        controls.autoRotate = false;     // spin: ballSpinY → group.rotation.z
         controls.target.copy(nextOrbitTarget);
         controls.update();
 
@@ -328,11 +324,7 @@
         let lastSpinT = performance.now();
 
         function syncOrbitToBall(){
-          nextOrbitTarget.set(
-            group.position.x,
-            group.position.y + lookLift,
-            group.position.z
-          );
+          nextOrbitTarget.copy(group.position);
           camera.position.x += nextOrbitTarget.x - controls.target.x;
           camera.position.y += nextOrbitTarget.y - controls.target.y;
           camera.position.z += nextOrbitTarget.z - controls.target.z;
@@ -404,7 +396,7 @@
           const dt = Math.min(0.05, (now - lastSpinT) / 1000);
           lastSpinT = now;
           if (!tagPreviewHover) ballSpinY += dt * spinRadPerSec;
-          group.rotation.y = ballSpinY;
+          group.rotation.z = ballSpinY;
 
           syncOrbitToBall();
           controls.update();
