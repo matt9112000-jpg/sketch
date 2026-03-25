@@ -154,11 +154,12 @@
         transform-origin: center center;
         transition: transform 620ms cubic-bezier(.2,.9,.2,1), filter 320ms ease;
         z-index:2;
-        filter: drop-shadow(0 14px 26px rgba(0,0,0,.10));
+        filter:none;
+        overflow:hidden;
       }
       .viewer-shell.is-active{
         transform: translate(-50%, -50%) scale(1);
-        filter: drop-shadow(0 22px 44px rgba(0,0,0,.16));
+        filter:none;
       }
       .viewer-shell.is-info-hover{
         transform: translate(-50%, -50%) scale(1.06);
@@ -166,8 +167,13 @@
       .viewer{
         width:100%;
         height:100%;
-        border-radius:14px;
+        border-radius:0;
         background: transparent;
+      }
+      .viewer canvas{
+        display:block;
+        border:0;
+        outline:none;
       }
       .product-body{
         position:absolute;
@@ -860,7 +866,24 @@
           controls.update();
         }
 
-        const silverMat = new THREE.MeshPhysicalMaterial({
+        const electroCaseMat = new THREE.MeshPhysicalMaterial({
+          color: '#eef3ff',
+          metalness: 0.98,
+          roughness: 0.06,
+          clearcoat: 1.0,
+          clearcoatRoughness: 0.03,
+          envMapIntensity: 2.1
+        });
+        const electroPanelMat = new THREE.MeshPhysicalMaterial({
+          color: '#f0f5ff',
+          metalness: 0.98,
+          roughness: 0.055,
+          clearcoat: 1.0,
+          clearcoatRoughness: 0.025,
+          envMapIntensity: 1.85
+        });
+        // Fallback if textures fail to load.
+        const electroFallbackMat = new THREE.MeshPhysicalMaterial({
           color: '#eef3ff',
           metalness: 0.94,
           roughness: 0.12,
@@ -868,6 +891,23 @@
           clearcoatRoughness: 0.06,
           envMapIntensity: 1.62
         });
+        function loadElectroMap(url, mat){
+          const texLoader = new THREE.TextureLoader();
+          texLoader.load(url, (tex)=>{
+            tex.colorSpace = THREE.SRGBColorSpace;
+            tex.flipY = false;
+            tex.wrapS = THREE.ClampToEdgeWrapping;
+            tex.wrapT = THREE.ClampToEdgeWrapping;
+            tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+            mat.map = tex;
+            mat.needsUpdate = true;
+          }, undefined, ()=>{
+            mat.map = null;
+            mat.needsUpdate = true;
+          });
+        }
+        loadElectroMap('./shop-assets/silver-case.png', electroCaseMat);
+        loadElectroMap('./shop-assets/silver-panel.png', electroPanelMat);
         function boostStickerImage(image){
           const cv = document.createElement('canvas');
           cv.width = image.width || 1024;
@@ -1022,10 +1062,10 @@
         function applyShopParts(){
           if (!modelState.parts) return;
           const parts = modelState.parts;
-          parts['1'].forEach((m)=>{ m.material = silverMat; m.visible = modelState.caseVisible; });
-          parts['2'].forEach((m)=>{ m.material = silverMat; m.visible = true; });
+          parts['1'].forEach((m)=>{ m.material = electroCaseMat; m.visible = modelState.caseVisible; });
+          parts['2'].forEach((m)=>{ m.material = electroPanelMat; m.visible = true; });
           parts['3'].forEach((m)=>{ m.material = blackMat; m.visible = modelState.showPart3; });
-          parts.other.forEach((m)=>{ m.material = silverMat; m.visible = true; });
+          parts.other.forEach((m)=>{ m.material = electroCaseMat; m.visible = true; });
           if (modelState.cartridgeMeshes && modelState.cartridgeMeshes.length){
             modelState.cartridgeMeshes.forEach((m)=>{ m.material = cartridgeDarkMat; m.visible = true; });
           }
