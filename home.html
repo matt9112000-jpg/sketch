@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>INSUFFICIENT SPACE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Space+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root{
+        --bg:#ffffff;
+        --text:#1f2433;
+        --muted:#5f6778;
+        --accent:#FF3BDA;
+        --line:rgba(26,38,255,.55);
+        --cursor-cube:url("./cursor-cube.svg") 9 9;
+      }
+      *{ box-sizing:border-box; }
+      html,body{ height:100%; }
+      body{
+        margin:0;
+        background:var(--bg);
+        color:var(--text);
+        font-family:Montserrat, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        cursor:var(--cursor-cube), auto;
+        overflow:hidden;
+      }
+
+      #hud{
+        position:fixed;
+        inset:0;
+        pointer-events:none;
+        z-index:20;
+      }
+      #top-buttons{
+        position:absolute;
+        top:18px;
+        left:18px;
+        right:18px;
+        display:flex;
+        justify-content:space-between;
+        align-items:flex-start;
+        pointer-events:auto;
+        user-select:none;
+      }
+      .hud-btn{
+        border:none;
+        background:transparent;
+        padding:0;
+        font:800 18px/1.1 "Space Mono", monospace;
+        letter-spacing:.06em;
+        color:#000;
+        text-transform:uppercase;
+        cursor:var(--cursor-cube), pointer;
+      }
+      .hud-btn small{
+        display:block;
+        margin-top:8px;
+        font:700 11px/1.1 "Space Mono", monospace;
+        color:var(--muted);
+        letter-spacing:.16em;
+        text-transform:uppercase;
+      }
+
+      #preview-panel{
+        position:absolute;
+        left:50%;
+        top:54%;
+        transform:translate(-50%, -50%);
+        width:min(980px, 92vw);
+        height:min(640px, 62vh);
+        background:#ffffff;
+        border:2px dashed var(--line);
+        border-radius:10px;
+        overflow:hidden;
+        opacity:0;
+        pointer-events:none;
+        transition:opacity .14s ease;
+      }
+      #preview-panel.is-visible{
+        opacity:1;
+      }
+      #preview-frame{
+        position:absolute;
+        inset:0;
+        width:100%;
+        height:100%;
+        border:0;
+        background:#fff;
+        pointer-events:none;
+      }
+
+      #ball-wrap{
+        position:fixed;
+        inset:0;
+      }
+      #ball{
+        width:100%;
+        height:100%;
+        display:block;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="ball-wrap">
+      <div id="ball"></div>
+    </div>
+
+    <div id="hud">
+      <div id="top-buttons" aria-label="Project buttons">
+        <button class="hud-btn" type="button" data-preview-url="./shop.html">
+          SHOP
+        </button>
+        <button class="hud-btn" type="button" data-preview-url="./contact-preview.html">
+          CONTACT
+        </button>
+        <button class="hud-btn" type="button" data-preview-url="./game.html?lang=zh">
+          中文
+        </button>
+      </div>
+
+      <div id="preview-panel" aria-label="Preview panel">
+        <iframe id="preview-frame" title="Project preview" loading="lazy" src="about:blank"></iframe>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script>
+      (function(){
+        const wrap = document.getElementById('ball');
+        const previewPanel = document.getElementById('preview-panel');
+        const previewFrame = document.getElementById('preview-frame');
+        if (!wrap || !previewPanel || !previewFrame) return;
+
+        const palette = ['#4C4C4C','#6DFF69','#FF3BDA','#FF99B1','#1A26FF','#FF4622','#FCC730'];
+        const paletteLen = palette.length;
+
+        const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(0xffffff, 1);
+        wrap.appendChild(renderer.domElement);
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 50);
+        camera.position.set(0, 0.8, 3.2);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enablePan = false;      // orbit only
+        controls.enableZoom = false;     // keep position (no dolly)
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 0.55;
+        controls.target.set(0, 0, 0);
+        controls.update();
+
+        scene.add(new THREE.HemisphereLight(0xffffff, 0xb9c7ff, 1.0));
+        const key = new THREE.DirectionalLight(0xffffff, 1.15);
+        key.position.set(-1.8, 2.1, 1.6);
+        scene.add(key);
+
+        // Build a "cube-filled" sphere using InstancedMesh boxes.
+        const group = new THREE.Group();
+        scene.add(group);
+
+        const cellSize = 0.12; // cube size
+        const gridN = 16; // number of steps per axis (roughly)
+        const half = (gridN - 1) / 2;
+        const radius = half * cellSize * 0.92; // sphere radius inside grid
+        const boxGeom = new THREE.BoxGeometry(cellSize, cellSize, cellSize);
+
+        const transformsByColor = Array.from({ length: paletteLen }, ()=>[]);
+
+        for (let ix = 0; ix < gridN; ix++){
+          for (let iy = 0; iy < gridN; iy++){
+            for (let iz = 0; iz < gridN; iz++){
+              const x = (ix - half) * cellSize;
+              const y = (iy - half) * cellSize;
+              const z = (iz - half) * cellSize;
+              const dist2 = x*x + y*y + z*z;
+              if (dist2 > radius*radius) continue;
+
+              // Deterministic 7-color fill.
+              const cIdx = Math.abs((ix*3 + iy*5 + iz*7) % paletteLen);
+              transformsByColor[cIdx].push({ x, y, z });
+            }
+          }
+        }
+
+        const dummy = new THREE.Object3D();
+        transformsByColor.forEach((list, cIdx)=>{
+          const mat = new THREE.MeshStandardMaterial({
+            color: palette[cIdx],
+            roughness: 0.55,
+            metalness: 0.05
+          });
+          const mesh = new THREE.InstancedMesh(boxGeom, mat, list.length);
+          mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+          list.forEach((p, i)=>{
+            dummy.position.set(p.x, p.y, p.z);
+            dummy.rotation.set(0,0,0);
+            dummy.scale.set(1,1,1);
+            dummy.updateMatrix();
+            mesh.setMatrixAt(i, dummy.matrix);
+          });
+          mesh.castShadow = false;
+          mesh.receiveShadow = false;
+          group.add(mesh);
+        });
+
+        // Interactive project cubes (separate meshes so raycasting works).
+        const markerGeom = new THREE.BoxGeometry(0.22, 0.22, 0.22);
+        const interactive = [];
+        const markerPositions = [
+          { // self introduction
+            x: 0.0, y: radius * 1.05, z: 0.0, url: './game.html'
+          },
+          { // shop
+            x: radius * 0.95, y: -radius * 0.06, z: radius * 0.66, url: './shop.html'
+          },
+          { // contact
+            x: -radius * 0.82, y: radius * 0.06, z: radius * 0.92, url: './contact-preview.html'
+          }
+        ];
+
+        function addMarker(p, colorIndex){
+          const mat = new THREE.MeshStandardMaterial({
+            color: palette[colorIndex % paletteLen],
+            roughness: 0.25,
+            metalness: 0.05,
+            emissive: palette[colorIndex % paletteLen],
+            emissiveIntensity: 0.25
+          });
+          const mesh = new THREE.Mesh(markerGeom, mat);
+          mesh.position.set(p.x, p.y, p.z);
+          mesh.userData = { url: p.url, isMarker:true };
+          group.add(mesh);
+          interactive.push(mesh);
+        }
+
+        addMarker(markerPositions[0], 2);
+        addMarker(markerPositions[1], 4);
+        addMarker(markerPositions[2], 6);
+
+        const raycaster = new THREE.Raycaster();
+        const pointer = new THREE.Vector2(-10, -10);
+        let hovered = null;
+
+        const PREVIEW_PARAM = 'preview=1';
+        function withPreview(url){
+          try {
+            const u = new URL(url, window.location.href);
+            if (!u.searchParams.get('preview')) u.searchParams.set('preview', '1');
+            return u.toString();
+          } catch {
+            if (url.includes('?')) return url + '&' + PREVIEW_PARAM;
+            return url + '?' + PREVIEW_PARAM;
+          }
+        }
+
+        let pendingHide = null;
+        function showPreview(url){
+          const src = withPreview(url);
+          if (previewFrame.getAttribute('src') !== src){
+            previewFrame.src = src;
+          }
+          previewPanel.classList.add('is-visible');
+        }
+        function hidePreview(){
+          previewPanel.classList.remove('is-visible');
+          previewFrame.src = 'about:blank';
+        }
+
+        function onPointerMove(ev){
+          const rect = renderer.domElement.getBoundingClientRect();
+          const x = (ev.clientX - rect.left) / rect.width;
+          const y = (ev.clientY - rect.top) / rect.height;
+          pointer.x = x * 2 - 1;
+          pointer.y = -(y * 2 - 1);
+        }
+
+        function tick(){
+          raycaster.setFromCamera(pointer, camera);
+          const hits = raycaster.intersectObjects(interactive, false);
+          const hit = hits[0] ? hits[0].object : null;
+
+          if (hit !== hovered){
+            // reset previous
+            if (hovered){
+              hovered.scale.set(1,1,1);
+              if (hovered.material && hovered.material.emissive){
+                hovered.material.emissiveIntensity = 0.25;
+              }
+            }
+
+            hovered = hit;
+            if (hovered){
+              // small "pop"
+              hovered.scale.set(1.08, 1.08, 1.08);
+              if (hovered.material && hovered.material.emissive){
+                hovered.material.emissiveIntensity = 0.55;
+              }
+              if (pendingHide) clearTimeout(pendingHide);
+              pendingHide = null;
+              showPreview(hovered.userData.url);
+            } else {
+              pendingHide = setTimeout(()=>hidePreview(), 120);
+            }
+          }
+
+          controls.update();
+          renderer.render(scene, camera);
+          requestAnimationFrame(tick);
+        }
+
+        renderer.domElement.addEventListener('pointermove', onPointerMove, { passive:true });
+        renderer.domElement.addEventListener('pointerleave', ()=>{
+          pointer.x = -10; pointer.y = -10;
+        });
+
+        // Header buttons: hover previews too.
+        const btns = document.querySelectorAll('[data-preview-url]');
+        btns.forEach(btn=>{
+          const url = btn.getAttribute('data-preview-url');
+          btn.addEventListener('pointerenter', ()=>{
+            if (pendingHide) clearTimeout(pendingHide);
+            pendingHide = null;
+            hovered = null;
+            showPreview(url);
+          });
+          btn.addEventListener('pointerleave', ()=>{
+            pendingHide = setTimeout(()=>hidePreview(), 80);
+          });
+          btn.addEventListener('click', ()=>{
+            // keep normal navigation behavior
+            window.location.href = url;
+          });
+        });
+
+        function onResize(){
+          camera.aspect = window.innerWidth / window.innerHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        window.addEventListener('resize', onResize, { passive:true });
+
+        tick();
+      })();
+    </script>
+  </body>
+</html>
+

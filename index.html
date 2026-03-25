@@ -4,6 +4,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>INSUFFICIENT SPACE</title>
+    <script>
+      // New home implementation lives in `home.html`.
+      // Keep `index.html` as a lightweight redirect.
+      (function(){
+        window.location.replace('./home.html' + window.location.search);
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
