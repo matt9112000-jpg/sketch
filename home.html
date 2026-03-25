@@ -43,7 +43,7 @@
         pointer-events:none;
         background:transparent;
         /* Moves the 3D layer on screen. If the top clips, widen FOV / pull camera back in JS (not more translate alone). */
-        transform:translateY(35vh);
+        transform:translateY(38vh);
       }
       #ball-wrap canvas{
         pointer-events:auto;
@@ -124,18 +124,22 @@
       #preview-panel{
         position:fixed;
         left:50%;
-        top:44%;
-        transform:translate(-50%, -50%);
-        width:min(960px, 92vw);
-        height:min(600px, 62vh);
+        top:42%;
+        width:min(1180px, 96vw);
+        height:min(780px, 78vh);
         z-index:5;
         pointer-events:none;
         background:transparent;
         opacity:0;
-        transition:opacity .22s ease;
+        transform:translate(-50%, -46%) scale(0.94);
+        transform-origin:center center;
+        transition:
+          opacity .42s cubic-bezier(0.22, 1, 0.36, 1),
+          transform .42s cubic-bezier(0.22, 1, 0.36, 1);
         overflow:hidden;
-        -webkit-mask-image:radial-gradient(ellipse 80% 78% at 50% 46%,#000 48%,#000 74%,transparent 100%);
-        mask-image:radial-gradient(ellipse 80% 78% at 50% 46%,#000 48%,#000 74%,transparent 100%);
+        will-change:opacity, transform;
+        -webkit-mask-image:radial-gradient(ellipse 82% 80% at 50% 48%,#000 46%,#000 76%,transparent 100%);
+        mask-image:radial-gradient(ellipse 82% 80% at 50% 48%,#000 46%,#000 76%,transparent 100%);
         -webkit-mask-repeat:no-repeat;
         mask-repeat:no-repeat;
         -webkit-mask-size:100% 100%;
@@ -143,6 +147,7 @@
       }
       #preview-panel.is-active{
         opacity:1;
+        transform:translate(-50%, -50%) scale(1);
       }
       #preview-frame{
         position:absolute;
@@ -214,7 +219,7 @@
         const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true, premultipliedAlpha:false });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setClearColor(0xffffff, 0); // show iframe preview behind canvas
+        renderer.setClearColor(0xffffff, 1); // opaque until self-intro hover (then alpha 0 for preview)
         wrap.appendChild(renderer.domElement);
 
         const scene = new THREE.Scene();
@@ -225,7 +230,7 @@
 
         const ballRadius = 1.48;
         // World height of ball center (orbit target). Camera uses lookLift so changing only this used to cancel on-screen; lookLift sets vertical framing.
-        const ballYOffset = -4.38;
+        const ballYOffset = -4.58;
 
         const group = new THREE.Group();
         scene.add(group);
@@ -236,14 +241,14 @@
         group.add(orientGroup);
         orientGroup.add(spinGroup);
 
-        const lookLift = 1.9; // camera above orbit target → ball lower in the canvas
-        const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.01, 50);
+        const lookLift = 2.06; // camera above orbit target → ball lower in the canvas
+        const camera = new THREE.PerspectiveCamera(52, window.innerWidth / window.innerHeight, 0.01, 50);
         const nextOrbitTarget = new THREE.Vector3();
         nextOrbitTarget.copy(group.position);
         camera.position.set(
           group.position.x,
-          group.position.y + lookLift + 0.58,
-          group.position.z + 3.12
+          group.position.y + lookLift + 0.6,
+          group.position.z + 3.38
         );
 
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -393,15 +398,18 @@
 
         function setTagPreviewActive(on){
           tagPreviewHover = on;
+          if (on){
+            renderer.setClearColor(0xffffff, 0);
+            previewPanel.classList.add('is-active');
+            previewPanel.setAttribute('aria-hidden', 'false');
+            const src = selfIntroPreviewSrc();
+            if (previewFrame.getAttribute('src') !== src) previewFrame.src = src;
+          } else {
+            renderer.setClearColor(0xffffff, 1);
+            previewPanel.classList.remove('is-active');
+            previewPanel.setAttribute('aria-hidden', 'true');
+          }
         }
-
-        function openBackdropPreview(){
-          previewPanel.classList.add('is-active');
-          previewPanel.setAttribute('aria-hidden', 'false');
-          const src = selfIntroPreviewSrc();
-          if (previewFrame.getAttribute('src') !== src) previewFrame.src = src;
-        }
-        openBackdropPreview();
 
         if (facetTagLink){
           facetTagLink.addEventListener('mouseenter', ()=> setTagPreviewActive(true));
@@ -453,8 +461,10 @@
           localStorage.setItem('site_lang', lang);
           setLangLabel();
           updateFacetTagLink();
-          const src = selfIntroPreviewSrc();
-          if (previewFrame.getAttribute('src') !== src) previewFrame.src = src;
+          if (previewPanel.classList.contains('is-active')){
+            const src = selfIntroPreviewSrc();
+            if (previewFrame.getAttribute('src') !== src) previewFrame.src = src;
+          }
         }
 
         if (shopBtn){
