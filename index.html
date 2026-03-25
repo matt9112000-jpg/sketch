@@ -12,7 +12,7 @@
     />
     <style>
       :root{
-        --bg:#f3f3f3;
+        --bg:#ffffff;
         --panel:#ffffff;
         --line:#d4d8e3;
         --text:#1f2433;
@@ -343,11 +343,11 @@
       }
 
       .index-side{
-        border-right:2px solid var(--line);
+        border-right:none;
         background:var(--panel);
       }
       .index-head{
-        display:grid;
+        display:none;
         grid-template-columns:60px minmax(0,1fr) 120px;
         border-bottom:2px solid var(--line);
         padding:.8rem 1rem;
@@ -361,20 +361,35 @@
       }
       .row{
         display:grid;
-        grid-template-columns:60px minmax(0,1fr) 120px;
+        grid-template-columns: 1fr;
         align-items:center;
-        gap:.5rem;
-        border-bottom:2px solid var(--line);
+        gap:0;
+        border-bottom:none;
         text-decoration:none;
         color:var(--text);
-        background:var(--panel);
-        padding:1rem;
-        transition:background .12s linear, color .12s linear;
+        background:transparent;
+        padding:1.1rem 1rem;
+        transition:filter .12s linear;
+        justify-content:center;
       }
       .row:hover, .row.active{
-        background:#fff0fb;
-        color:var(--c1);
-        border-color:#ffb8ec;
+        background:transparent;
+        color:var(--text);
+        filter:brightness(1.05);
+      }
+      .row .num,
+      .row .name,
+      .row .meta{
+        display:none;
+      }
+      .project-cube{
+        --cube-size:12px;
+        --cube-gap:1px;
+        display:grid;
+        grid-template-columns:repeat(6,var(--cube-size));
+        grid-template-rows:repeat(6,var(--cube-size));
+        gap:var(--cube-gap);
+        transform: scale(1.05);
       }
       .row .num{
         font:700 13px/1 var(--font-mono);
@@ -396,7 +411,7 @@
       .preview-side{
         position:relative;
         overflow:hidden;
-        background:#f7f8fb;
+        background:#ffffff;
         transition:min-height .32s cubic-bezier(.2,.9,.2,1), height .32s cubic-bezier(.2,.9,.2,1), background .2s ease;
       }
       .preview-grid{
@@ -417,8 +432,9 @@
 
       .preview-card{
         position:absolute;
-        inset:0;
-        border-left:2px solid var(--line);
+        inset:26px;
+        border:2px solid var(--c3);
+        border-radius:14px;
         background:#ffffff;
         cursor:pointer;
         opacity:0;
@@ -426,6 +442,26 @@
         clip-path: inset(0 0 0 0);
         transition:opacity .2s linear, transform .28s cubic-bezier(.2,.9,.2,1), clip-path .34s cubic-bezier(.2,.9,.2,1);
       }
+      .preview-card::before{
+        content:"";
+        position:absolute;
+        inset:10px;
+        border:2px solid var(--c5);
+        border-radius:10px;
+        pointer-events:none;
+      }
+      .preview-handle{
+        position:absolute;
+        width:12px;
+        height:12px;
+        border:2px solid var(--c5);
+        background:transparent;
+        pointer-events:none;
+      }
+      .preview-handle--tl{ left:-2px; top:-2px; }
+      .preview-handle--tr{ right:-2px; top:-2px; }
+      .preview-handle--bl{ left:-2px; bottom:-2px; }
+      .preview-handle--br{ right:-2px; bottom:-2px; }
       .preview-card.visible{
         opacity:1;
         transform: translateX(0) scale(1);
@@ -445,8 +481,9 @@
         right:0;
         bottom:0;
         padding:1rem 1.1rem;
-        background:linear-gradient(transparent, rgba(255,255,255,.95));
+        background:transparent;
         color:#1f2433;
+        z-index:3;
       }
       .preview-kicker{
         font:700 11px/1 var(--font-mono);
@@ -550,15 +587,7 @@
           line-height:1.4;
         }
         .row{
-          grid-template-columns:44px minmax(0,1fr) 82px;
-          padding:.85rem .7rem;
-        }
-        .row .name{
-          font-size:clamp(.78rem, 4.7vw, .95rem);
-          letter-spacing:-.01em;
-        }
-        .row .meta{
-          font-size:10px;
+          padding:1rem .9rem;
         }
       }
     </style>
@@ -602,7 +631,8 @@
           <span>ID</span><span>Project</span><span style="text-align:right;">Type</span>
         </div>
         <div class="rows" id="rows">
-          <a class="row active" data-preview-title="SELF-INTRODUCTION" data-preview-desc="What is INSUFFICIENT SPACE?&#10;You might find out through the game." data-preview-image="linear-gradient(130deg,#1a26ff 0%,#ff3bda 60%,#ff4622 100%)" href="./game.html" data-soft-nav>
+          <a class="row" data-preview-title="SELF-INTRODUCTION" data-preview-desc="What is INSUFFICIENT SPACE?&#10;You might find out through the game." data-preview-image="linear-gradient(130deg,#1a26ff 0%,#ff3bda 60%,#ff4622 100%)" href="./game.html" data-soft-nav>
+            <span class="project-cube" aria-hidden="true"></span>
             <span class="num">01</span><span class="name">SELF-INTRODUCTION</span><span class="meta">Game<br/>Live</span>
           </a>
         </div>
@@ -610,7 +640,11 @@
 
       <section class="preview-side" aria-label="Hover Preview">
         <div class="preview-grid" id="preview-grid"></div>
-        <div class="preview-card visible" id="preview-card">
+        <div class="preview-card" id="preview-card">
+          <span class="preview-handle preview-handle--tl" aria-hidden="true"></span>
+          <span class="preview-handle preview-handle--tr" aria-hidden="true"></span>
+          <span class="preview-handle preview-handle--bl" aria-hidden="true"></span>
+          <span class="preview-handle preview-handle--br" aria-hidden="true"></span>
           <iframe class="preview-frame" id="preview-frame" title="Page preview" loading="lazy"></iframe>
           <div class="preview-overlay">
             <div class="preview-kicker"></div>
@@ -907,6 +941,44 @@
       })();
 
       (function(){
+        const cubePalette = ['#4C4C4C','#6DFF69','#FF3BDA','#FF99B1','#1A26FF','#FF4622','#FCC730'];
+        function mulberry32(a){
+          return function(){
+            let t = a += 0x6D2B79F5;
+            t = Math.imul(t ^ (t >>> 15), t | 1);
+            t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+          };
+        }
+        const rows = Array.from(document.querySelectorAll('.row'));
+        rows.forEach((row, rowIdx)=>{
+          const mount = row.querySelector('.project-cube');
+          if (!mount) return;
+          mount.innerHTML = '';
+          const rand = mulberry32((rowIdx + 1) * 1337 + 42);
+          const gridN = 6;
+          for (let r = 0; r < gridN; r++){
+            for (let c = 0; c < gridN; c++){
+              const cell = document.createElement('span');
+              cell.className = 'cube-cell';
+              // Make a recognizable "pixel cube" silhouette by cutting corners.
+              const dx = (c - (gridN - 1) / 2);
+              const dy = (r - (gridN - 1) / 2);
+              const dist = Math.sqrt(dx*dx + dy*dy);
+              const keep = dist < 3.35 && rand() > 0.18;
+              if (keep){
+                const col = cubePalette[Math.floor(rand() * cubePalette.length)];
+                cell.style.background = col;
+              } else {
+                cell.style.background = 'transparent';
+              }
+              mount.appendChild(cell);
+            }
+          }
+        });
+      })();
+
+      (function(){
         const rows = Array.from(document.querySelectorAll('.row'));
         const previewSide = document.querySelector('.preview-side');
         const card = document.getElementById('preview-card');
@@ -946,7 +1018,6 @@
         });
         if (previewSide) previewSide.addEventListener('mouseleave', closePreview);
         if (card) card.addEventListener('click', openActiveProject);
-        if (rows[0]) setPreview(rows[0]);
 
         document.body.classList.add('is-ready');
         document.querySelectorAll('a[data-soft-nav]').forEach(link=>{
