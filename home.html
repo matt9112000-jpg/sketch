@@ -34,7 +34,7 @@
         position:fixed;
         inset:0;
         pointer-events:none;
-        z-index:20;
+        z-index:100;
       }
       #ball-wrap{
         position:fixed;
@@ -48,6 +48,7 @@
       }
       #top-buttons{
         position:absolute;
+        z-index:101;
         top:18px;
         left:18px;
         right:18px;
@@ -90,7 +91,7 @@
         position:fixed;
         left:0;
         top:0;
-        z-index:21;
+        z-index:99;
         transform:translate(-50%, -130%);
         pointer-events:none;
         opacity:0;
@@ -163,6 +164,10 @@
       <div id="ball"></div>
     </div>
 
+    <div id="preview-panel" aria-hidden="true">
+      <iframe id="preview-frame" title="Self-introduction preview" src="about:blank"></iframe>
+    </div>
+
     <div id="hud">
       <div id="top-buttons" aria-label="Site navigation">
         <button class="hud-btn" type="button" id="shop-btn">SHOP</button>
@@ -217,10 +222,10 @@
         const TAG_FACET_IV = 2;
 
         const ballRadius = 1.14;
-        const ballYOffset = -1.512; // 40% lower than -1.08
+        const ballYOffset = -1.02; // low in frame; -1.512 pushed the sphere out of view
 
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 50);
-        camera.position.set(0, ballYOffset + 0.12, 2.92);
+        camera.position.set(0, ballYOffset + 0.14, 2.92);
 
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enablePan = false;      // orbit only
