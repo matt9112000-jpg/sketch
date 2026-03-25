@@ -288,8 +288,8 @@
         pointer-events:none;
       }
       .product-body.is-photo-ready .product-photo-stack{
-        opacity:1;
-        transform: translateY(0);
+        opacity:0;
+        transform: none;
         pointer-events:auto;
       }
       .product-photo-card{
@@ -311,8 +311,8 @@
       }
       /* Collapsed / preview state: only the main card is visible */
       .product-body.is-photo-ready .product-photo-card.card-main{
-        opacity:1;
-        transform: translate(0,0) rotate(0deg) scale(1.02);
+        opacity:0;
+        transform: none;
         z-index:3;
       }
       .product-body.is-photo-ready .product-photo-card.card-left,
@@ -323,18 +323,18 @@
       }
       /* Clicked state: cards fly out */
       .product-body.is-cards-out .product-photo-card.card-left{
-        opacity:1;
-        transform: translate(-22px,-10px) rotate(-10deg) scale(1);
+        opacity:0;
+        transform: none;
         z-index:4;
       }
       .product-body.is-cards-out .product-photo-card.card-main{
-        opacity:1;
-        transform: translate(0,-2px) rotate(0deg) scale(1.04);
+        opacity:0;
+        transform: none;
         z-index:5;
       }
       .product-body.is-cards-out .product-photo-card.card-right{
-        opacity:1;
-        transform: translate(22px,-10px) rotate(10deg) scale(1);
+        opacity:0;
+        transform: none;
         z-index:3;
       }
       .product-actions button{
@@ -679,37 +679,116 @@
         let gridCells = [];
         let gridFlashTimer = 0;
 
-        let photoReady = false;
-        let cardsOut = false;
-        const resetPhotoUi = ()=>{
-          photoReady = false;
-          cardsOut = false;
+        let planesReady = false;
+        let planesTargetOut = false; // toggled by click; driven to 3D position each frame.
+        let autoOutLatch = false; // ensure auto-out only happens once per hover/open cycle
+        const syncPreviewUiClasses = ()=>{
           if (!info) return;
-          info.classList.remove('is-photo-ready', 'is-cards-out');
+          info.classList.toggle('is-photo-ready', planesReady);
+          info.classList.toggle('is-cards-out', planesTargetOut);
         };
-        const revealPhotoUi = ()=>{
-          if (!info) return;
-          if (photoReady) return;
-          photoReady = true;
-          info.classList.add('is-photo-ready');
+        const setPlanesReady = (v)=>{
+          planesReady = !!v;
+          syncPreviewUiClasses();
+        };
+        const togglePlanesOut = ()=>{
+          if (!planesReady) return;
+          planesTargetOut = !planesTargetOut;
+          syncPreviewUiClasses();
         };
         if (photoStack && info){
-          const flyOut = ()=>{
-            if (!photoReady || cardsOut) return;
-            cardsOut = true;
-            info.classList.add('is-cards-out');
-          };
           photoStack.addEventListener('click', (e)=>{
             e.stopPropagation();
-            flyOut();
+            togglePlanesOut();
           });
           photoStack.addEventListener('keydown', (e)=>{
             const key = (e && e.key) ? e.key : '';
             if (key !== 'Enter' && key !== ' ') return;
             e.preventDefault();
             e.stopPropagation();
-            flyOut();
+            togglePlanesOut();
           });
+        }
+
+        // 3D preview planes (the three picture cards that slide out from the opened case).
+        let previewPlanesInitialized = false;
+        let previewGroup = null;
+        let previewMeshes = [];
+        let previewProgress = 0; // 0..1 (retracted -> out)
+
+        // Requested sizes in cm (Three.js units are assumed meters: 1 unit = 1m).
+        const PREVIEW_PLANE_W = 0.045; // 4.5cm
+        const PREVIEW_PLANE_L = 0.08;  // 8cm
+
+        const PREVIEW_SPREAD_X = 0.06;  // horizontal spacing between three planes
+        const PREVIEW_BASE_Y = 0.02;    // vertical position inside the case
+        const PREVIEW_IN_Z = -0.01;     // retracted position (local to case)
+        const PREVIEW_OUT_Z = -0.22;    // extended position (local to case)
+
+        function syncPreviewPlanesToProgress(){
+          if (!previewGroup || !previewMeshes.length) return;
+          previewGroup.position.z = PREVIEW_IN_Z + (PREVIEW_OUT_Z - PREVIEW_IN_Z) * previewProgress;
+          const opacity = Math.max(0, Math.min(1, previewProgress));
+          previewMeshes.forEach((m)=>{ if (m && m.material) m.material.opacity = opacity; });
+        }
+
+        async function initPreviewPlanesIfNeeded(){
+          if (previewPlanesInitialized) return;
+          if (!modelState || !modelState.caseNode) return;
+          previewPlanesInitialized = true;
+
+          const loader = new THREE.TextureLoader();
+          const loadTexture = (url)=>new Promise((resolve)=>{
+            loader.load(url, (tex)=>{
+              tex.colorSpace = THREE.SRGBColorSpace;
+              tex.flipY = false;
+              tex.wrapS = THREE.ClampToEdgeWrapping;
+              tex.wrapT = THREE.ClampToEdgeWrapping;
+              tex.anisotropy = Math.min(8, renderer && renderer.capabilities ? renderer.capabilities.getMaxAnisotropy() : 1);
+              resolve(tex);
+            }, undefined, ()=>{
+              resolve(null);
+            });
+          });
+
+          const [texLeft, texMain, texRight] = await Promise.all([
+            loadTexture('./shop-assets/silver-case.png'),
+            loadTexture('./shop-assets/product-photo.png'),
+            loadTexture('./shop-assets/silver-panel.png')
+          ]);
+
+          const geometry = new THREE.PlaneGeometry(PREVIEW_PLANE_W, PREVIEW_PLANE_L);
+          const makeMat = (tex)=>new THREE.MeshBasicMaterial({
+            map: tex || null,
+            color: 0xffffff,
+            transparent: true,
+            opacity: 0,
+            side: THREE.DoubleSide,
+            toneMapped: false
+          });
+
+          previewGroup = new THREE.Group();
+          modelState.caseNode.add(previewGroup);
+          previewGroup.position.set(0, PREVIEW_BASE_Y, PREVIEW_IN_Z);
+
+          const x = PREVIEW_SPREAD_X;
+          const planes = [
+            { tex: texLeft,  x: -x, rotY: -0.08, y: 0.00 },
+            { tex: texMain,  x:  0, rotY:  0.00, y: 0.00 },
+            { tex: texRight, x:  x, rotY:  0.08, y: 0.00 },
+          ];
+
+          planes.forEach((p)=>{
+            const mesh = new THREE.Mesh(geometry, makeMat(p.tex));
+            mesh.position.set(p.x, p.y, 0);
+            mesh.rotation.y = p.rotY;
+            previewGroup.add(mesh);
+            previewMeshes.push(mesh);
+          });
+
+          // If we already decided to show them out before textures finished, apply immediately.
+          previewProgress = planesTargetOut ? 1 : 0;
+          syncPreviewPlanesToProgress();
         }
         function stopGridFlash(){
           if (gridFlashTimer){
@@ -928,45 +1007,14 @@
           controls.update();
         }
 
-        const silverCaseMat = new THREE.MeshPhysicalMaterial({
+        const silverMat = new THREE.MeshPhysicalMaterial({
           color: '#eef3ff',
           metalness: 0.94,
-          roughness: 0.10,
-          clearcoat: 0.86,
-          clearcoatRoughness: 0.05,
-          envMapIntensity: 1.7
+          roughness: 0.12,
+          clearcoat: 0.82,
+          clearcoatRoughness: 0.06,
+          envMapIntensity: 1.62
         });
-        const silverPanelMat = new THREE.MeshPhysicalMaterial({
-          color: '#f0f5ff',
-          metalness: 0.92,
-          roughness: 0.14,
-          clearcoat: 0.84,
-          clearcoatRoughness: 0.08,
-          envMapIntensity: 1.55
-        });
-
-        // Use your silver reference images for case/panel surfaces.
-        // Absolute `file://` URLs keep it working when the page is opened locally.
-        const silverCaseTexUrl = './shop-assets/silver-case.png';
-        const silverPanelTexUrl = './shop-assets/silver-panel.png';
-        const silverTexLoader = new THREE.TextureLoader();
-        function applySilverTex(url, mat){
-          silverTexLoader.load(url, (tex)=>{
-            tex.colorSpace = THREE.SRGBColorSpace;
-            tex.flipY = false;
-            tex.wrapS = THREE.ClampToEdgeWrapping;
-            tex.wrapT = THREE.ClampToEdgeWrapping;
-            tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
-            mat.map = tex;
-            mat.needsUpdate = true;
-          }, undefined, ()=>{
-            // Fall back to solid silver if the local texture can't be loaded.
-            mat.map = null;
-            mat.needsUpdate = true;
-          });
-        }
-        applySilverTex(silverCaseTexUrl, silverCaseMat);
-        applySilverTex(silverPanelTexUrl, silverPanelMat);
         function boostStickerImage(image){
           const cv = document.createElement('canvas');
           cv.width = image.width || 1024;
@@ -1121,10 +1169,10 @@
         function applyShopParts(){
           if (!modelState.parts) return;
           const parts = modelState.parts;
-          parts['1'].forEach((m)=>{ m.material = silverCaseMat; m.visible = modelState.caseVisible; });
-          parts['2'].forEach((m)=>{ m.material = silverPanelMat; m.visible = true; });
+          parts['1'].forEach((m)=>{ m.material = silverMat; m.visible = modelState.caseVisible; });
+          parts['2'].forEach((m)=>{ m.material = silverMat; m.visible = true; });
           parts['3'].forEach((m)=>{ m.material = blackMat; m.visible = modelState.showPart3; });
-          parts.other.forEach((m)=>{ m.material = silverCaseMat; m.visible = true; });
+          parts.other.forEach((m)=>{ m.material = silverMat; m.visible = true; });
           if (modelState.cartridgeMeshes && modelState.cartridgeMeshes.length){
             modelState.cartridgeMeshes.forEach((m)=>{ m.material = cartridgeDarkMat; m.visible = true; });
           }
@@ -1224,6 +1272,8 @@
           modelRoot = root;
           scene.add(root);
           motionState.initialized = false;
+          // Prepare the 3D preview planes (textures loaded asynchronously).
+          initPreviewPlanesIfNeeded();
         };
 
         (async ()=>{
@@ -1286,7 +1336,7 @@
           hoverTopLightR.intensity = active ? 3.4 : 0;
           hoverAreaWash.material.opacity = 0.0;
           if (!active){
-            resetPhotoUi();
+            autoOutLatch = false;
           }
         }
 
@@ -1375,9 +1425,14 @@
           }
           const target = active ? 1 : 0;
           motionState.progress += (target - motionState.progress) * 0.08;
-          // Reveal photo preview only after the opening motion finishes.
+          // After the opening motion finishes, automatically slide the three preview planes out.
           if (target === 1 && modelState.caseNode && motionState.progress >= 0.965){
-            revealPhotoUi();
+            if (!autoOutLatch){
+              setPlanesReady(true);
+              planesTargetOut = true;
+              syncPreviewUiClasses();
+              autoOutLatch = true;
+            }
           }
           if (modelState.part3Node){
             // Step 1: X-led slide, reversed direction.
@@ -1407,6 +1462,11 @@
             modelState.caseNode.position.y = motionState.caseBaseY + offset.y + (motionState.caseLiftY * motionState.progress);
             modelState.caseNode.position.z = motionState.caseBaseZ + offset.z;
           }
+
+          // Slide the three preview planes in/out from the opened case.
+          const planesTarget = (planesTargetOut && modelState && modelState.caseVisible) ? 1 : 0;
+          previewProgress += (planesTarget - previewProgress) * 0.08;
+          syncPreviewPlanesToProgress();
           controls.update();
           renderer.render(scene, camera);
           rafId = requestAnimationFrame(tick);
