@@ -277,6 +277,66 @@
         user-select:none;
         pointer-events:none;
       }
+      .product-photo-stack{
+        width:100%;
+        margin-top:12px;
+        position:relative;
+        aspect-ratio: 16 / 10;
+        opacity:0;
+        transform: translateY(10px);
+        transition: opacity .26s ease, transform .42s cubic-bezier(.2,.9,.2,1);
+        pointer-events:none;
+      }
+      .product-body.is-photo-ready .product-photo-stack{
+        opacity:1;
+        transform: translateY(0);
+        pointer-events:auto;
+      }
+      .product-photo-card{
+        position:absolute;
+        inset:0;
+        width:100%;
+        height:100%;
+        object-fit:cover;
+        border-radius:14px;
+        padding:10px;
+        background:rgba(255,255,255,.88);
+        filter: saturate(1.02) contrast(1.04) brightness(1.03);
+        mix-blend-mode:multiply;
+        user-select:none;
+        transform-origin:50% 70%;
+        transition: transform .55s cubic-bezier(.2,.9,.2,1), opacity .35s ease;
+        opacity:0;
+        box-shadow: 0 12px 30px rgba(0,0,0,.06);
+      }
+      /* Collapsed / preview state: only the main card is visible */
+      .product-body.is-photo-ready .product-photo-card.card-main{
+        opacity:1;
+        transform: translate(0,0) rotate(0deg) scale(1.02);
+        z-index:3;
+      }
+      .product-body.is-photo-ready .product-photo-card.card-left,
+      .product-body.is-photo-ready .product-photo-card.card-right{
+        opacity:0;
+        transform: translate(0, 14px) rotate(0deg) scale(.98);
+        z-index:1;
+      }
+      /* Clicked state: cards fly out */
+      .product-body.is-cards-out .product-photo-card.card-left{
+        opacity:1;
+        transform: translate(-22px,-10px) rotate(-10deg) scale(1);
+        z-index:4;
+      }
+      .product-body.is-cards-out .product-photo-card.card-main{
+        opacity:1;
+        transform: translate(0,-2px) rotate(0deg) scale(1.04);
+        z-index:5;
+      }
+      .product-body.is-cards-out .product-photo-card.card-right{
+        opacity:1;
+        transform: translate(22px,-10px) rotate(10deg) scale(1);
+        z-index:3;
+      }
       .product-actions button{
         border:none;
         border-radius:10px;
@@ -478,7 +538,11 @@
             </div>
             <div class="product-price" id="product-price">NT$3600 <span class="currency-unit twd">TWD</span></div>
           </div>
-          <img class="product-photo" id="product-photo" src="./shop-assets/product-photo.png" alt="CCC product photo" />
+          <div class="product-photo-stack" id="product-photo-stack" role="button" tabindex="0" aria-label="Preview photos">
+            <img class="product-photo-card card-left" src="./shop-assets/silver-case.png" alt="Case silver preview" />
+            <img class="product-photo-card card-main" src="./shop-assets/product-photo.png" alt="CCC product photo" />
+            <img class="product-photo-card card-right" src="./shop-assets/silver-panel.png" alt="Panel silver preview" />
+          </div>
           <p class="product-meta" id="product-meta">3D-printed with a vintage GBA cartridge (1 of 25),<br>featuring a one-to-multi cable charm.</p>
           <div class="product-actions">
             <button id="add-cart-btn" type="button">Add Cart</button>
@@ -608,11 +672,45 @@
         const pageGrid = document.getElementById('page-grid');
         const shell = document.getElementById('viewer-shell');
         const info = document.getElementById('product-info');
+        const photoStack = document.getElementById('product-photo-stack');
         const mount = document.getElementById('box-viewer');
         const gridBaseColor = '#f3f3f3';
         const gridPalette = ['#4C4C4C','#6DFF69','#FF3BDA','#FF99B1','#1A26FF','#FF4622','#FCC730'];
         let gridCells = [];
         let gridFlashTimer = 0;
+
+        let photoReady = false;
+        let cardsOut = false;
+        const resetPhotoUi = ()=>{
+          photoReady = false;
+          cardsOut = false;
+          if (!info) return;
+          info.classList.remove('is-photo-ready', 'is-cards-out');
+        };
+        const revealPhotoUi = ()=>{
+          if (!info) return;
+          if (photoReady) return;
+          photoReady = true;
+          info.classList.add('is-photo-ready');
+        };
+        if (photoStack && info){
+          const flyOut = ()=>{
+            if (!photoReady || cardsOut) return;
+            cardsOut = true;
+            info.classList.add('is-cards-out');
+          };
+          photoStack.addEventListener('click', (e)=>{
+            e.stopPropagation();
+            flyOut();
+          });
+          photoStack.addEventListener('keydown', (e)=>{
+            const key = (e && e.key) ? e.key : '';
+            if (key !== 'Enter' && key !== ' ') return;
+            e.preventDefault();
+            e.stopPropagation();
+            flyOut();
+          });
+        }
         function stopGridFlash(){
           if (gridFlashTimer){
             clearTimeout(gridFlashTimer);
@@ -1187,6 +1285,9 @@
           hoverTopLightL.intensity = active ? 3.4 : 0;
           hoverTopLightR.intensity = active ? 3.4 : 0;
           hoverAreaWash.material.opacity = 0.0;
+          if (!active){
+            resetPhotoUi();
+          }
         }
 
         function checkProximity(clientX, clientY){
@@ -1274,6 +1375,10 @@
           }
           const target = active ? 1 : 0;
           motionState.progress += (target - motionState.progress) * 0.08;
+          // Reveal photo preview only after the opening motion finishes.
+          if (target === 1 && modelState.caseNode && motionState.progress >= 0.965){
+            revealPhotoUi();
+          }
           if (modelState.part3Node){
             // Step 1: X-led slide, reversed direction.
             modelState.part3Node.position.x = motionState.part3BaseX + (motionState.part3SlideX * motionState.progress);
