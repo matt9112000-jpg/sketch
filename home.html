@@ -40,6 +40,11 @@
         position:fixed;
         inset:0;
         z-index:10;
+        pointer-events:none;
+        background:transparent;
+      }
+      #ball-wrap canvas{
+        pointer-events:auto;
       }
       #top-buttons{
         position:absolute;
@@ -72,14 +77,14 @@
       }
 
       #preview-panel{
-        position:absolute;
+        position:fixed;
         left:50%;
-        top:54%;
+        top:44%;
         transform:translate(-50%, -50%);
-        width:min(980px, 92vw);
-        height:min(640px, 62vh);
+        width:min(920px, 90vw);
+        height:min(580px, 58vh);
         z-index:5;
-        background:rgba(255,255,255,.72);
+        background:rgba(255,255,255,.88);
         border:none;
         border-radius:18px;
         overflow:hidden;
@@ -93,6 +98,7 @@
       }
       #preview-panel.is-visible{
         opacity:1;
+        z-index:15; /* above WebGL canvas so iframe is never painted underneath */
       }
       #preview-panel::before{
         content:'';
@@ -167,18 +173,19 @@
         }
         setLangLabel();
 
-        const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+        const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true, premultipliedAlpha:false });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setClearColor(0xffffff, 1);
+        /* Alpha 0 so areas outside the sphere show the preview layer (z-index under this wrap). */
+        renderer.setClearColor(0xffffff, 0);
         wrap.appendChild(renderer.domElement);
 
         const scene = new THREE.Scene();
-        const ballRadius = 1.38;
-        const ballYOffset = -1.05; // lower in the window (toward bottom)
+        const ballRadius = 0.48;
+        const ballYOffset = -1.22; // tiny ball, low in the window
 
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 50);
-        camera.position.set(0, ballYOffset + 0.55, 3.15);
+        camera.position.set(0, ballYOffset + 0.32, 4.35);
 
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enablePan = false;      // orbit only
@@ -281,7 +288,7 @@
         group.position.y = ballYOffset;
 
         // Interactive project cubes (separate meshes so raycasting works).
-        const markerSize = 0.14;
+        const markerSize = 0.056;
         const markerGeom = new THREE.BoxGeometry(markerSize, markerSize, markerSize);
         const interactive = [];
         let selfMarker = null;
