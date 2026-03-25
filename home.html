@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Space+Mono:wght@400;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap"
       rel="stylesheet"
     />
     <style>
@@ -63,7 +63,7 @@
         background:transparent;
         padding:0;
         margin:0;
-        font:800 18px/1.1 "Space Mono", monospace;
+        font:800 18px/1.1 Montserrat, system-ui, sans-serif;
         letter-spacing:.06em;
         color:#000;
         text-transform:uppercase;
@@ -80,10 +80,42 @@
       .hud-btn small{
         display:block;
         margin-top:8px;
-        font:700 11px/1.1 "Space Mono", monospace;
+        font:700 11px/1.1 Montserrat, system-ui, sans-serif;
         color:var(--muted);
         letter-spacing:.16em;
         text-transform:uppercase;
+      }
+
+      .facet-tag{
+        position:fixed;
+        left:0;
+        top:0;
+        z-index:21;
+        transform:translate(-50%, -130%);
+        pointer-events:none;
+        opacity:0;
+        transition:opacity .15s ease;
+        max-width:min(280px, 46vw);
+        text-align:center;
+      }
+      .facet-tag.is-visible{
+        opacity:1;
+      }
+      .facet-tag__link{
+        pointer-events:auto;
+        display:inline-block;
+        font:600 11px/1.25 Montserrat, system-ui, sans-serif;
+        letter-spacing:.12em;
+        text-transform:uppercase;
+        color:#111;
+        text-decoration:none;
+        border-bottom:1px solid rgba(0,0,0,.35);
+        padding-bottom:2px;
+        cursor:var(--cursor-cube), pointer;
+      }
+      .facet-tag__link:hover{
+        color:var(--accent);
+        border-bottom-color:var(--accent);
       }
 
       #ball{
@@ -104,6 +136,9 @@
         <button class="hud-btn" type="button" id="contact-btn">CONTACT</button>
         <button class="hud-btn" type="button" id="lang-btn">中文</button>
       </div>
+      <div id="facet-tag" class="facet-tag" aria-hidden="true">
+        <a id="facet-tag-link" class="facet-tag__link" href="#">01 SELF-INTRODUCTION</a>
+      </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
@@ -116,6 +151,8 @@
         const shopBtn = document.getElementById('shop-btn');
         const contactBtn = document.getElementById('contact-btn');
         const langBtn = document.getElementById('lang-btn');
+        const facetTag = document.getElementById('facet-tag');
+        const facetTagLink = document.getElementById('facet-tag-link');
 
         const palette = ['#4C4C4C','#6DFF69','#FF3BDA','#FF99B1','#1A26FF','#FF4622','#FCC730'];
         const paletteLen = palette.length;
@@ -140,7 +177,7 @@
 
         const scene = new THREE.Scene();
         const ballRadius = 1.14;
-        const ballYOffset = -0.72; // large hero ball, sitting low in the frame
+        const ballYOffset = -1.08; // ~50% lower than prior (-0.72)
 
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 50);
         camera.position.set(0, ballYOffset + 0.12, 2.92);
@@ -251,9 +288,45 @@
         const ballMesh = new THREE.Mesh(sphereGeom, ballMat);
         group.add(ballMesh);
         group.position.y = ballYOffset;
+        group.rotation.y = Math.PI / 2;
+
+        const tagLocal = new THREE.Vector3(0.52, 0.78, 0.35).normalize().multiplyScalar(ballRadius * 1.015);
+        const tagWorld = new THREE.Vector3();
+        const tagNDC = new THREE.Vector3();
+        const groupCenter = new THREE.Vector3();
+
+        function selfIntroHref(){
+          return `./game.html?lang=${lang}`;
+        }
+        function updateFacetTagLink(){
+          if (facetTagLink) facetTagLink.href = selfIntroHref();
+        }
+        updateFacetTagLink();
 
         function tick(){
           controls.update();
+
+          if (facetTag && facetTagLink){
+            group.updateMatrixWorld(true);
+            tagWorld.copy(tagLocal).applyMatrix4(group.matrixWorld);
+            tagNDC.copy(tagWorld).project(camera);
+            const rect = renderer.domElement.getBoundingClientRect();
+            const px = rect.left + (tagNDC.x * 0.5 + 0.5) * rect.width;
+            const py = rect.top + (-tagNDC.y * 0.5 + 0.5) * rect.height;
+            group.getWorldPosition(groupCenter);
+            const outward = tagWorld.clone().sub(groupCenter).normalize();
+            const toCam = camera.position.clone().sub(tagWorld).normalize();
+            const facing = outward.dot(toCam) > 0.18;
+            const inView = facing &&
+              tagNDC.z > -1 && tagNDC.z < 1 &&
+              tagNDC.x > -0.92 && tagNDC.x < 0.92 &&
+              tagNDC.y > -0.92 && tagNDC.y < 0.92;
+            facetTag.style.left = px + 'px';
+            facetTag.style.top = py + 'px';
+            facetTag.classList.toggle('is-visible', inView);
+            facetTag.setAttribute('aria-hidden', inView ? 'false' : 'true');
+          }
+
           renderer.render(scene, camera);
           requestAnimationFrame(tick);
         }
@@ -262,6 +335,7 @@
           lang = nextLang;
           localStorage.setItem('site_lang', lang);
           setLangLabel();
+          updateFacetTagLink();
         }
 
         if (shopBtn){
