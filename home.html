@@ -222,13 +222,13 @@
         const TAG_FACET_IV = 2;
 
         const ballRadius = 1.14;
-        const ballYOffset = -2.052; // -1.52 × 1.35 (~35% lower); orbit follows group.position
+        const ballYOffset = -1.22; // raised so ball + orbit stay in view (was -2.052)
 
         const group = new THREE.Group();
         scene.add(group);
         group.position.set(0, ballYOffset, 0);
 
-        const lookLift = 0.92; // higher camera vs ball → ball reads lower in the window
+        const lookLift = 0.62; // camera above ball center; keeps ball visible with X tilt
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 50);
         const nextOrbitTarget = new THREE.Vector3();
         nextOrbitTarget.copy(group.position);
