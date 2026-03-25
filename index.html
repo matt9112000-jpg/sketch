@@ -12,7 +12,7 @@
     />
     <style>
       :root{
-        --bg:#ffffff;
+        --bg:#f3f3f3;
         --panel:#ffffff;
         --line:#d4d8e3;
         --text:#1f2433;
@@ -27,7 +27,7 @@
         --c6:#FF4622;
         --c7:#FCC730;
         --cube-size:8px;
-        --cube-gap:1px;
+        --cube-gap:2px;
         --font-sans:'Syne', sans-serif;
         --font-mono:'Space Mono', monospace;
         --font-serif:'Playfair Display', serif;
@@ -62,18 +62,17 @@
         letter-spacing:.08em;
         text-transform:uppercase;
         padding:.45rem 0;
-        display:none;
       }
       .marquee{
         display:inline-block;
-        animation:none;
+        animation:scroll 18s linear infinite;
       }
       .marquee span{ margin-right:2.2rem; }
       @keyframes scroll{ from{ transform:translateX(0);} to{ transform:translateX(-50%);} }
 
       header{
-        border-bottom:none;
-        padding:1.2rem 1.5rem 1.7rem;
+        border-bottom:2px solid var(--line);
+        padding:2.1rem 1.5rem 1.7rem;
       }
       .header-bar{
         display:grid;
@@ -90,7 +89,7 @@
       .title{
         position:relative;
         display:flex;
-        align-items:flex-start;
+        align-items:flex-end;
         flex-wrap:wrap;
         white-space:normal;
         pointer-events:none;
@@ -343,16 +342,11 @@
       }
 
       .index-side{
-        border-right:none;
-        background:transparent;
-        position:fixed;
-        right:26px;
-        bottom:26px;
-        z-index:10;
-        padding:0;
+        border-right:2px solid var(--line);
+        background:var(--panel);
       }
       .index-head{
-        display:none;
+        display:grid;
         grid-template-columns:60px minmax(0,1fr) 120px;
         border-bottom:2px solid var(--line);
         padding:.8rem 1rem;
@@ -363,41 +357,23 @@
       .rows{
         display:flex;
         flex-direction:column;
-        align-items:flex-end;
       }
       .row{
         display:grid;
-        grid-template-columns: 1fr;
+        grid-template-columns:60px minmax(0,1fr) 120px;
         align-items:center;
-        gap:0;
-        border-bottom:none;
+        gap:.5rem;
+        border-bottom:2px solid var(--line);
         text-decoration:none;
         color:var(--text);
-        background:transparent;
-        padding:0;
-        transition:filter .12s linear;
-        justify-content:center;
-        width:92px;
-        height:92px;
+        background:var(--panel);
+        padding:1rem;
+        transition:background .12s linear, color .12s linear;
       }
       .row:hover, .row.active{
-        background:transparent;
-        color:var(--text);
-        filter:brightness(1.05);
-      }
-      .row .num,
-      .row .name,
-      .row .meta{
-        display:none;
-      }
-      .project-cube{
-        --cube-size:12px;
-        --cube-gap:1px;
-        display:grid;
-        grid-template-columns:repeat(6,var(--cube-size));
-        grid-template-rows:repeat(6,var(--cube-size));
-        gap:var(--cube-gap);
-        transform: scale(1.05);
+        background:#fff0fb;
+        color:var(--c1);
+        border-color:#ffb8ec;
       }
       .row .num{
         font:700 13px/1 var(--font-mono);
@@ -417,12 +393,9 @@
       }
 
       .preview-side{
-        position:fixed;
-        inset:0;
+        position:relative;
         overflow:hidden;
-        background:transparent;
-        z-index:9;
-        pointer-events:none;
+        background:#f7f8fb;
         transition:min-height .32s cubic-bezier(.2,.9,.2,1), height .32s cubic-bezier(.2,.9,.2,1), background .2s ease;
       }
       .preview-grid{
@@ -442,44 +415,19 @@
       }
 
       .preview-card{
-        position:fixed;
-        left:50%;
-        top:50%;
-        width:min(760px, 78vw);
-        height:min(480px, 50vh);
-        inset:auto;
-        transform: translate(-50%, -50%) scale(.98);
-        border:2px solid var(--c3);
-        border-radius:14px;
+        position:absolute;
+        inset:0;
+        border-left:2px solid var(--line);
         background:#ffffff;
         cursor:pointer;
         opacity:0;
+        transform: translateX(18px) scale(.98);
         clip-path: inset(0 0 0 0);
         transition:opacity .2s linear, transform .28s cubic-bezier(.2,.9,.2,1), clip-path .34s cubic-bezier(.2,.9,.2,1);
       }
-      .preview-card::before{
-        content:"";
-        position:absolute;
-        inset:10px;
-        border:2px solid var(--c5);
-        border-radius:10px;
-        pointer-events:none;
-      }
-      .preview-handle{
-        position:absolute;
-        width:12px;
-        height:12px;
-        border:2px solid var(--c5);
-        background:transparent;
-        pointer-events:none;
-      }
-      .preview-handle--tl{ left:-2px; top:-2px; }
-      .preview-handle--tr{ right:-2px; top:-2px; }
-      .preview-handle--bl{ left:-2px; bottom:-2px; }
-      .preview-handle--br{ right:-2px; bottom:-2px; }
       .preview-card.visible{
         opacity:1;
-        transform: translate(-50%, -50%) scale(1);
+        transform: translateX(0) scale(1);
       }
       .preview-frame{
         position:absolute;
@@ -496,9 +444,8 @@
         right:0;
         bottom:0;
         padding:1rem 1.1rem;
-        background:transparent;
+        background:linear-gradient(transparent, rgba(255,255,255,.95));
         color:#1f2433;
-        z-index:3;
       }
       .preview-kicker{
         font:700 11px/1 var(--font-mono);
@@ -520,7 +467,7 @@
         display:inline-grid;
         grid-auto-flow:column;
         align-items:start;
-        column-gap:3px;
+        column-gap:6px;
       }
       .cube-letter{
         display:grid;
@@ -531,12 +478,8 @@
       .cube-cell{
         width:var(--cube-size);
         height:var(--cube-size);
-        border-radius:0;
-        box-shadow:none;
-        transition: background .18s ease, filter .18s ease;
-      }
-      .cube-cell.is-flash{
-        filter:brightness(1.25) saturate(1.15);
+        border-radius:2px;
+        box-shadow:inset 0 0 0 1px rgba(255,255,255,.35);
       }
 
       @media (max-width: 920px){
@@ -554,7 +497,7 @@
       @media (max-width: 680px){
         :root{
           --cube-size:6px;
-          --cube-gap:1px;
+          --cube-gap:2px;
         }
         .title-wrap{
           max-width:100%;
@@ -602,7 +545,15 @@
           line-height:1.4;
         }
         .row{
-          padding:1rem .9rem;
+          grid-template-columns:44px minmax(0,1fr) 82px;
+          padding:.85rem .7rem;
+        }
+        .row .name{
+          font-size:clamp(.78rem, 4.7vw, .95rem);
+          letter-spacing:-.01em;
+        }
+        .row .meta{
+          font-size:10px;
         }
       }
     </style>
@@ -646,8 +597,7 @@
           <span>ID</span><span>Project</span><span style="text-align:right;">Type</span>
         </div>
         <div class="rows" id="rows">
-          <a class="row" data-preview-title="SELF-INTRODUCTION" data-preview-desc="What is INSUFFICIENT SPACE?&#10;You might find out through the game." data-preview-image="linear-gradient(130deg,#1a26ff 0%,#ff3bda 60%,#ff4622 100%)" href="./game.html" data-soft-nav>
-            <span class="project-cube" aria-hidden="true"></span>
+          <a class="row active" data-preview-title="SELF-INTRODUCTION" data-preview-desc="What is INSUFFICIENT SPACE?&#10;You might find out through the game." data-preview-image="linear-gradient(130deg,#1a26ff 0%,#ff3bda 60%,#ff4622 100%)" href="./game.html" data-soft-nav>
             <span class="num">01</span><span class="name">SELF-INTRODUCTION</span><span class="meta">Game<br/>Live</span>
           </a>
         </div>
@@ -655,11 +605,7 @@
 
       <section class="preview-side" aria-label="Hover Preview">
         <div class="preview-grid" id="preview-grid"></div>
-        <div class="preview-card" id="preview-card">
-          <span class="preview-handle preview-handle--tl" aria-hidden="true"></span>
-          <span class="preview-handle preview-handle--tr" aria-hidden="true"></span>
-          <span class="preview-handle preview-handle--bl" aria-hidden="true"></span>
-          <span class="preview-handle preview-handle--br" aria-hidden="true"></span>
+        <div class="preview-card visible" id="preview-card">
           <iframe class="preview-frame" id="preview-frame" title="Page preview" loading="lazy"></iframe>
           <div class="preview-overlay">
             <div class="preview-kicker"></div>
@@ -741,43 +687,21 @@
           T:['11111','00100','00100','00100','00100','00100','00100'],
           U:['10001','10001','10001','10001','10001','10001','01110']
         };
-        function buildCubeWord(text, seed, cubeSizeFactor = 1){
+        function buildCubeWord(text, seed){
           const word = document.createElement('span');
           word.className = 'cube-word';
-          const baseCubeSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cube-size')) || 8;
-          const wordCubeSize = Math.max(2, baseCubeSize * cubeSizeFactor);
-          word.style.setProperty('--cube-size', `${wordCubeSize}px`);
           let colorIdx = seed;
-          for (let i = 0; i < text.length; i++){
-            const ch = text[i];
+          for (const ch of text){
             const map = glyph[ch];
             if (!map) continue;
             const letter = document.createElement('span');
             letter.className = 'cube-letter';
-
-            // Per-letter size bias (more obvious than a single size per word).
-            // Matches your "I big / N small" vibe, while keeping other letters varied.
-            const chCode = ch.charCodeAt(0);
-            let x = (seed * 10007 + i * 9176 + chCode * 19) >>> 0;
-            x ^= x << 13;
-            x ^= x >>> 17;
-            x ^= x << 5;
-            const rand01 = (x >>> 0) / 4294967295;
-
-            let rel = 0.78 + rand01 * 0.74; // 0.78 .. 1.52
-            if (ch === 'I') rel = 1.6 + rand01 * 0.4; // clearly bigger
-            if (ch === 'N') rel = 0.65 + rand01 * 0.18; // clearly smaller
-            const nextCubeSize = Math.max(2, baseCubeSize * cubeSizeFactor * rel);
-            letter.style.setProperty('--cube-size', `${nextCubeSize}px`);
-
             for (let r = 0; r < map.length; r++){
               for (let c = 0; c < map[r].length; c++){
                 const cell = document.createElement('span');
                 cell.className = 'cube-cell';
                 if (map[r][c] === '1'){
                   cell.style.background = cubePalette[(colorIdx + r + c) % cubePalette.length];
-                  cell.dataset.baseColor = cell.style.background;
-                  cell.dataset.color = cell.style.background;
                 } else {
                   cell.style.background = 'transparent';
                   cell.style.boxShadow = 'none';
@@ -790,47 +714,12 @@
           }
           return word;
         }
-        let heroCubeCells = [];
-        let heroCubeFlashTimer = 0;
-        function stopHeroCubeFlash(){
-          if (heroCubeFlashTimer){
-            clearTimeout(heroCubeFlashTimer);
-            heroCubeFlashTimer = 0;
-          }
-        }
-        function scheduleHeroCubeFlash(delay){
-          stopHeroCubeFlash();
-          heroCubeFlashTimer = setTimeout(()=>{
-            if (!heroCubeCells.length) return;
-            const target = heroCubeCells[Math.floor(Math.random() * heroCubeCells.length)];
-            if (!target) return;
-            const prev = target.dataset.color || target.dataset.baseColor || '';
-            let next = cubePalette[Math.floor(Math.random() * cubePalette.length)];
-            if (cubePalette.length > 1 && next === prev){
-              next = cubePalette[(cubePalette.indexOf(next) + 1) % cubePalette.length];
-            }
-            target.classList.add('is-flash');
-            target.style.background = next;
-            target.dataset.color = next;
-            setTimeout(()=>{
-              target.style.background = target.dataset.baseColor || 'transparent';
-              target.dataset.color = target.dataset.baseColor || 'transparent';
-              target.classList.remove('is-flash');
-              scheduleHeroCubeFlash(260 + Math.random() * 520);
-            }, 210);
-          }, delay);
-        }
         const showFinalHeroState = ()=>{
-          stopHeroCubeFlash();
           ins.innerHTML = '';
-          const isMobile = window.innerWidth <= 680;
-          // Default sizes (per-letter will be varied inside buildCubeWord).
-          const insFactor = isMobile ? 1.12 : 1.2;
-          const spaceFactor = isMobile ? 1.0 : 1.02;
-          ins.appendChild(buildCubeWord('INSUFFICIENT', 0, insFactor));
+          ins.appendChild(buildCubeWord('INSUFFICIENT', 0));
           ins.classList.remove('transfer-syne', 'transfer-serif', 'transfer-back');
           space.innerHTML = '';
-          space.appendChild(buildCubeWord('SPACE', 2, spaceFactor));
+          space.appendChild(buildCubeWord('SPACE', 2));
           space.classList.remove('is-visible');
           space.classList.remove('is-covering');
           space.classList.add('is-static');
@@ -839,13 +728,6 @@
           heroTitle.classList.add('is-done');
           bannerLinks.classList.remove('intro-glass');
           document.body.classList.add('intro-done');
-
-          // Flash random cube colors (shop-like) after the final hero state is rendered.
-          // Avoid it for reduced-motion users.
-          heroCubeCells = Array.from(heroTitle.querySelectorAll('.cube-cell[data-base-color]'));
-          if (!reduce && heroCubeCells.length){
-            scheduleHeroCubeFlash(700 + Math.random() * 400);
-          }
         };
         const resetHeroIntroState = ()=>{
           document.body.classList.remove('intro-done');
@@ -956,44 +838,6 @@
       })();
 
       (function(){
-        const cubePalette = ['#4C4C4C','#6DFF69','#FF3BDA','#FF99B1','#1A26FF','#FF4622','#FCC730'];
-        function mulberry32(a){
-          return function(){
-            let t = a += 0x6D2B79F5;
-            t = Math.imul(t ^ (t >>> 15), t | 1);
-            t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-          };
-        }
-        const rows = Array.from(document.querySelectorAll('.row'));
-        rows.forEach((row, rowIdx)=>{
-          const mount = row.querySelector('.project-cube');
-          if (!mount) return;
-          mount.innerHTML = '';
-          const rand = mulberry32((rowIdx + 1) * 1337 + 42);
-          const gridN = 6;
-          for (let r = 0; r < gridN; r++){
-            for (let c = 0; c < gridN; c++){
-              const cell = document.createElement('span');
-              cell.className = 'cube-cell';
-              // Make a recognizable "pixel cube" silhouette by cutting corners.
-              const dx = (c - (gridN - 1) / 2);
-              const dy = (r - (gridN - 1) / 2);
-              const dist = Math.sqrt(dx*dx + dy*dy);
-              const keep = dist < 3.35 && rand() > 0.18;
-              if (keep){
-                const col = cubePalette[Math.floor(rand() * cubePalette.length)];
-                cell.style.background = col;
-              } else {
-                cell.style.background = 'transparent';
-              }
-              mount.appendChild(cell);
-            }
-          }
-        });
-      })();
-
-      (function(){
         const rows = Array.from(document.querySelectorAll('.row'));
         const previewSide = document.querySelector('.preview-side');
         const card = document.getElementById('preview-card');
@@ -1028,13 +872,12 @@
 
         rows.forEach((row)=>{
           row.addEventListener('mouseenter', ()=>setPreview(row));
-          row.addEventListener('mouseleave', closePreview);
           row.addEventListener('focus', ()=>setPreview(row));
-          row.addEventListener('blur', closePreview);
           row.addEventListener('touchstart', ()=>setPreview(row), { passive:true });
         });
         if (previewSide) previewSide.addEventListener('mouseleave', closePreview);
         if (card) card.addEventListener('click', openActiveProject);
+        if (rows[0]) setPreview(rows[0]);
 
         document.body.classList.add('is-ready');
         document.querySelectorAll('a[data-soft-nav]').forEach(link=>{
