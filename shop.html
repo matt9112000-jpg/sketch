@@ -85,7 +85,7 @@
       .stage{
         width:min(980px, 100%);
         min-height:640px;
-        background:#f1f2f4;
+        background:#ffffff;
         border-radius:24px;
         border:none;
         position:relative;
@@ -97,8 +97,8 @@
         position:absolute;
         inset:0;
         background:
-          radial-gradient(820px 280px at 50% 100%, rgba(190,196,209,.56), transparent 64%),
-          radial-gradient(560px 260px at 8% 8%, rgba(224,228,236,.8), transparent 72%);
+          radial-gradient(820px 280px at 50% 100%, rgba(255,255,255,.98), transparent 64%),
+          radial-gradient(560px 260px at 8% 8%, rgba(255,255,255,.92), transparent 72%);
         z-index:1;
         pointer-events:none;
       }
@@ -436,8 +436,8 @@
       .scroll-gallery{
         width:min(980px, 100%);
         margin-top:10px;
-        display:flex;
-        flex-direction:column;
+        display:grid;
+        grid-template-columns:repeat(2, minmax(0, 1fr));
         gap:18px;
         z-index:1;
       }
@@ -446,6 +446,8 @@
         border-radius:22px;
         overflow:hidden;
         box-shadow:0 18px 46px rgba(0,0,0,.07);
+        display:flex;
+        flex-direction:column;
       }
       .scroll-gallery-card img{
         display:block;
@@ -455,9 +457,28 @@
         object-fit:cover;
         background:#fff;
       }
+      .scroll-gallery-caption{
+        padding:14px 16px 16px;
+      }
+      .scroll-gallery-caption h3{
+        margin:0 0 6px;
+        color:#1f2433;
+        font-size:13px;
+        font-weight:800;
+        letter-spacing:-0.01em;
+      }
+      .scroll-gallery-caption p{
+        margin:0;
+        color:#5f6778;
+        font-size:12px;
+        line-height:1.45;
+      }
       @media (max-width: 700px){
         .wrap{ padding:12px 10px; }
         .stage{ min-height: 80vh; }
+        .scroll-gallery{
+          grid-template-columns:1fr;
+        }
         .home-btn{
           top:16px;
           right:14px;
@@ -513,13 +534,39 @@
       </section>
       <section class="scroll-gallery" aria-label="Preview pictures">
         <div class="scroll-gallery-card">
-          <img src="./shop-assets/card-1.png" alt="Preview image 1" loading="lazy" />
+          <img src="./shop-assets/card-1.png" alt="Preview photo 1" loading="lazy" />
+          <div class="scroll-gallery-caption">
+            <h3>Outdoor Carry</h3>
+            <p>Daylight snapshot of the cartridge case + cable charm.</p>
+          </div>
         </div>
         <div class="scroll-gallery-card">
-          <img src="./shop-assets/card-2.png" alt="Preview image 2" loading="lazy" />
+          <img src="./shop-assets/card-2.png" alt="Preview photo 2" loading="lazy" />
+          <div class="scroll-gallery-caption">
+            <h3>Night Grip</h3>
+            <p>Warm indoor lighting with a close view of the details.</p>
+          </div>
         </div>
         <div class="scroll-gallery-card">
-          <img src="./shop-assets/card-3.png" alt="Preview image 3" loading="lazy" />
+          <img src="./shop-assets/card-3.png" alt="Preview photo 3" loading="lazy" />
+          <div class="scroll-gallery-caption">
+            <h3>Close Detail</h3>
+            <p>Tighter angle showing the front finish and texture.</p>
+          </div>
+        </div>
+        <div class="scroll-gallery-card">
+          <img src="./shop-assets/card-4.png" alt="Preview photo 4" loading="lazy" />
+          <div class="scroll-gallery-caption">
+            <h3>Bridge Moment</h3>
+            <p>A wide shot for motion and perspective.</p>
+          </div>
+        </div>
+        <div class="scroll-gallery-card">
+          <img src="./shop-assets/card-5.png" alt="Preview photo 5" loading="lazy" />
+          <div class="scroll-gallery-caption">
+            <h3>On the Road</h3>
+            <p>Roadside scene with the case in frame.</p>
+          </div>
         </div>
       </section>
     </main>
@@ -762,8 +809,9 @@
         const camera = new THREE.PerspectiveCamera(35, mount.clientWidth / mount.clientHeight, 0.01, 100);
         camera.position.set(1.05, 0.65, 1.45);
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+        renderer.setClearColor(0xffffff, 1);
         renderer.setSize(mount.clientWidth, mount.clientHeight);
         renderer.outputColorSpace = THREE.SRGBColorSpace;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
