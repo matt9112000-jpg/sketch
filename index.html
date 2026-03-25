@@ -73,7 +73,7 @@
 
       header{
         border-bottom:2px solid var(--line);
-        padding:2.1rem 1.5rem 1.7rem;
+        padding:1.2rem 1.5rem 1.7rem;
       }
       .header-bar{
         display:grid;
@@ -90,7 +90,7 @@
       .title{
         position:relative;
         display:flex;
-        align-items:flex-end;
+        align-items:flex-start;
         flex-wrap:wrap;
         white-space:normal;
         pointer-events:none;
@@ -758,7 +758,7 @@
           stopHeroCubeFlash();
           ins.innerHTML = '';
           const isMobile = window.innerWidth <= 680;
-          const insFactor = isMobile ? 0.9 + Math.random() * 0.2 : 0.85 + Math.random() * 0.3;
+          const insFactor = isMobile ? 1.05 + Math.random() * 0.25 : 1.12 + Math.random() * 0.35;
           const spaceFactor = isMobile ? 0.9 + Math.random() * 0.2 : 0.85 + Math.random() * 0.3;
           ins.appendChild(buildCubeWord('INSUFFICIENT', 0, insFactor));
           ins.classList.remove('transfer-syne', 'transfer-serif', 'transfer-back');
