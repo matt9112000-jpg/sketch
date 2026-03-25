@@ -74,7 +74,6 @@
         flex:0 0 var(--grid-size);
         width:var(--grid-size);
         height:var(--grid-size);
-        border:1px solid rgba(255,255,255,.12);
         transition:background-color .22s ease, filter .22s ease;
       }
       .page-grid-cell.is-flash{
@@ -246,7 +245,7 @@
         justify-content:center;
         padding:4px 8px;
         border-radius:999px;
-        border:1px solid #ff99e8;
+        border:none;
         background:rgba(238,0,184,.18);
         color:#ffd3f4;
         font-size:11px;
@@ -263,6 +262,20 @@
         margin-top:10px;
         display:flex;
         gap:8px;
+      }
+      .product-photo{
+        width:100%;
+        margin-top:12px;
+        border-radius:14px;
+        background:rgba(255,255,255,.88);
+        padding:10px;
+        object-fit:cover;
+        aspect-ratio: 16 / 10;
+        filter: saturate(1.02) contrast(1.04) brightness(1.03);
+        opacity:.92;
+        mix-blend-mode:multiply;
+        user-select:none;
+        pointer-events:none;
       }
       .product-actions button{
         border:none;
@@ -465,6 +478,7 @@
             </div>
             <div class="product-price" id="product-price">NT$3600 <span class="currency-unit twd">TWD</span></div>
           </div>
+          <img class="product-photo" id="product-photo" src="./shop-assets/product-photo.png" alt="CCC product photo" />
           <p class="product-meta" id="product-meta">3D-printed with a vintage GBA cartridge (1 of 25),<br>featuring a one-to-multi cable charm.</p>
           <div class="product-actions">
             <button id="add-cart-btn" type="button">Add Cart</button>
@@ -835,8 +849,8 @@
 
         // Use your silver reference images for case/panel surfaces.
         // Absolute `file://` URLs keep it working when the page is opened locally.
-        const silverCaseTexUrl = 'file:///Users/matt/.cursor/projects/Users-matt-Downloads-sketch2695852/assets/___2026-03-25___3.00.00-4ff9e11d-263b-4c44-b81d-c84809983f82.png';
-        const silverPanelTexUrl = 'file:///Users/matt/.cursor/projects/Users-matt-Downloads-sketch2695852/assets/___2026-03-25___3.00.43-de2d1e9d-96fc-4235-bcc7-ce1a150958ef.png';
+        const silverCaseTexUrl = './shop-assets/silver-case.png';
+        const silverPanelTexUrl = './shop-assets/silver-panel.png';
         const silverTexLoader = new THREE.TextureLoader();
         function applySilverTex(url, mat){
           silverTexLoader.load(url, (tex)=>{
