@@ -76,40 +76,6 @@
         text-transform:uppercase;
       }
 
-      /* Behind the WebGL layer (z-index); ball draws on top via transparent canvas clear. */
-      #preview-panel{
-        position:fixed;
-        left:50%;
-        top:44%;
-        transform:translate(-50%, -50%);
-        width:min(960px, 92vw);
-        height:min(600px, 62vh);
-        z-index:5;
-        background:transparent;
-        border:none;
-        border-radius:0;
-        overflow:hidden;
-        opacity:1;
-        pointer-events:none;
-        box-shadow:none;
-        /* Feather edges into white page — no hard frame */
-        -webkit-mask-image:radial-gradient(ellipse 78% 76% at 50% 44%,#000 52%,#000 72%,transparent 100%);
-        mask-image:radial-gradient(ellipse 78% 76% at 50% 44%,#000 52%,#000 72%,transparent 100%);
-        -webkit-mask-repeat:no-repeat;
-        mask-repeat:no-repeat;
-        -webkit-mask-size:100% 100%;
-        mask-size:100% 100%;
-      }
-      #preview-frame{
-        position:absolute;
-        inset:0;
-        width:100%;
-        height:100%;
-        border:0;
-        background:#fff;
-        pointer-events:none;
-        z-index:1;
-      }
       #ball{
         width:100%;
         height:100%;
@@ -139,9 +105,7 @@
     <script>
       (function(){
         const wrap = document.getElementById('ball');
-        const previewPanel = document.getElementById('preview-panel');
-        const previewFrame = document.getElementById('preview-frame');
-        if (!wrap || !previewPanel || !previewFrame) return;
+        if (!wrap) return;
 
         const shopBtn = document.getElementById('shop-btn');
         const contactBtn = document.getElementById('contact-btn');
@@ -212,9 +176,9 @@
           const im = ctx.createImageData(size, size);
           const d = im.data;
 
-          const tilesU = 32;
-          const tilesV = 16;
-          const groutW = 0.11;
+          const tilesU = 12;
+          const tilesV = 6;
+          const groutW = 0.055;
 
           for (let y = 0; y < size; y++){
             const v = y / (size - 1);
@@ -232,28 +196,31 @@
               const i = (y * size + x) * 4;
 
               if (edge < groutW){
-                const g = 18 + Math.round(edge / groutW * 40);
-                d[i] = g; d[i + 1] = g; d[i + 2] = g + 8; d[i + 3] = 255;
+                const t = edge / groutW;
+                const g = 55 + Math.round(t * 85);
+                const bl = 70 + Math.round(t * 60);
+                d[i] = g; d[i + 1] = g; d[i + 2] = bl; d[i + 3] = 255;
                 continue;
               }
 
               const seed = iu * 73 + iv * 179;
               const cIdx = Math.abs(seed) % paletteLen;
               const col = palRgb[cIdx];
+              const vivid = cIdx === 0 ? 1.18 : 1.32;
 
               const du = fu - 0.5;
               const dv = fv - 0.5;
               const dist = Math.sqrt(du * du + dv * dv);
-              const spec = Math.pow(Math.max(0, 1 - dist * 2.15), 2.8);
-              const facetShade = 0.55 + (1 - Math.min(1, dist * 1.9)) * 0.28;
-              const jitter = 0.92 + ((seed * 0.001) % 1) * 0.14;
+              const spec = Math.pow(Math.max(0, 1 - dist * 1.85), 2.2);
+              const facetShade = 0.82 + (1 - Math.min(1, dist * 1.45)) * 0.22;
+              const jitter = 0.96 + ((seed * 0.001) % 1) * 0.08;
 
-              let r = col.r * facetShade * jitter + spec * 220;
-              let g = col.g * facetShade * jitter + spec * 235;
-              let b = col.b * facetShade * jitter + spec * 255;
+              let r = col.r * facetShade * jitter * vivid + spec * 255;
+              let g = col.g * facetShade * jitter * vivid + spec * 255;
+              let b = col.b * facetShade * jitter * vivid + spec * 255;
 
               const rim = Math.min(fu, 1 - fu, fv, 1 - fv);
-              const rimDark = 0.88 + rim * 0.24;
+              const rimDark = 0.96 + rim * 0.08;
               r *= rimDark; g *= rimDark; b *= rimDark;
 
               d[i] = Math.min(255, Math.round(r));
@@ -274,21 +241,12 @@
         const ballTexture = createDiscoBallTexture();
         const ballMat = new THREE.MeshStandardMaterial({
           map: ballTexture,
-          roughness: 0.22,
-          metalness: 0.78
+          roughness: 0.35,
+          metalness: 0.42
         });
         const ballMesh = new THREE.Mesh(sphereGeom, ballMat);
         group.add(ballMesh);
         group.position.y = ballYOffset;
-
-        function setBackdropPreviewSrc(){
-          const u = new URL('./shop.html', window.location.href);
-          u.searchParams.set('lang', lang);
-          u.searchParams.set('preview', '1');
-          const next = u.toString();
-          if (previewFrame.getAttribute('src') !== next) previewFrame.src = next;
-        }
-        setBackdropPreviewSrc();
 
         function tick(){
           controls.update();
@@ -300,7 +258,6 @@
           lang = nextLang;
           localStorage.setItem('site_lang', lang);
           setLangLabel();
-          setBackdropPreviewSrc();
         }
 
         if (shopBtn){
