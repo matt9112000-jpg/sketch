@@ -50,14 +50,18 @@
         pointer-events:auto;
       }
       #top-buttons{
-        position:absolute;
+        position:fixed;
         z-index:101;
-        top:18px;
-        left:18px;
-        right:18px;
-        display:flex;
-        justify-content:space-between;
-        align-items:flex-start;
+        top:0;
+        left:0;
+        right:0;
+        height:56px;
+        display:grid;
+        grid-template-columns:1fr 1fr 1fr;
+        align-items:center;
+        padding:0 18px;
+        background:#ececec;
+        border-bottom:1px solid rgba(0,0,0,.08);
         pointer-events:auto;
         user-select:none;
         -webkit-tap-highlight-color:transparent;
@@ -67,7 +71,7 @@
         background:transparent;
         padding:0;
         margin:0;
-        font:800 18px/1.1 Montserrat, system-ui, sans-serif;
+        font:800 30px/1 Montserrat, system-ui, sans-serif;
         letter-spacing:.06em;
         color:#000;
         text-transform:uppercase;
@@ -77,6 +81,9 @@
         box-shadow:none;
         outline:none;
       }
+      #shop-btn{ justify-self:start; }
+      #contact-btn{ justify-self:center; }
+      #lang-btn{ justify-self:end; }
       .hud-btn:focus-visible{
         outline:2px solid var(--line);
         outline-offset:3px;
@@ -226,7 +233,7 @@
         const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true, premultipliedAlpha:false });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setClearColor(0xffffff, 1); // opaque when preview off
+        renderer.setClearColor(0, 0); // always transparent clear
         wrap.appendChild(renderer.domElement);
 
         const scene = new THREE.Scene();
@@ -413,7 +420,7 @@
             const src = selfIntroPreviewSrc();
             if (previewFrame.getAttribute('src') !== src) previewFrame.src = src;
           } else {
-            renderer.setClearColor(0xffffff, 1);
+            renderer.setClearColor(0, 0);
             previewPanel.classList.remove('is-active');
             previewPanel.setAttribute('aria-hidden', 'true');
           }

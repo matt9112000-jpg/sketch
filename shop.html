@@ -37,22 +37,51 @@
         cursor:var(--cursor-cube), auto;
         opacity:0;
         transition: opacity 260ms ease-out;
+        overflow:hidden;
       }
       a, button, .viewer-shell, .product-body{
         cursor:var(--cursor-cube), pointer;
       }
       body.is-ready{ opacity:1; }
       body.is-exiting{ opacity:0; }
+      .top-buttons{
+        position:fixed;
+        top:0;
+        left:0;
+        right:0;
+        height:56px;
+        z-index:120;
+        display:grid;
+        grid-template-columns:1fr 1fr 1fr;
+        align-items:center;
+        padding:0 18px;
+        background:#ececec;
+        border-bottom:1px solid rgba(0,0,0,.08);
+      }
+      .top-btn{
+        border:none;
+        background:transparent;
+        padding:0;
+        margin:0;
+        text-decoration:none;
+        font:800 30px/1 Montserrat, system-ui, sans-serif;
+        letter-spacing:.06em;
+        text-transform:uppercase;
+        color:#000;
+      }
+      #nav-shop{ justify-self:start; }
+      #nav-contact{ justify-self:center; }
+      #nav-lang{ justify-self:end; }
       .wrap{
-        min-height:100%;
+        min-height:100dvh;
         display:flex;
         flex-direction:column;
         align-items:center;
         justify-content:flex-start;
-        padding:28px 18px;
+        padding:56px 0 0;
         position:relative;
         overflow:visible;
-        gap:44px;
+        gap:0;
       }
       .page-grid{
         position:absolute;
@@ -83,10 +112,10 @@
         filter:brightness(1.25) saturate(1.15);
       }
       .stage{
-        width:min(980px, 100%);
-        min-height:640px;
+        width:100%;
+        min-height:calc(100dvh - 56px);
         background:#ffffff;
-        border-radius:24px;
+        border-radius:0;
         border:none;
         position:relative;
         overflow:hidden;
@@ -102,33 +131,15 @@
       }
       .stage-head{
         position:absolute;
-        top:24px;
+        top:72px;
         left:24px;
         right:24px;
         z-index:3;
-      }
-      .home-btn{
-        position:absolute;
-        top:24px;
-        right:24px;
-        z-index:4;
-        border:1px solid var(--c2);
-        border-radius:10px;
-        background:var(--c5);
-        color:#f4f6ff;
-        padding:7px 11px;
-        font-size:11px;
-        font-weight:700;
-        letter-spacing:.04em;
-        text-decoration:none;
-      }
-      .home-btn:hover{
-        border-color:var(--c4);
-      }
-      .home-btn:active,
-      .home-btn:focus-visible{
-        border-color:var(--c7);
-        background:#2632ff;
+        max-width:420px;
+        padding:12px 14px;
+        background:rgba(255,255,255,.84);
+        border:1px solid rgba(26,38,255,.2);
+        border-radius:12px;
       }
       h1{
         margin:0 0 8px;
@@ -144,11 +155,11 @@
       }
       .viewer-shell{
         position:absolute;
-        left:50%;
-        top:50%;
-        width:min(820px, 92vw);
-        height:min(560px, 60vh);
-        transform: translate(-50%, -50%) scale(0.72);
+        left:0;
+        top:0;
+        width:100%;
+        height:100%;
+        transform:none;
         transform-origin: center center;
         transition: transform 620ms cubic-bezier(.2,.9,.2,1), filter 320ms ease;
         z-index:2;
@@ -156,11 +167,11 @@
         overflow:hidden;
       }
       .viewer-shell.is-active{
-        transform: translate(-50%, -50%) scale(1);
+        transform:none;
         filter:none;
       }
       .viewer-shell.is-info-hover{
-        transform: translate(-50%, -50%) scale(1.06);
+        transform:none;
       }
       .viewer{
         width:100%;
@@ -176,9 +187,10 @@
       .product-body{
         position:absolute;
         left:50%;
-        top:74%;
-        width:min(460px, calc(100% - 36px));
-        transform: translate(-50%, 26px);
+        bottom:22px;
+        top:auto;
+        width:min(520px, calc(100% - 36px));
+        transform: translate(-50%, 18px);
         opacity:0;
         transition: transform 440ms cubic-bezier(.2,.9,.2,1), opacity 280ms ease;
         background: rgba(255,255,255,.9);
@@ -435,7 +447,7 @@
       .scroll-gallery{
         width:min(980px, 100%);
         margin-top:10px;
-        display:flex;
+        display:none;
         flex-direction:column;
         gap:14px;
         z-index:1;
@@ -473,40 +485,46 @@
         line-height:1.45;
       }
       @media (max-width: 700px){
-        .wrap{ padding:12px 10px; }
-        .stage{ min-height: 80vh; }
+        .wrap{ padding:56px 0 0; }
+        .stage{ min-height: calc(100dvh - 56px); }
         .scroll-gallery{
           gap:12px;
         }
-        .home-btn{
-          top:16px;
-          right:14px;
-        }
         .viewer-shell{
-          left:50%;
-          top:50%;
-          width:min(94vw, 520px);
-          height:min(54vh, 460px);
-          transform: translate(-50%, -50%) scale(0.94);
+          width:100%;
+          height:100%;
+          transform:none;
         }
         .viewer-shell.is-active{
-          transform: translate(-50%, -50%) scale(1.0);
+          transform:none;
         }
         .viewer-shell.is-info-hover{
-          transform: translate(-50%, -50%) scale(1.03);
+          transform:none;
         }
         .product-body{
-          top:74%;
+          bottom:12px;
+          top:auto;
           width:min(94vw, 520px);
+        }
+        .top-buttons{ padding:0 12px; }
+        .top-btn{ font-size:24px; }
+        .stage-head{
+          top:64px;
+          left:12px;
+          right:12px;
         }
       }
     </style>
   </head>
   <body>
+    <div class="top-buttons" aria-label="Site navigation">
+      <a class="top-btn" id="nav-shop" href="./shop.html" data-soft-nav>SHOP</a>
+      <a class="top-btn" id="nav-contact" href="./contact-preview.html" data-soft-nav>CONTACT</a>
+      <button class="top-btn" id="nav-lang" type="button">中文</button>
+    </div>
     <main class="wrap">
       <div class="page-grid" id="page-grid" aria-hidden="true"></div>
       <section class="stage" aria-label="Product stage" id="product-stage">
-        <a class="home-btn" href="./index.html" data-soft-nav>Home</a>
         <div class="stage-head">
           <h1>Shop</h1>
           <p>Clean stage preview. Move cursor near model.</p>
@@ -629,7 +647,9 @@
           });
         }
         enableSoftNav();
-        const homeBtn = document.querySelector('.home-btn');
+        const shopNav = document.getElementById('nav-shop');
+        const contactNav = document.getElementById('nav-contact');
+        const langBtn = document.getElementById('nav-lang');
         const stageTitle = document.querySelector('.stage-head h1');
         const stageDesc = document.querySelector('.stage-head p');
         const hintEl = document.querySelector('.hint');
@@ -637,7 +657,9 @@
         const editionTag = document.getElementById('edition-tag');
         const productMeta = document.getElementById('product-meta');
         const productPrice = document.getElementById('product-price');
-        if (homeBtn) homeBtn.textContent = t('Home', '首頁');
+        if (shopNav) shopNav.textContent = t('Shop', '商店');
+        if (contactNav) contactNav.textContent = t('Contact', '聯絡');
+        if (langBtn) langBtn.textContent = isZh ? 'EN' : '中文';
         if (stageTitle) stageTitle.textContent = t('Shop', '商店');
         if (stageDesc) stageDesc.textContent = t('Clean stage preview. Move cursor near model.', '商品展示區。將游標移到模型附近可查看光效。');
         if (hintEl) hintEl.textContent = t('Hover near the model', '將游標移到模型附近');
@@ -648,10 +670,20 @@
           '3D-printed with a vintage GBA cartridge (1 of 25),<br>featuring a one-to-multi cable charm.',
           '3D 列印打造，搭配復古 GBA 卡匣（限量25 件），<br>和一對多連接線吊飾。'
         );
-        if (homeBtn){
-          const target = new URL(homeBtn.getAttribute('href'), window.location.href);
+        [shopNav, contactNav].forEach((el)=>{
+          if (!el) return;
+          const target = new URL(el.getAttribute('href'), window.location.href);
           target.searchParams.set('lang', lang);
-          homeBtn.setAttribute('href', target.pathname + target.search);
+          el.setAttribute('href', target.pathname + target.search);
+        });
+        if (langBtn){
+          langBtn.addEventListener('click', ()=>{
+            const next = isZh ? 'en' : 'zh';
+            localStorage.setItem('site_lang', next);
+            const u = new URL(window.location.href);
+            u.searchParams.set('lang', next);
+            window.location.href = u.pathname + u.search;
+          });
         }
         const wrap = document.querySelector('.wrap');
         const stage = document.getElementById('product-stage');
@@ -764,10 +796,10 @@
         }
         if (!mount || !stage || !shell || !info || !window.THREE || !THREE.GLTFLoader || !THREE.DRACOLoader || !THREE.OrbitControls) return;
         if (PREVIEW_MODE){
-          const homeBtn = document.querySelector('.home-btn');
           const actions = document.querySelector('.product-actions');
           const hint = document.querySelector('.hint');
-          if (homeBtn) homeBtn.style.display = 'none';
+          const nav = document.querySelector('.top-buttons');
+          if (nav) nav.style.display = 'none';
           if (actions) actions.style.display = 'none';
           if (hint) hint.style.display = 'none';
         }
@@ -776,9 +808,9 @@
         const camera = new THREE.PerspectiveCamera(35, mount.clientWidth / mount.clientHeight, 0.01, 100);
         camera.position.set(1.05, 0.65, 1.45);
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, premultipliedAlpha: false });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
-        renderer.setClearColor(0xffffff, 1);
+        renderer.setClearColor(0, 0);
         renderer.setSize(mount.clientWidth, mount.clientHeight);
         renderer.outputColorSpace = THREE.SRGBColorSpace;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
