@@ -223,6 +223,8 @@
         localStorage.setItem('site_lang', lang);
 
         function setLangLabel(){
+          if (shopBtn) shopBtn.textContent = (lang === 'zh') ? '商店' : 'SHOP';
+          if (contactBtn) contactBtn.textContent = (lang === 'zh') ? '聯絡' : 'CONTACT';
           if (!langBtn) return;
           langBtn.textContent = (lang === 'zh') ? 'EN' : '中文';
         }

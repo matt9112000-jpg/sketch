@@ -37,7 +37,7 @@
         cursor:var(--cursor-cube), auto;
         opacity:0;
         transition: opacity 260ms ease-out;
-        overflow:hidden;
+        overflow:auto;
       }
       a, button, .viewer-shell, .product-body{
         cursor:var(--cursor-cube), pointer;
@@ -49,7 +49,7 @@
         top:0;
         left:0;
         right:0;
-        height:46px;
+        height:40px;
         z-index:120;
         display:grid;
         grid-template-columns:1fr 1fr 1fr;
@@ -62,7 +62,7 @@
         padding:0;
         margin:0;
         text-decoration:none;
-        font:800 22px/1 Montserrat, system-ui, sans-serif;
+        font:800 18px/1 Montserrat, system-ui, sans-serif;
         letter-spacing:.06em;
         text-transform:uppercase;
         color:#000;
@@ -76,7 +76,7 @@
         flex-direction:column;
         align-items:center;
         justify-content:flex-start;
-        padding:46px 0 0;
+        padding:0;
         position:relative;
         overflow:visible;
         gap:0;
@@ -111,7 +111,7 @@
       }
       .stage{
         width:100%;
-        min-height:calc(100dvh - 46px);
+        min-height:100dvh;
         background:#ffffff;
         border-radius:0;
         border:none;
@@ -129,8 +129,9 @@
       }
       .home-link{
         position:absolute;
-        top:62px;
-        left:22px;
+        top:18px;
+        right:22px;
+        left:auto;
         z-index:4;
         text-decoration:none;
         font:700 12px/1.1 Montserrat, system-ui, sans-serif;
@@ -139,6 +140,16 @@
         text-transform:uppercase;
       }
       .home-link:hover{ text-decoration:underline; }
+      .product-number-pin{
+        position:absolute;
+        top:16px;
+        left:22px;
+        z-index:4;
+        font:800 24px/1 'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        letter-spacing:.16em;
+        color:#ff3bda;
+        text-transform:uppercase;
+      }
       h1{
         margin:0 0 8px;
         font-size: clamp(26px, 4vw, 34px);
@@ -226,12 +237,6 @@
         font-weight:700;
         letter-spacing:.08em;
         text-transform:uppercase;
-      }
-      .product-number{
-        font:700 12px/1 'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-        letter-spacing:.24em;
-        color:#ff3bda;
-        margin-left:2px;
       }
       .product-top{
         display:flex;
@@ -489,8 +494,8 @@
         line-height:1.45;
       }
       @media (max-width: 700px){
-        .wrap{ padding:46px 0 0; }
-        .stage{ min-height: calc(100dvh - 46px); }
+        .wrap{ padding:0; }
+        .stage{ min-height: 100dvh; }
         .scroll-gallery{
           gap:12px;
         }
@@ -511,10 +516,15 @@
           width:min(94vw, 520px);
         }
         .top-buttons{ padding:0 12px; }
-        .top-btn{ font-size:18px; }
+        .top-btn{ font-size:15px; }
         .home-link{
-          top:56px;
+          top:14px;
+          right:12px;
+        }
+        .product-number-pin{
+          top:14px;
           left:12px;
+          font-size:20px;
         }
       }
     </style>
@@ -528,6 +538,7 @@
     <main class="wrap">
       <div class="page-grid" id="page-grid" aria-hidden="true"></div>
       <section class="stage" aria-label="Product stage" id="product-stage">
+        <div class="product-number-pin">001</div>
         <a class="home-link" id="home-link" href="./home.html" data-soft-nav>Home</a>
         <div class="viewer-shell" id="viewer-shell">
           <div id="box-viewer" class="viewer"></div>
@@ -538,7 +549,6 @@
               <div>
                 <h2 class="product-title">CCC</h2>
                 <div class="edition-tag" id="edition-tag">LIMITED CARTRIDGE EDITION</div>
-                <div class="product-number">001</div>
               </div>
             </div>
             <div class="product-price" id="product-price">NT$3600 <span class="currency-unit twd">TWD</span></div>
@@ -1240,12 +1250,12 @@
           const box = new THREE.Box3().setFromObject(root);
           const size = box.getSize(new THREE.Vector3());
           const maxDim = Math.max(size.x, size.y, size.z) || 1;
-          root.scale.setScalar(0.92 / maxDim); // make model bigger
+          root.scale.setScalar(0.72 / maxDim); // smaller initial model size
           root.updateWorldMatrix(true, true);
           const centered = new THREE.Box3().setFromObject(root);
           const center = centered.getCenter(new THREE.Vector3());
           root.position.sub(center);
-          root.position.x += (window.innerWidth <= 700) ? 0.70 : 2.10;
+          root.position.x += 0;
           root.position.y += 0.0;
           stageGlow.position.x = root.position.x;
           stageGlow.position.z = root.position.z;
