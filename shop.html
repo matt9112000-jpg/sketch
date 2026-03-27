@@ -49,14 +49,12 @@
         top:0;
         left:0;
         right:0;
-        height:56px;
+        height:46px;
         z-index:120;
         display:grid;
         grid-template-columns:1fr 1fr 1fr;
         align-items:center;
         padding:0 18px;
-        background:#ececec;
-        border-bottom:1px solid rgba(0,0,0,.08);
       }
       .top-btn{
         border:none;
@@ -64,7 +62,7 @@
         padding:0;
         margin:0;
         text-decoration:none;
-        font:800 30px/1 Montserrat, system-ui, sans-serif;
+        font:800 22px/1 Montserrat, system-ui, sans-serif;
         letter-spacing:.06em;
         text-transform:uppercase;
         color:#000;
@@ -78,7 +76,7 @@
         flex-direction:column;
         align-items:center;
         justify-content:flex-start;
-        padding:56px 0 0;
+        padding:46px 0 0;
         position:relative;
         overflow:visible;
         gap:0;
@@ -113,7 +111,7 @@
       }
       .stage{
         width:100%;
-        min-height:calc(100dvh - 56px);
+        min-height:calc(100dvh - 46px);
         background:#ffffff;
         border-radius:0;
         border:none;
@@ -129,18 +127,18 @@
         z-index:1;
         pointer-events:none;
       }
-      .stage-head{
+      .home-link{
         position:absolute;
-        top:72px;
-        left:24px;
-        right:24px;
-        z-index:3;
-        max-width:420px;
-        padding:12px 14px;
-        background:rgba(255,255,255,.84);
-        border:1px solid rgba(26,38,255,.2);
-        border-radius:12px;
+        top:62px;
+        left:22px;
+        z-index:4;
+        text-decoration:none;
+        font:700 12px/1.1 Montserrat, system-ui, sans-serif;
+        letter-spacing:.08em;
+        color:#1A26FF;
+        text-transform:uppercase;
       }
+      .home-link:hover{ text-decoration:underline; }
       h1{
         margin:0 0 8px;
         font-size: clamp(26px, 4vw, 34px);
@@ -228,6 +226,12 @@
         font-weight:700;
         letter-spacing:.08em;
         text-transform:uppercase;
+      }
+      .product-number{
+        font:700 12px/1 'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        letter-spacing:.24em;
+        color:#ff3bda;
+        margin-left:2px;
       }
       .product-top{
         display:flex;
@@ -447,7 +451,7 @@
       .scroll-gallery{
         width:min(980px, 100%);
         margin-top:10px;
-        display:none;
+        display:flex;
         flex-direction:column;
         gap:14px;
         z-index:1;
@@ -485,8 +489,8 @@
         line-height:1.45;
       }
       @media (max-width: 700px){
-        .wrap{ padding:56px 0 0; }
-        .stage{ min-height: calc(100dvh - 56px); }
+        .wrap{ padding:46px 0 0; }
+        .stage{ min-height: calc(100dvh - 46px); }
         .scroll-gallery{
           gap:12px;
         }
@@ -507,11 +511,10 @@
           width:min(94vw, 520px);
         }
         .top-buttons{ padding:0 12px; }
-        .top-btn{ font-size:24px; }
-        .stage-head{
-          top:64px;
+        .top-btn{ font-size:18px; }
+        .home-link{
+          top:56px;
           left:12px;
-          right:12px;
         }
       }
     </style>
@@ -525,10 +528,7 @@
     <main class="wrap">
       <div class="page-grid" id="page-grid" aria-hidden="true"></div>
       <section class="stage" aria-label="Product stage" id="product-stage">
-        <div class="stage-head">
-          <h1>Shop</h1>
-          <p>Clean stage preview. Move cursor near model.</p>
-        </div>
+        <a class="home-link" id="home-link" href="./home.html" data-soft-nav>Home</a>
         <div class="viewer-shell" id="viewer-shell">
           <div id="box-viewer" class="viewer"></div>
         </div>
@@ -538,6 +538,7 @@
               <div>
                 <h2 class="product-title">CCC</h2>
                 <div class="edition-tag" id="edition-tag">LIMITED CARTRIDGE EDITION</div>
+                <div class="product-number">001</div>
               </div>
             </div>
             <div class="product-price" id="product-price">NT$3600 <span class="currency-unit twd">TWD</span></div>
@@ -649,9 +650,8 @@
         enableSoftNav();
         const shopNav = document.getElementById('nav-shop');
         const contactNav = document.getElementById('nav-contact');
+        const homeLink = document.getElementById('home-link');
         const langBtn = document.getElementById('nav-lang');
-        const stageTitle = document.querySelector('.stage-head h1');
-        const stageDesc = document.querySelector('.stage-head p');
         const hintEl = document.querySelector('.hint');
         const addCartBtnEl = document.getElementById('add-cart-btn');
         const editionTag = document.getElementById('edition-tag');
@@ -659,9 +659,8 @@
         const productPrice = document.getElementById('product-price');
         if (shopNav) shopNav.textContent = t('Shop', '商店');
         if (contactNav) contactNav.textContent = t('Contact', '聯絡');
+        if (homeLink) homeLink.textContent = t('Home', '首頁');
         if (langBtn) langBtn.textContent = isZh ? 'EN' : '中文';
-        if (stageTitle) stageTitle.textContent = t('Shop', '商店');
-        if (stageDesc) stageDesc.textContent = t('Clean stage preview. Move cursor near model.', '商品展示區。將游標移到模型附近可查看光效。');
         if (hintEl) hintEl.textContent = t('Hover near the model', '將游標移到模型附近');
         if (addCartBtnEl) addCartBtnEl.textContent = t('Add Cart', '加入購物車');
         if (productPrice) productPrice.innerHTML = displayPrice;
@@ -670,7 +669,7 @@
           '3D-printed with a vintage GBA cartridge (1 of 25),<br>featuring a one-to-multi cable charm.',
           '3D 列印打造，搭配復古 GBA 卡匣（限量25 件），<br>和一對多連接線吊飾。'
         );
-        [shopNav, contactNav].forEach((el)=>{
+        [shopNav, contactNav, homeLink].forEach((el)=>{
           if (!el) return;
           const target = new URL(el.getAttribute('href'), window.location.href);
           target.searchParams.set('lang', lang);
