@@ -107,6 +107,8 @@
           u.searchParams.set('lang', lang);
           el.setAttribute('href', u.pathname + u.search);
         });
+        if (shopLink) shopLink.textContent = (lang === 'zh') ? '商店' : 'SHOP';
+        if (contactLink) contactLink.textContent = (lang === 'zh') ? '聯絡' : 'CONTACT';
         if (langBtn){
           langBtn.textContent = (lang === 'zh') ? 'EN' : '中文';
           langBtn.addEventListener('click', ()=>{

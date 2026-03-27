@@ -683,8 +683,8 @@
         const editionTag = document.getElementById('edition-tag');
         const productMeta = document.getElementById('product-meta');
         const productPrice = document.getElementById('product-price');
-        if (shopNav) shopNav.textContent = 'SHOP';
-        if (contactNav) contactNav.textContent = 'CONTACT';
+        if (shopNav) shopNav.textContent = isZh ? '商店' : 'SHOP';
+        if (contactNav) contactNav.textContent = isZh ? '聯絡' : 'CONTACT';
         if (homeLink) homeLink.textContent = t('Home', '首頁');
         if (langBtn) langBtn.textContent = isZh ? 'EN' : '中文';
         if (hintEl) hintEl.textContent = t('Hover near the model', '將游標移到模型附近');

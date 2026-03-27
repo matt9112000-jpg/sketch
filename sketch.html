@@ -321,13 +321,13 @@
           }
         }
         if (shopLink){
-          shopLink.textContent = 'SHOP';
+          shopLink.textContent = isZh ? '商店' : 'SHOP';
           const u = new URL(shopLink.getAttribute('href'), window.location.href);
           u.searchParams.set('lang', lang);
           shopLink.setAttribute('href', u.pathname + u.search);
         }
         if (contactLink){
-          contactLink.textContent = 'CONTACT';
+          contactLink.textContent = isZh ? '聯絡' : 'CONTACT';
           const u = new URL(contactLink.getAttribute('href'), window.location.href);
           u.searchParams.set('lang', lang);
           contactLink.setAttribute('href', u.pathname + u.search);
