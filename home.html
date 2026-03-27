@@ -227,12 +227,22 @@
         localStorage.setItem('site_lang', lang);
 
         function setLangLabel(){
-          if (shopBtn) shopBtn.textContent = (lang === 'zh') ? '商店' : 'SHOP';
-          if (contactBtn) contactBtn.textContent = (lang === 'zh') ? '聯絡' : 'CONTACT';
+          const shopLabel = (lang === 'zh') ? '商店' : 'SHOP';
+          const contactLabel = (lang === 'zh') ? '聯絡' : 'CONTACT';
+          if (shopBtn){
+            shopBtn.textContent = shopLabel;
+            shopBtn.setAttribute('aria-label', shopLabel);
+          }
+          if (contactBtn){
+            contactBtn.textContent = contactLabel;
+            contactBtn.setAttribute('aria-label', contactLabel);
+          }
           if (!langBtn) return;
           langBtn.textContent = (lang === 'zh') ? 'EN' : '中文';
         }
         setLangLabel();
+        // Re-apply once after first paint in case another script touches nav text.
+        requestAnimationFrame(setLangLabel);
 
         const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true, premultipliedAlpha:false });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
