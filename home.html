@@ -55,7 +55,7 @@
         top:0;
         left:0;
         right:0;
-        height:46px;
+        height:40px;
         display:grid;
         grid-template-columns:1fr 1fr 1fr;
         align-items:center;
@@ -69,7 +69,7 @@
         background:transparent;
         padding:0;
         margin:0;
-        font:800 22px/1 Montserrat, system-ui, sans-serif;
+        font:800 18px/1 Montserrat, system-ui, sans-serif;
         letter-spacing:.06em;
         color:#000;
         text-transform:uppercase;
@@ -176,6 +176,10 @@
         height:100%;
         display:block;
       }
+      @media (max-width:700px){
+        #top-buttons{ padding:0 12px; }
+        .hud-btn{ font-size:15px; }
+      }
     </style>
   </head>
   <body>
@@ -223,8 +227,8 @@
         localStorage.setItem('site_lang', lang);
 
         function setLangLabel(){
-          if (shopBtn) shopBtn.textContent = (lang === 'zh') ? '商店' : 'SHOP';
-          if (contactBtn) contactBtn.textContent = (lang === 'zh') ? '聯絡' : 'CONTACT';
+          if (shopBtn) shopBtn.textContent = 'SHOP';
+          if (contactBtn) contactBtn.textContent = 'CONTACT';
           if (!langBtn) return;
           langBtn.textContent = (lang === 'zh') ? 'EN' : '中文';
         }

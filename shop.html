@@ -129,7 +129,7 @@
       }
       .home-link{
         position:absolute;
-        top:18px;
+        top:58px;
         right:22px;
         left:auto;
         z-index:4;
@@ -142,7 +142,7 @@
       .home-link:hover{ text-decoration:underline; }
       .product-number-pin{
         position:absolute;
-        top:16px;
+        top:56px;
         left:22px;
         z-index:4;
         font:800 24px/1 'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -460,6 +460,8 @@
         flex-direction:column;
         gap:14px;
         z-index:1;
+        -webkit-mask-image:linear-gradient(to bottom, transparent 0%, #000 9%, #000 91%, transparent 100%);
+        mask-image:linear-gradient(to bottom, transparent 0%, #000 9%, #000 91%, transparent 100%);
       }
       .scroll-gallery-card{
         background:transparent;
@@ -467,6 +469,14 @@
         overflow:hidden;
         box-shadow:none;
         display:block;
+        opacity:.74;
+        transform:translateY(36px);
+        transition:opacity .7s ease, transform .7s cubic-bezier(.2,.86,.22,1);
+        will-change:opacity, transform;
+      }
+      .scroll-gallery-card.is-visible{
+        opacity:1;
+        transform:translateY(0);
       }
       .scroll-gallery-card img{
         display:block;
@@ -476,6 +486,12 @@
         object-fit:cover;
         background:#fff;
         border-radius:0;
+        filter:saturate(.92) contrast(1.03);
+        transition:transform .8s ease, filter .5s ease;
+      }
+      .scroll-gallery-card.is-visible img{
+        transform:scale(1.015);
+        filter:saturate(1) contrast(1.06);
       }
       .scroll-gallery-caption{
         padding:14px 16px 16px;
@@ -518,11 +534,11 @@
         .top-buttons{ padding:0 12px; }
         .top-btn{ font-size:15px; }
         .home-link{
-          top:14px;
+          top:52px;
           right:12px;
         }
         .product-number-pin{
-          top:14px;
+          top:50px;
           left:12px;
           font-size:20px;
         }
@@ -667,8 +683,8 @@
         const editionTag = document.getElementById('edition-tag');
         const productMeta = document.getElementById('product-meta');
         const productPrice = document.getElementById('product-price');
-        if (shopNav) shopNav.textContent = t('Shop', '商店');
-        if (contactNav) contactNav.textContent = t('Contact', '聯絡');
+        if (shopNav) shopNav.textContent = 'SHOP';
+        if (contactNav) contactNav.textContent = 'CONTACT';
         if (homeLink) homeLink.textContent = t('Home', '首頁');
         if (langBtn) langBtn.textContent = isZh ? 'EN' : '中文';
         if (hintEl) hintEl.textContent = t('Hover near the model', '將游標移到模型附近');
@@ -1250,7 +1266,7 @@
           const box = new THREE.Box3().setFromObject(root);
           const size = box.getSize(new THREE.Vector3());
           const maxDim = Math.max(size.x, size.y, size.z) || 1;
-          root.scale.setScalar(0.72 / maxDim); // smaller initial model size
+          root.scale.setScalar(0.45 / maxDim); // much smaller initial model size
           root.updateWorldMatrix(true, true);
           const centered = new THREE.Box3().setFromObject(root);
           const center = centered.getCenter(new THREE.Vector3());
@@ -1467,6 +1483,35 @@
           camera.aspect = w / h;
           camera.updateProjectionMatrix();
         });
+
+        const galleryCards = Array.from(document.querySelectorAll('.scroll-gallery-card'));
+        if (galleryCards.length){
+          const observer = new IntersectionObserver((entries)=>{
+            entries.forEach((entry)=>{
+              entry.target.classList.toggle('is-visible', entry.isIntersecting);
+            });
+          }, { threshold: 0.22 });
+          galleryCards.forEach((card)=>observer.observe(card));
+
+          let rafScroll = 0;
+          const onScrollParallax = ()=>{
+            if (rafScroll) return;
+            rafScroll = requestAnimationFrame(()=>{
+              rafScroll = 0;
+              const viewH = window.innerHeight || 1;
+              galleryCards.forEach((card)=>{
+                const rect = card.getBoundingClientRect();
+                const center = rect.top + rect.height * 0.5;
+                const normalized = (center - viewH * 0.5) / viewH;
+                const y = Math.max(-20, Math.min(20, normalized * -18));
+                if (!card.classList.contains('is-visible')) return;
+                card.style.transform = `translateY(${y}px)`;
+              });
+            });
+          };
+          window.addEventListener('scroll', onScrollParallax, { passive:true });
+          onScrollParallax();
+        }
       })();
     </script>
   </body>

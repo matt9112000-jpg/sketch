@@ -32,7 +32,7 @@
         top:0;
         left:0;
         right:0;
-        height:46px;
+        height:40px;
         z-index:120;
         display:grid;
         grid-template-columns:1fr 1fr 1fr;
@@ -45,7 +45,7 @@
         padding:0;
         margin:0;
         text-decoration:none;
-        font:800 22px/1 Montserrat, system-ui, sans-serif;
+        font:800 18px/1 Montserrat, system-ui, sans-serif;
         letter-spacing:.06em;
         text-transform:uppercase;
         color:#000;
@@ -53,6 +53,10 @@
       #nav-shop{ justify-self:start; }
       #nav-contact{ justify-self:center; }
       #nav-lang{ justify-self:end; }
+      @media (max-width:700px){
+        .top-buttons{ padding:0 12px; }
+        .top-btn{ font-size:15px; }
+      }
       .card{
         width:min(680px, 100%);
         border:2px solid var(--line);
