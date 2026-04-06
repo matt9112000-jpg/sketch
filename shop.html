@@ -26,6 +26,7 @@
         --c6:#FF4622;
         --c7:#FCC730;
         --cursor-cube:url("./cursor-cube.svg") 9 9;
+        --line:rgba(26,38,255,.55);
       }
       *{ box-sizing:border-box; }
       html, body{ height:100%; }
@@ -49,13 +50,14 @@
         top:0;
         left:0;
         right:0;
-        min-height:calc(52px + env(safe-area-inset-top, 0px));
+        min-height:calc(68px + env(safe-area-inset-top, 0px));
         height:auto;
         z-index:120;
         display:flex;
         align-items:center;
         padding:max(10px, env(safe-area-inset-top, 0px)) max(14px, env(safe-area-inset-right, 0px)) 12px max(12px, env(safe-area-inset-left, 0px));
         background:transparent;
+        pointer-events:auto;
         user-select:none;
         -webkit-tap-highlight-color:transparent;
         gap:6px;
@@ -82,15 +84,15 @@
       }
       .site-nav .nav-home img{
         display:block;
-        height:44px;
+        height:56px;
         width:auto;
-        max-height:52px;
-        max-width:min(240px, 52vw);
+        max-height:64px;
+        max-width:min(300px, 58vw);
         object-fit:contain;
         filter:drop-shadow(0 2px 6px rgba(0,0,0,.08));
       }
       .site-nav .nav-home:focus-visible{
-        outline:2px solid rgba(26,38,255,.55);
+        outline:2px solid var(--line);
         outline-offset:2px;
         border-radius:4px;
       }
@@ -118,18 +120,20 @@
         cursor:var(--cursor-cube), pointer;
         -webkit-appearance:none;
         appearance:none;
+        box-shadow:none;
+        outline:none;
         white-space:nowrap;
         transition:color .18s ease, transform .2s cubic-bezier(.34,1.56,.64,1);
       }
       .site-nav .hud-btn:hover{
         transform:translateY(-2px);
-        color:#FF3BDA;
+        color:var(--c3);
       }
       .site-nav .hud-btn:active{
         transform:translateY(0);
       }
       .site-nav .hud-btn:focus-visible{
-        outline:2px solid rgba(26,38,255,.55);
+        outline:2px solid var(--line);
         outline-offset:3px;
       }
       .wrap{
@@ -582,12 +586,12 @@
         }
         .site-nav{
           padding:max(8px, env(safe-area-inset-top, 0px)) 10px 10px max(8px, env(safe-area-inset-left, 0px));
-          min-height:calc(46px + env(safe-area-inset-top, 0px));
+          min-height:calc(58px + env(safe-area-inset-top, 0px));
         }
         .site-nav .nav-home{ padding:2px 8px 2px 10px; }
         .site-nav .nav-home img{
-          height:38px;
-          max-height:44px;
+          height:48px;
+          max-height:54px;
         }
         .site-nav .hud-btn{ font-size:15px; }
         .site-nav .nav-cluster{
@@ -604,7 +608,7 @@
   <body>
     <header class="site-nav" aria-label="Site navigation">
       <a class="nav-home" href="./home.html" data-soft-nav id="nav-home" aria-label="Home">
-        <img src="./home-b.svg" alt="" width="120" height="48" decoding="async" />
+        <img src="./home-b.svg" alt="" width="160" height="64" decoding="async" />
       </a>
       <div class="nav-cluster">
         <a class="hud-btn" id="nav-shop" href="./shop.html" data-soft-nav>SHOP</a>

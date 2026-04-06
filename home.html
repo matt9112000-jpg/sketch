@@ -56,7 +56,7 @@
         top:0;
         left:0;
         right:0;
-        min-height:calc(52px + env(safe-area-inset-top, 0px));
+        min-height:calc(68px + env(safe-area-inset-top, 0px));
         height:auto;
         display:flex;
         align-items:center;
@@ -89,10 +89,10 @@
       }
       .site-nav .nav-home img{
         display:block;
-        height:44px;
+        height:56px;
         width:auto;
-        max-height:52px;
-        max-width:min(240px, 52vw);
+        max-height:64px;
+        max-width:min(300px, 58vw);
         object-fit:contain;
         filter:drop-shadow(0 2px 6px rgba(0,0,0,.08));
       }
@@ -233,12 +233,12 @@
       @media (max-width:700px){
         .site-nav{
           padding:max(8px, env(safe-area-inset-top, 0px)) 10px 10px max(8px, env(safe-area-inset-left, 0px));
-          min-height:calc(46px + env(safe-area-inset-top, 0px));
+          min-height:calc(58px + env(safe-area-inset-top, 0px));
         }
         .site-nav .nav-home{ padding:2px 8px 2px 10px; }
         .site-nav .nav-home img{
-          height:38px;
-          max-height:44px;
+          height:48px;
+          max-height:54px;
         }
         .site-nav .hud-btn{ font-size:15px; }
         .site-nav .nav-cluster{
@@ -259,7 +259,7 @@
     <div id="hud">
       <header class="site-nav" aria-label="Site navigation">
         <a class="nav-home" href="./home.html" data-soft-nav id="nav-home" aria-label="Home">
-          <img src="./home-b.svg" alt="" width="120" height="48" decoding="async" />
+          <img src="./home-b.svg" alt="" width="160" height="64" decoding="async" />
         </a>
         <div class="nav-cluster">
           <button class="hud-btn" type="button" id="shop-btn">SHOP</button>
