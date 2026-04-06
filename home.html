@@ -70,22 +70,14 @@
       .site-nav .nav-home{
         flex:0 0 auto;
         display:flex;
-        align-items:center;
-        justify-content:center;
+        flex-direction:column;
+        align-items:flex-start;
+        justify-content:flex-start;
         padding:4px 12px 4px 14px;
         margin:0;
-        line-height:0;
         text-decoration:none;
         cursor:var(--cursor-cube), pointer;
         border-radius:12px;
-        transition:transform .26s cubic-bezier(.34,1.56,.64,1);
-      }
-      .site-nav .nav-home:hover{
-        transform:translateY(-4px) scale(1.09);
-      }
-      .site-nav .nav-home:active{
-        transform:translateY(-1px) scale(1.03);
-        transition-duration:.12s;
       }
       .site-nav .nav-home img{
         display:block;
@@ -95,6 +87,36 @@
         max-width:min(300px, 58vw);
         object-fit:contain;
         filter:drop-shadow(0 2px 6px rgba(0,0,0,.08));
+        transition:transform .26s cubic-bezier(.34,1.56,.64,1);
+      }
+      .site-nav .nav-home:hover img,
+      .site-nav .nav-home:focus-visible img{
+        transform:translateY(-4px) scale(1.09);
+      }
+      .site-nav .nav-home:active img{
+        transform:translateY(-1px) scale(1.03);
+        transition-duration:.12s;
+      }
+      .site-nav .nav-home-brand{
+        font:800 8px/1.25 Montserrat, system-ui, sans-serif;
+        letter-spacing:.14em;
+        text-transform:uppercase;
+        color:#000;
+        margin:5px 0 0;
+        padding:0;
+        max-height:0;
+        opacity:0;
+        overflow:hidden;
+        transform:translateY(-6px);
+        transition:max-height .32s cubic-bezier(.2,.9,.2,1), opacity .26s ease, transform .32s cubic-bezier(.2,.9,.2,1);
+        pointer-events:none;
+        white-space:nowrap;
+      }
+      .site-nav .nav-home:hover .nav-home-brand,
+      .site-nav .nav-home:focus-visible .nav-home-brand{
+        max-height:2.8em;
+        opacity:1;
+        transform:translateY(0);
       }
       .site-nav .nav-home:focus-visible{
         outline:2px solid var(--line);
@@ -240,6 +262,10 @@
           height:48px;
           max-height:54px;
         }
+        .site-nav .nav-home-brand{
+          font-size:7px;
+          letter-spacing:.1em;
+        }
         .site-nav .hud-btn{ font-size:15px; }
         .site-nav .nav-cluster{
           gap:10px 12px;
@@ -260,6 +286,7 @@
       <header class="site-nav" aria-label="Site navigation">
         <a class="nav-home" href="./home.html" data-soft-nav id="nav-home" aria-label="Home">
           <img src="./home-b.svg" alt="" width="160" height="64" decoding="async" />
+          <span class="nav-home-brand" aria-hidden="true">INSUFFICIENT SPACE</span>
         </a>
         <div class="nav-cluster">
           <button class="hud-btn" type="button" id="shop-btn">SHOP</button>
