@@ -44,19 +44,54 @@
       }
       body.is-ready{ opacity:1; }
       body.is-exiting{ opacity:0; }
-      .top-buttons{
+      .site-nav{
         position:fixed;
         top:0;
         left:0;
         right:0;
         height:40px;
         z-index:120;
+        display:flex;
+        align-items:center;
+        padding:0 10px 0 4px;
+        background:#fff;
+        user-select:none;
+        -webkit-tap-highlight-color:transparent;
+      }
+      .site-nav .nav-home{
+        flex:0 0 auto;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        height:40px;
+        padding:0 8px 0 10px;
+        margin:0;
+        line-height:0;
+        text-decoration:none;
+        cursor:var(--cursor-cube), pointer;
+      }
+      .site-nav .nav-home img{
+        display:block;
+        height:28px;
+        width:auto;
+        max-height:32px;
+        max-width:min(140px, 36vw);
+        object-fit:contain;
+      }
+      .site-nav .nav-home:focus-visible{
+        outline:2px solid rgba(26,38,255,.55);
+        outline-offset:2px;
+        border-radius:4px;
+      }
+      .site-nav .nav-cluster{
+        flex:1;
+        min-width:0;
         display:grid;
         grid-template-columns:1fr 1fr 1fr;
         align-items:center;
-        padding:0 18px;
+        padding:0 8px 0 0;
       }
-      .top-btn{
+      .site-nav .hud-btn{
         border:none;
         background:transparent;
         padding:0;
@@ -66,6 +101,9 @@
         letter-spacing:.06em;
         text-transform:uppercase;
         color:#000;
+        cursor:var(--cursor-cube), pointer;
+        -webkit-appearance:none;
+        appearance:none;
       }
       #nav-shop{ justify-self:start; }
       #nav-contact{ justify-self:center; }
@@ -127,19 +165,6 @@
         z-index:1;
         pointer-events:none;
       }
-      .home-link{
-        position:absolute;
-        top:58px;
-        right:22px;
-        left:auto;
-        z-index:4;
-        text-decoration:none;
-        font:700 12px/1.1 Montserrat, system-ui, sans-serif;
-        letter-spacing:.08em;
-        color:#1A26FF;
-        text-transform:uppercase;
-      }
-      .home-link:hover{ text-decoration:underline; }
       .product-number-pin{
         position:absolute;
         top:56px;
@@ -531,12 +556,8 @@
           top:auto;
           width:min(94vw, 520px);
         }
-        .top-buttons{ padding:0 12px; }
-        .top-btn{ font-size:15px; }
-        .home-link{
-          top:52px;
-          right:12px;
-        }
+        .site-nav{ padding:0 8px 0 2px; }
+        .site-nav .hud-btn{ font-size:15px; }
         .product-number-pin{
           top:50px;
           left:12px;
@@ -546,16 +567,20 @@
     </style>
   </head>
   <body>
-    <div class="top-buttons" aria-label="Site navigation">
-      <a class="top-btn" id="nav-shop" href="./shop.html" data-soft-nav>SHOP</a>
-      <a class="top-btn" id="nav-contact" href="./contact-preview.html" data-soft-nav>CONTACT</a>
-      <button class="top-btn" id="nav-lang" type="button">中文</button>
-    </div>
+    <header class="site-nav" aria-label="Site navigation">
+      <a class="nav-home" href="./home.html" data-soft-nav id="nav-home" aria-label="Home">
+        <img src="./home-b.svg" alt="" width="32" height="32" />
+      </a>
+      <div class="nav-cluster">
+        <a class="hud-btn" id="nav-shop" href="./shop.html" data-soft-nav>SHOP</a>
+        <a class="hud-btn" id="nav-contact" href="./contact-preview.html" data-soft-nav>CONTACT</a>
+        <button class="hud-btn" id="nav-lang" type="button">中文</button>
+      </div>
+    </header>
     <main class="wrap">
       <div class="page-grid" id="page-grid" aria-hidden="true"></div>
       <section class="stage" aria-label="Product stage" id="product-stage">
         <div class="product-number-pin">001</div>
-        <a class="home-link" id="home-link" href="./home.html" data-soft-nav>Home</a>
         <div class="viewer-shell" id="viewer-shell">
           <div id="box-viewer" class="viewer"></div>
         </div>
@@ -674,9 +699,9 @@
           });
         }
         enableSoftNav();
+        const navHome = document.getElementById('nav-home');
         const shopNav = document.getElementById('nav-shop');
         const contactNav = document.getElementById('nav-contact');
-        const homeLink = document.getElementById('home-link');
         const langBtn = document.getElementById('nav-lang');
         const hintEl = document.querySelector('.hint');
         const addCartBtnEl = document.getElementById('add-cart-btn');
@@ -685,7 +710,6 @@
         const productPrice = document.getElementById('product-price');
         if (shopNav) shopNav.textContent = isZh ? '商店' : 'SHOP';
         if (contactNav) contactNav.textContent = isZh ? '聯絡' : 'CONTACT';
-        if (homeLink) homeLink.textContent = t('Home', '首頁');
         if (langBtn) langBtn.textContent = isZh ? 'EN' : '中文';
         if (hintEl) hintEl.textContent = t('Hover near the model', '將游標移到模型附近');
         if (addCartBtnEl) addCartBtnEl.textContent = t('Add Cart', '加入購物車');
@@ -695,7 +719,7 @@
           '3D-printed with a vintage GBA cartridge (1 of 25),<br>featuring a one-to-multi cable charm.',
           '3D 列印打造，搭配復古 GBA 卡匣（限量25 件），<br>和一對多連接線吊飾。'
         );
-        [shopNav, contactNav, homeLink].forEach((el)=>{
+        [navHome, shopNav, contactNav].forEach((el)=>{
           if (!el) return;
           const target = new URL(el.getAttribute('href'), window.location.href);
           target.searchParams.set('lang', lang);
@@ -823,7 +847,7 @@
         if (PREVIEW_MODE){
           const actions = document.querySelector('.product-actions');
           const hint = document.querySelector('.hint');
-          const nav = document.querySelector('.top-buttons');
+          const nav = document.querySelector('.site-nav');
           if (nav) nav.style.display = 'none';
           if (actions) actions.style.display = 'none';
           if (hint) hint.style.display = 'none';
