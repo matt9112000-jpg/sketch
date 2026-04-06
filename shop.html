@@ -516,6 +516,35 @@
         -webkit-mask-image:linear-gradient(to bottom, transparent 0%, #000 9%, #000 91%, transparent 100%);
         mask-image:linear-gradient(to bottom, transparent 0%, #000 9%, #000 91%, transparent 100%);
       }
+      /* Full-viewport lifestyle photo: edge-to-edge, no max-width or vignette mask */
+      .scroll-gallery--fullscreen{
+        width:100%;
+        max-width:none;
+        margin-top:0;
+        margin-left:0;
+        margin-right:0;
+        gap:0;
+        -webkit-mask-image:none;
+        mask-image:none;
+      }
+      .scroll-gallery-card--fullscreen{
+        opacity:1;
+        transform:none;
+        width:100%;
+        min-height:100dvh;
+        position:relative;
+        overflow:hidden;
+      }
+      .scroll-gallery-card--fullscreen img{
+        width:100%;
+        height:100dvh;
+        min-height:100dvh;
+        max-height:none;
+        aspect-ratio:auto;
+        object-fit:cover;
+        object-position:center;
+        background:#000;
+      }
       .scroll-gallery-card{
         background:transparent;
         border-radius:0;
@@ -546,6 +575,10 @@
         transform:scale(1.015);
         filter:saturate(1) contrast(1.06);
       }
+      .scroll-gallery-card--fullscreen.is-visible img{
+        transform:none;
+        filter:saturate(1) contrast(1.05);
+      }
       .scroll-gallery-caption{
         padding:14px 16px 16px;
       }
@@ -567,6 +600,9 @@
         .stage{ min-height: 100dvh; }
         .scroll-gallery{
           gap:12px;
+        }
+        .scroll-gallery--fullscreen{
+          gap:0;
         }
         .viewer-shell{
           width:100%;
@@ -640,8 +676,8 @@
         </div>
         <div class="hint">Hover near the model</div>
       </section>
-      <section class="scroll-gallery" aria-label="Preview pictures">
-        <div class="scroll-gallery-card">
+      <section class="scroll-gallery scroll-gallery--fullscreen" aria-label="Preview pictures">
+        <div class="scroll-gallery-card scroll-gallery-card--fullscreen">
           <img src="./shop-assets/card-1.png" alt="Preview photo 1" loading="lazy" />
         </div>
       </section>
@@ -1563,6 +1599,10 @@
               rafScroll = 0;
               const viewH = window.innerHeight || 1;
               galleryCards.forEach((card)=>{
+                if (card.classList.contains('scroll-gallery-card--fullscreen')){
+                  card.style.transform = '';
+                  return;
+                }
                 const rect = card.getBoundingClientRect();
                 const center = rect.top + rect.height * 0.5;
                 const normalized = (center - viewH * 0.5) / viewH;
