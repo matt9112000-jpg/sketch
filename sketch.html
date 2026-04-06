@@ -46,72 +46,94 @@
         top:0;
         left:0;
         right:0;
-        height:40px;
+        min-height:calc(52px + env(safe-area-inset-top, 0px));
+        height:auto;
         z-index:20000;
         display:flex;
         align-items:center;
-        padding:0 10px 0 4px;
-        background:#fff;
+        padding:max(10px, env(safe-area-inset-top, 0px)) max(14px, env(safe-area-inset-right, 0px)) 12px max(12px, env(safe-area-inset-left, 0px));
+        background:transparent;
         pointer-events:auto;
         user-select:none;
         -webkit-tap-highlight-color:transparent;
+        gap:6px;
       }
       .site-nav .nav-home{
         flex:0 0 auto;
         display:flex;
         align-items:center;
         justify-content:center;
-        height:40px;
-        padding:0 8px 0 10px;
+        padding:4px 12px 4px 14px;
         margin:0;
         line-height:0;
         text-decoration:none;
         cursor:var(--cursor-cube), pointer;
+        border-radius:12px;
+        transition:transform .26s cubic-bezier(.34,1.56,.64,1);
+      }
+      .site-nav .nav-home:hover{
+        transform:translateY(-4px) scale(1.09);
+      }
+      .site-nav .nav-home:active{
+        transform:translateY(-1px) scale(1.03);
+        transition-duration:.12s;
       }
       .site-nav .nav-home img{
         display:block;
-        height:28px;
+        height:44px;
         width:auto;
-        max-height:32px;
-        max-width:min(140px, 36vw);
+        max-height:52px;
+        max-width:min(240px, 52vw);
         object-fit:contain;
+        filter:drop-shadow(0 2px 10px rgba(0,0,20,.55));
       }
       .site-nav .nav-home:focus-visible{
-        outline:2px solid rgba(26,38,255,.55);
+        outline:2px solid rgba(214,224,255,.65);
         outline-offset:2px;
         border-radius:4px;
       }
       .site-nav .nav-cluster{
         flex:1;
         min-width:0;
-        display:grid;
-        grid-template-columns:1fr 1fr 1fr;
+        display:flex;
         align-items:center;
-        padding:0 8px 0 0;
+        justify-content:flex-end;
+        flex-wrap:wrap;
+        gap:clamp(14px, 3.2vw, 32px);
+        row-gap:8px;
+        padding:0 0 0 10px;
       }
       .site-nav .hud-btn{
         border:none;
         background:transparent;
-        padding:0;
+        padding:6px 2px;
         margin:0;
-        font:800 18px/1 Montserrat, system-ui, sans-serif;
+        font:800 17px/1 Montserrat, system-ui, sans-serif;
         letter-spacing:.06em;
-        color:#000;
+        color:#e9ebff;
         text-transform:uppercase;
         text-decoration:none;
+        text-shadow:0 1px 14px rgba(0,0,24,.65);
         cursor:var(--cursor-cube), pointer;
         -webkit-appearance:none;
         appearance:none;
         box-shadow:none;
         outline:none;
+        white-space:nowrap;
+        transition:color .18s ease, transform .2s cubic-bezier(.34,1.56,.64,1), text-shadow .18s ease;
+      }
+      .site-nav .hud-btn:hover{
+        transform:translateY(-2px);
+        color:#fff;
+        text-shadow:0 0 20px rgba(255,59,218,.45), 0 2px 16px rgba(0,0,30,.7);
+      }
+      .site-nav .hud-btn:active{
+        transform:translateY(0);
       }
       .site-nav .hud-btn:focus-visible{
-        outline:2px solid rgba(26,38,255,.55);
+        outline:2px solid rgba(214,224,255,.65);
         outline-offset:3px;
       }
-      #nav-shop{ justify-self:start; }
-      #nav-contact{ justify-self:center; }
-      #nav-lang{ justify-self:end; }
       .intro-phrase{
         position:fixed;
         left:50%;
@@ -263,8 +285,19 @@
         50%{ transform:translateX(-50%) translateY(4px); }
       }
       @media (max-width: 700px){
-        .site-nav{ padding:0 8px 0 2px; }
+        .site-nav{
+          padding:max(8px, env(safe-area-inset-top, 0px)) 10px 10px max(8px, env(safe-area-inset-left, 0px));
+          min-height:calc(46px + env(safe-area-inset-top, 0px));
+        }
+        .site-nav .nav-home{ padding:2px 8px 2px 10px; }
+        .site-nav .nav-home img{
+          height:38px;
+          max-height:44px;
+        }
         .site-nav .hud-btn{ font-size:15px; }
+        .site-nav .nav-cluster{
+          gap:10px 12px;
+        }
         .intro-phrase{
           top:42%;
           width:min(92vw, 420px);
@@ -291,7 +324,7 @@
   <body>
     <header class="site-nav" aria-label="Site navigation">
       <a class="nav-home" href="./home.html" data-soft-nav id="nav-home" aria-label="Home">
-        <img src="./home-b.svg" alt="" width="32" height="32" />
+        <img src="./home-b.svg" alt="" width="120" height="48" decoding="async" />
       </a>
       <div class="nav-cluster">
         <a class="hud-btn" href="./shop.html" data-soft-nav id="nav-shop">SHOP</a>
