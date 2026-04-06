@@ -28,14 +28,14 @@
         display:flex;
         align-items:flex-start;
         justify-content:center;
-        padding:max(128px, calc(92px + env(safe-area-inset-top, 0px))) 24px 24px;
+        padding:max(128px, calc(100px + env(safe-area-inset-top, 0px))) 24px 24px;
       }
       .site-nav{
         position:fixed;
         top:0;
         left:0;
         right:0;
-        min-height:calc(104px + env(safe-area-inset-top, 0px));
+        min-height:calc(112px + env(safe-area-inset-top, 0px));
         height:auto;
         z-index:120;
         display:flex;
@@ -51,7 +51,7 @@
       .site-nav .nav-home{
         flex:0 0 auto;
         display:block;
-        padding:4px 12px 22px 14px;
+        padding:4px 12px 26px 14px;
         margin:0;
         text-decoration:none;
         cursor:var(--cursor-cube), pointer;
@@ -74,20 +74,20 @@
       }
       .site-nav .nav-home-logo{
         display:block;
-        height:72px;
+        height:88px;
         width:auto;
-        max-height:82px;
-        max-width:min(320px, 58vw);
+        max-height:98px;
+        max-width:min(368px, 62vw);
         object-fit:contain;
         filter:drop-shadow(0 2px 6px rgba(0,0,0,.08));
       }
       .site-nav .nav-home-brand{
         position:absolute;
-        right:-8px;
-        bottom:-16px;
-        width:54%;
-        min-width:92px;
-        max-width:178px;
+        right:-22px;
+        bottom:-20px;
+        width:60%;
+        min-width:108px;
+        max-width:208px;
         opacity:0;
         overflow:visible;
         pointer-events:none;
@@ -155,19 +155,19 @@
       @media (max-width:700px){
         .site-nav{
           padding:max(8px, env(safe-area-inset-top, 0px)) 10px 14px max(8px, env(safe-area-inset-left, 0px));
-          min-height:calc(86px + env(safe-area-inset-top, 0px));
+          min-height:calc(94px + env(safe-area-inset-top, 0px));
         }
-        .site-nav .nav-home{ padding:2px 8px 12px 10px; }
+        .site-nav .nav-home{ padding:2px 8px 14px 10px; }
         .site-nav .nav-home-logo{
-          height:56px;
-          max-height:62px;
+          height:66px;
+          max-height:74px;
         }
         .site-nav .nav-home-brand{
-          width:52%;
-          min-width:78px;
-          max-width:148px;
-          right:-6px;
-          bottom:-12px;
+          width:56%;
+          min-width:90px;
+          max-width:170px;
+          right:-14px;
+          bottom:-14px;
           transform:rotate(-15deg);
         }
         .site-nav .nav-home:hover .nav-home-brand,
@@ -207,9 +207,9 @@
     <header class="site-nav" aria-label="Site navigation">
       <a class="nav-home" id="nav-home" href="./home.html" aria-label="Home">
         <span class="nav-home-visual">
-          <img class="nav-home-logo" src="./home-b.svg" alt="" width="180" height="72" decoding="async" />
+          <img class="nav-home-logo" src="./home-b.svg" alt="" width="220" height="88" decoding="async" />
             <span class="nav-home-brand" aria-hidden="true">
-              <img class="nav-home-brand-img" src="./home-i.svg" alt="" width="200" height="50" decoding="async" />
+              <img class="nav-home-brand-img" src="./home-i.svg" alt="" width="244" height="61" decoding="async" />
             </span>
         </span>
       </a>
