@@ -66,46 +66,29 @@
       }
       .site-nav .nav-home:hover .nav-home-visual,
       .site-nav .nav-home:focus-visible .nav-home-visual{
-        transform:translateY(-4px) scale(1.05);
+        transform:translateY(-3px);
       }
       .site-nav .nav-home:active .nav-home-visual{
-        transform:translateY(-1px) scale(1.02);
+        transform:translateY(-1px);
         transition-duration:.12s;
       }
-      .site-nav .nav-home-logo{
+      .site-nav .nav-home-bb{
         display:block;
-        height:72px;
         width:auto;
-        max-height:82px;
-        max-width:min(320px, 58vw);
-        object-fit:contain;
-        filter:drop-shadow(0 2px 6px rgba(0,0,0,.08));
-      }
-      .site-nav .nav-home-brand{
-        position:absolute;
-        right:-6px;
-        bottom:2px;
-        width:42%;
-        min-width:68px;
-        max-width:132px;
-        opacity:0;
-        overflow:visible;
-        pointer-events:none;
-        z-index:2;
-        transform:rotate(-17deg);
-        transform-origin:100% 100%;
-        transition:opacity .28s ease, transform .28s cubic-bezier(.2,.9,.2,1);
-      }
-      .site-nav .nav-home-brand-img{
-        display:block;
-        width:100%;
         height:auto;
+        max-height:118px;
+        max-width:min(340px, 65vw);
         object-fit:contain;
+        object-position:left top;
+        filter:drop-shadow(0 2px 6px rgba(0,0,0,.08));
+        -webkit-clip-path:inset(0 0 40% 0);
+        clip-path:inset(0 0 40% 0);
+        transition:clip-path .34s cubic-bezier(.2,.9,.2,1), -webkit-clip-path .34s cubic-bezier(.2,.9,.2,1);
       }
-      .site-nav .nav-home:hover .nav-home-brand,
-      .site-nav .nav-home:focus-visible .nav-home-brand{
-        opacity:1;
-        transform:rotate(-17deg) translate(0,0);
+      .site-nav .nav-home:hover .nav-home-bb,
+      .site-nav .nav-home:focus-visible .nav-home-bb{
+        -webkit-clip-path:inset(0 0 0 0);
+        clip-path:inset(0 0 0 0);
       }
       .site-nav .nav-home:focus-visible{
         outline:2px solid var(--nav-line);
@@ -158,21 +141,11 @@
           min-height:calc(86px + env(safe-area-inset-top, 0px));
         }
         .site-nav .nav-home{ padding:2px 8px 12px 10px; }
-        .site-nav .nav-home-logo{
-          height:56px;
-          max-height:62px;
-        }
-        .site-nav .nav-home-brand{
-          width:44%;
-          min-width:56px;
-          max-width:108px;
-          right:-4px;
-          bottom:1px;
-          transform:rotate(-15deg);
-        }
-        .site-nav .nav-home:hover .nav-home-brand,
-        .site-nav .nav-home:focus-visible .nav-home-brand{
-          transform:rotate(-15deg) translate(0,0);
+        .site-nav .nav-home-bb{
+          max-height:96px;
+          max-width:min(300px, 72vw);
+          -webkit-clip-path:inset(0 0 38% 0);
+          clip-path:inset(0 0 38% 0);
         }
         .site-nav .hud-btn{ font-size:15px; }
         .site-nav .nav-cluster{
@@ -207,10 +180,7 @@
     <header class="site-nav" aria-label="Site navigation">
       <a class="nav-home" id="nav-home" href="./home.html" aria-label="Home">
         <span class="nav-home-visual">
-          <img class="nav-home-logo" src="./home-b.svg" alt="" width="180" height="72" decoding="async" />
-          <span class="nav-home-brand" aria-hidden="true">
-            <img class="nav-home-brand-img" src="./home-i.svg" alt="" width="200" height="50" decoding="async" />
-          </span>
+          <img class="nav-home-bb" src="./home-bb.svg" alt="" width="280" height="350" decoding="async" />
         </span>
       </a>
       <div class="nav-cluster">
