@@ -51,7 +51,7 @@
         flex:0 0 auto;
         display:flex;
         flex-direction:column;
-        align-items:flex-start;
+        align-items:center;
         justify-content:flex-start;
         padding:4px 12px 4px 14px;
         margin:0;
@@ -78,11 +78,10 @@
         transition-duration:.12s;
       }
       .site-nav .nav-home-brand{
-        font:800 8px/1.25 Montserrat, system-ui, sans-serif;
-        letter-spacing:.14em;
-        text-transform:uppercase;
-        color:#000;
-        margin:5px 0 0;
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        margin:4px 0 0;
         padding:0;
         max-height:0;
         opacity:0;
@@ -90,11 +89,18 @@
         transform:translateY(-6px);
         transition:max-height .32s cubic-bezier(.2,.9,.2,1), opacity .26s ease, transform .32s cubic-bezier(.2,.9,.2,1);
         pointer-events:none;
-        white-space:nowrap;
+      }
+      .site-nav .nav-home-brand-img{
+        display:block;
+        height:auto;
+        width:auto;
+        max-height:38px;
+        max-width:min(280px, 72vw);
+        object-fit:contain;
       }
       .site-nav .nav-home:hover .nav-home-brand,
       .site-nav .nav-home:focus-visible .nav-home-brand{
-        max-height:2.8em;
+        max-height:56px;
         opacity:1;
         transform:translateY(0);
       }
@@ -153,9 +159,9 @@
           height:48px;
           max-height:54px;
         }
-        .site-nav .nav-home-brand{
-          font-size:7px;
-          letter-spacing:.1em;
+        .site-nav .nav-home-brand-img{
+          max-height:30px;
+          max-width:min(220px, 78vw);
         }
         .site-nav .hud-btn{ font-size:15px; }
         .site-nav .nav-cluster{
@@ -190,7 +196,9 @@
     <header class="site-nav" aria-label="Site navigation">
       <a class="nav-home" id="nav-home" href="./home.html" aria-label="Home">
         <img src="./home-b.svg" alt="" width="160" height="64" decoding="async" />
-        <span class="nav-home-brand" aria-hidden="true">INSUFFICIENT SPACE</span>
+        <span class="nav-home-brand" aria-hidden="true">
+          <img class="nav-home-brand-img" src="./home-i.svg" alt="" width="200" height="50" decoding="async" />
+        </span>
       </a>
       <div class="nav-cluster">
         <a class="hud-btn" id="nav-shop" href="./shop.html">SHOP</a>
