@@ -56,7 +56,7 @@
         top:0;
         left:0;
         right:0;
-        min-height:calc(68px + env(safe-area-inset-top, 0px));
+        min-height:calc(96px + env(safe-area-inset-top, 0px));
         height:auto;
         display:flex;
         align-items:center;
@@ -66,63 +66,67 @@
         user-select:none;
         -webkit-tap-highlight-color:transparent;
         gap:6px;
+        overflow:visible;
       }
       .site-nav .nav-home{
         flex:0 0 auto;
-        display:flex;
-        flex-direction:column;
-        align-items:center;
-        justify-content:flex-start;
-        padding:4px 12px 4px 14px;
+        display:block;
+        padding:4px 12px 16px 14px;
         margin:0;
         text-decoration:none;
         cursor:var(--cursor-cube), pointer;
         border-radius:12px;
       }
-      .site-nav .nav-home img{
-        display:block;
-        height:56px;
-        width:auto;
-        max-height:64px;
-        max-width:min(300px, 58vw);
-        object-fit:contain;
-        filter:drop-shadow(0 2px 6px rgba(0,0,0,.08));
+      .site-nav .nav-home-visual{
+        position:relative;
+        display:inline-block;
+        line-height:0;
+        vertical-align:top;
         transition:transform .26s cubic-bezier(.34,1.56,.64,1);
       }
-      .site-nav .nav-home:hover img,
-      .site-nav .nav-home:focus-visible img{
-        transform:translateY(-4px) scale(1.09);
+      .site-nav .nav-home:hover .nav-home-visual,
+      .site-nav .nav-home:focus-visible .nav-home-visual{
+        transform:translateY(-4px) scale(1.05);
       }
-      .site-nav .nav-home:active img{
-        transform:translateY(-1px) scale(1.03);
+      .site-nav .nav-home:active .nav-home-visual{
+        transform:translateY(-1px) scale(1.02);
         transition-duration:.12s;
       }
+      .site-nav .nav-home-logo{
+        display:block;
+        height:72px;
+        width:auto;
+        max-height:82px;
+        max-width:min(320px, 58vw);
+        object-fit:contain;
+        filter:drop-shadow(0 2px 6px rgba(0,0,0,.08));
+      }
+      /* Wordmark sits at bottom-right of sphere (~42% of sphere width), tilted ~17° CCW */
       .site-nav .nav-home-brand{
-        display:flex;
-        flex-direction:column;
-        align-items:center;
-        margin:4px 0 0;
-        padding:0;
-        max-height:0;
+        position:absolute;
+        right:-6px;
+        bottom:2px;
+        width:42%;
+        min-width:68px;
+        max-width:132px;
         opacity:0;
-        overflow:hidden;
-        transform:translateY(-6px);
-        transition:max-height .32s cubic-bezier(.2,.9,.2,1), opacity .26s ease, transform .32s cubic-bezier(.2,.9,.2,1);
+        overflow:visible;
         pointer-events:none;
+        z-index:2;
+        transform:rotate(-17deg);
+        transform-origin:100% 100%;
+        transition:opacity .28s ease, transform .28s cubic-bezier(.2,.9,.2,1);
       }
       .site-nav .nav-home-brand-img{
         display:block;
+        width:100%;
         height:auto;
-        width:auto;
-        max-height:38px;
-        max-width:min(280px, 72vw);
         object-fit:contain;
       }
       .site-nav .nav-home:hover .nav-home-brand,
       .site-nav .nav-home:focus-visible .nav-home-brand{
-        max-height:56px;
         opacity:1;
-        transform:translateY(0);
+        transform:rotate(-17deg) translate(0,0);
       }
       .site-nav .nav-home:focus-visible{
         outline:2px solid var(--line);
@@ -260,17 +264,25 @@
       }
       @media (max-width:700px){
         .site-nav{
-          padding:max(8px, env(safe-area-inset-top, 0px)) 10px 10px max(8px, env(safe-area-inset-left, 0px));
-          min-height:calc(58px + env(safe-area-inset-top, 0px));
+          padding:max(8px, env(safe-area-inset-top, 0px)) 10px 14px max(8px, env(safe-area-inset-left, 0px));
+          min-height:calc(86px + env(safe-area-inset-top, 0px));
         }
-        .site-nav .nav-home{ padding:2px 8px 2px 10px; }
-        .site-nav .nav-home img{
-          height:48px;
-          max-height:54px;
+        .site-nav .nav-home{ padding:2px 8px 12px 10px; }
+        .site-nav .nav-home-logo{
+          height:56px;
+          max-height:62px;
         }
-        .site-nav .nav-home-brand-img{
-          max-height:30px;
-          max-width:min(220px, 78vw);
+        .site-nav .nav-home-brand{
+          width:44%;
+          min-width:56px;
+          max-width:108px;
+          right:-4px;
+          bottom:1px;
+          transform:rotate(-15deg);
+        }
+        .site-nav .nav-home:hover .nav-home-brand,
+        .site-nav .nav-home:focus-visible .nav-home-brand{
+          transform:rotate(-15deg) translate(0,0);
         }
         .site-nav .hud-btn{ font-size:15px; }
         .site-nav .nav-cluster{
@@ -291,9 +303,11 @@
     <div id="hud">
       <header class="site-nav" aria-label="Site navigation">
         <a class="nav-home" href="./home.html" data-soft-nav id="nav-home" aria-label="Home">
-          <img src="./home-b.svg" alt="" width="160" height="64" decoding="async" />
-          <span class="nav-home-brand" aria-hidden="true">
-            <img class="nav-home-brand-img" src="./home-i.svg" alt="" width="200" height="50" decoding="async" />
+          <span class="nav-home-visual">
+            <img class="nav-home-logo" src="./home-b.svg" alt="" width="180" height="72" decoding="async" />
+            <span class="nav-home-brand" aria-hidden="true">
+              <img class="nav-home-brand-img" src="./home-i.svg" alt="" width="200" height="50" decoding="async" />
+            </span>
           </span>
         </a>
         <div class="nav-cluster">
