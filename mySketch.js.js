@@ -34,7 +34,7 @@ const PREVIEW_MODE = new URLSearchParams(window.location.search).has('preview');
 const URL_LANG = new URLSearchParams(window.location.search).get('lang');
 const LANG_ZH = (URL_LANG === 'zh') || (!URL_LANG && localStorage.getItem('site_lang') === 'zh');
 const T = (en, zh)=> LANG_ZH ? zh : en;
-const COMING_SOON_MODE = true;
+const COMING_SOON_MODE = false;
 const SHOP_PRICE_TWD = 3600;
 const SHOP_TWD_PER_USD = 31.5; // keep in sync with shop.html TWD_PER_USD
 function shopCheckoutPriceLabel(){

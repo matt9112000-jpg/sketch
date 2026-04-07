@@ -275,48 +275,6 @@
         transform:translateX(-50%) translateY(0);
         animation:introArrowPulse 1s ease-in-out infinite;
       }
-      .coming-soon{
-        position:fixed;
-        left:50%;
-        top:50%;
-        transform:translate(-50%, -50%);
-        z-index:18000;
-        width:min(320px, 86vw);
-        padding:28px 26px 26px;
-        border-radius:12px;
-        border:1px solid rgba(255,255,255,.1);
-        background:rgba(4, 8, 40, .35);
-        backdrop-filter:blur(16px);
-        -webkit-backdrop-filter:blur(16px);
-        text-align:center;
-        color:#f2f4ff;
-        box-shadow:0 4px 24px rgba(0,0,0,.2);
-      }
-      .coming-soon__rule{
-        width:32px;
-        height:2px;
-        margin:0 auto 18px;
-        border-radius:1px;
-        background:linear-gradient(90deg, transparent, #ff3bda, transparent);
-        opacity:.85;
-      }
-      .coming-soon__title{
-        margin:0;
-        font-size:clamp(20px, 4.2vw, 26px);
-        letter-spacing:.22em;
-        font-weight:600;
-        text-transform:uppercase;
-        color:#fff;
-        line-height:1.2;
-      }
-      .coming-soon__lead{
-        margin:14px 0 0;
-        color:rgba(233,235,255,.58);
-        font-size:12px;
-        font-weight:500;
-        line-height:1.55;
-        letter-spacing:.04em;
-      }
       @keyframes introArrowPulse{
         0%,100%{ transform:translateX(-50%) translateY(0); }
         50%{ transform:translateX(-50%) translateY(4px); }
@@ -354,10 +312,6 @@
         .intro-phrase.is-hover .intro-phrase-body{
           max-height:min(36vh, 280px);
         }
-        .coming-soon{
-          padding:22px 20px 20px;
-          width:min(300px, 88vw);
-        }
       }
       body.preview-mode .site-nav{
         display:none !important;
@@ -394,12 +348,6 @@
       </div>
     </div>
     <div class="intro-arrow" id="intro-arrow" aria-hidden="true">↓</div>
-    <div class="coming-soon" id="coming-soon-panel" aria-live="polite">
-      <div class="coming-soon__rule" aria-hidden="true"></div>
-      <h2 class="coming-soon__title">COMING SOON</h2>
-      <p class="coming-soon__lead">This page is under preparation.</p>
-    </div>
-
     <!-- Libraries first, then the sketch -->
     <script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.js" type="text/javascript"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-app-compat.js" type="text/javascript"></script>
@@ -422,7 +370,6 @@
         const introPhraseBody = document.getElementById('intro-phrase-body');
         const introPhraseContent = document.getElementById('intro-phrase-content');
         const introArrow = document.getElementById('intro-arrow');
-        const comingSoonPanel = document.getElementById('coming-soon-panel');
         function renderIntroPhrase(){
           if (!introPhraseContent) return;
           introPhraseContent.innerHTML = t(
@@ -489,14 +436,7 @@
         if (introPhraseHead){
           introPhraseHead.textContent = t('Hover', '懸停');
         }
-        if (comingSoonPanel){
-          const h2 = comingSoonPanel.querySelector('.coming-soon__title');
-          const p = comingSoonPanel.querySelector('.coming-soon__lead');
-          if (h2) h2.textContent = t('COMING SOON', '即將推出');
-          if (p) p.textContent = t('This page is under preparation.', '此頁面正在準備中。');
-        }
         renderIntroPhrase();
-        if (introPhrase) introPhrase.classList.add('is-hidden');
         if (introArrow) introArrow.classList.remove('is-visible');
         if (introPhrase){
           const canHover = window.matchMedia && window.matchMedia('(hover: hover)').matches;
