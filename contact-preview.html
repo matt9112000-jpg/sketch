@@ -39,8 +39,8 @@
         height:auto;
         z-index:120;
         display:flex;
-        align-items:center;
-        padding:max(10px, env(safe-area-inset-top, 0px)) max(14px, env(safe-area-inset-right, 0px)) 12px max(12px, env(safe-area-inset-left, 0px));
+        align-items:flex-start;
+        padding:max(0px, env(safe-area-inset-top, 0px)) max(14px, env(safe-area-inset-right, 0px)) 8px max(12px, env(safe-area-inset-left, 0px));
         background:transparent;
         pointer-events:auto;
         user-select:none;
@@ -83,8 +83,8 @@
       }
       .site-nav .nav-home-brand{
         position:absolute;
-        right:-36px;
-        bottom:-36px;
+        right:-46px;
+        bottom:-52px;
         width:82%;
         min-width:168px;
         max-width:300px;
@@ -121,17 +121,17 @@
         flex:1;
         min-width:0;
         display:flex;
-        align-items:center;
+        align-items:flex-start;
         justify-content:flex-end;
-        flex-wrap:wrap;
+        flex-wrap:nowrap;
         gap:clamp(14px, 3.2vw, 32px);
-        row-gap:8px;
-        padding:0 0 0 10px;
+        row-gap:0;
+        padding:2px 0 0 10px;
       }
       .site-nav .hud-btn{
         border:none;
         background:transparent;
-        padding:6px 2px;
+        padding:2px 2px;
         margin:0;
         text-decoration:none;
         font:800 17px/1 Montserrat, system-ui, sans-serif;
@@ -159,7 +159,7 @@
       }
       @media (max-width:700px){
         .site-nav{
-          padding:max(8px, env(safe-area-inset-top, 0px)) 10px 14px max(8px, env(safe-area-inset-left, 0px));
+          padding:max(0px, env(safe-area-inset-top, 0px)) 10px 10px max(8px, env(safe-area-inset-left, 0px));
           min-height:calc(116px + env(safe-area-inset-top, 0px));
         }
         .site-nav .nav-home{ padding:2px 8px 26px 10px; }
@@ -171,8 +171,8 @@
           width:72%;
           min-width:124px;
           max-width:240px;
-          right:-22px;
-          bottom:-24px;
+          right:-30px;
+          bottom:-36px;
           transform:rotate(-15deg);
         }
         .site-nav .nav-home:hover .nav-home-brand,
