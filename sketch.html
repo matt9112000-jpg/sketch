@@ -53,7 +53,7 @@
         align-items:flex-start;
         padding:max(0px, env(safe-area-inset-top, 0px)) max(14px, env(safe-area-inset-right, 0px)) 8px max(0px, env(safe-area-inset-left, 0px));
         background:transparent;
-        pointer-events:auto;
+        pointer-events:none;
         user-select:none;
         -webkit-tap-highlight-color:transparent;
         gap:6px;
@@ -62,6 +62,7 @@
       .site-nav .nav-home{
         flex:0 0 auto;
         display:block;
+        pointer-events:auto;
         padding:0 12px 44px 0;
         margin:-8px 0 0 0;
         text-decoration:none;
@@ -133,6 +134,7 @@
         flex:1;
         min-width:0;
         display:flex;
+        pointer-events:auto;
         align-items:flex-start;
         justify-content:flex-end;
         flex-wrap:nowrap;
@@ -501,8 +503,11 @@
           const state = typeof window.gameState === 'string' ? window.gameState : null;
           if (state === lastState || !state) return;
           lastState = state;
-          if (introPhrase) introPhrase.classList.add('is-hidden');
-          if (introArrow) introArrow.classList.remove('is-visible');
+          if (introPhrase){
+            const shouldShowIntro = (state === 'input');
+            introPhrase.classList.toggle('is-hidden', !shouldShowIntro);
+          }
+          if (introArrow && state !== 'input') introArrow.classList.remove('is-visible');
         }, 180);
       })();
     </script>
