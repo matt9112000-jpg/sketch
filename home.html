@@ -293,29 +293,14 @@
         transform:translateX(-50%) translateY(8px);
       }
       .ball-scroll-hint__drag{
-        width:16px;
-        height:16px;
-        position:relative;
-        border:1.6px solid #20263b;
-        border-radius:4px;
+        width:18px;
+        height:18px;
+        display:block;
       }
-      .ball-scroll-hint__drag::before,
-      .ball-scroll-hint__drag::after{
-        content:"";
-        position:absolute;
-        top:50%;
-        width:6px;
-        height:6px;
-        border-top:1.8px solid #20263b;
-        border-right:1.8px solid #20263b;
-        transform:translateY(-50%) rotate(45deg);
-      }
-      .ball-scroll-hint__drag::before{
-        left:-6px;
-        transform:translateY(-50%) rotate(225deg);
-      }
-      .ball-scroll-hint__drag::after{
-        right:-6px;
+      .ball-scroll-hint__drag svg{
+        width:100%;
+        height:100%;
+        display:block;
       }
       @media (max-width:700px){
         .site-nav{
@@ -361,7 +346,12 @@
       <iframe id="preview-frame" title="Self-introduction preview" src="about:blank"></iframe>
     </div>
     <div id="ball-scroll-hint" class="ball-scroll-hint" aria-hidden="true">
-      <span class="ball-scroll-hint__drag" aria-hidden="true"></span>
+      <span class="ball-scroll-hint__drag" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M11.4 3.6a2.6 2.6 0 0 1 5.2 0v6.4l1-1a2.3 2.3 0 1 1 3.3 3.2l-4.7 4.8a3.7 3.7 0 0 1-2.6 1.1h-3.8a3.8 3.8 0 0 1-2.8-1.2L4.2 14a2.2 2.2 0 1 1 3.1-3.1l2.1 2.1V3.6z" stroke="#20263b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="12.2" cy="3.1" r="2.3" stroke="#20263b" stroke-width="1.6"/>
+        </svg>
+      </span>
       <span>Drag to rotate</span>
     </div>
 
@@ -437,6 +427,8 @@
         const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true, premultipliedAlpha:false });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
         renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.toneMapping = THREE.NoToneMapping;
+        renderer.outputEncoding = THREE.sRGBEncoding;
         renderer.setClearColor(0, 0); // always transparent clear
         wrap.appendChild(renderer.domElement);
 
@@ -490,10 +482,6 @@
           const seed = iu * 73 + iv * 179;
           return Math.abs(seed) % paletteLen;
         }
-        function clamp01(v){
-          return Math.max(0, Math.min(1, v));
-        }
-
         /** Facet grid in standard sphere UV (matches SphereGeometry mapping). */
         function createDiscoBallTexture(kind = 'color'){
           const size = 1024;
@@ -535,14 +523,8 @@
 
               const cIdx = tileColorIndex(iu, iv);
               if (kind === 'gray-overlay'){
-                const duWrap = Math.min(Math.abs(iu - TAG_FACET_IU), tilesU - Math.abs(iu - TAG_FACET_IU));
-                const dvAbs = Math.abs(iv - TAG_FACET_IV);
-                const radial = Math.sqrt(duWrap * duWrap + dvAbs * dvAbs);
-                const maxRad = Math.sqrt((tilesU * 0.5) * (tilesU * 0.5) + (tilesV - 1) * (tilesV - 1));
-                const t = clamp01(radial / maxRad);
-                // Lighter near selected project, darker toward the far edge.
-                const gray = Math.round(212 - t * 72);
-                const alpha = Math.round(190 + t * 48);
+                const gray = 196; // lighter gray while hovering
+                const alpha = 208;
                 d[i] = gray;
                 d[i + 1] = gray;
                 d[i + 2] = gray;
