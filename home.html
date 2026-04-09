@@ -360,7 +360,7 @@
     </div>
     <div id="ball-scroll-hint" class="ball-scroll-hint" aria-hidden="true">
       <span class="ball-scroll-hint__mouse" aria-hidden="true"></span>
-      <span>Scroll to rotate</span>
+      <span>Drag to rotate</span>
     </div>
 
     <div id="hud">
@@ -401,7 +401,7 @@
         const facetTagLink = document.getElementById('facet-tag-link');
         const scrollHint = document.getElementById('ball-scroll-hint');
 
-        const palette = ['#4C4C4C','#6DFF69','#FF3BDA','#FF99B1','#1A26FF','#FF4622','#FCC730'];
+        const palette = ['#FCC730','#1A26FF','#FF4622','#FF3BDA','#6DFF69','#FF99B1','#4C4C4C'];
         const paletteLen = palette.length;
 
         // Language: default en, zh if ?lang=zh or localStorage site_lang === 'zh'
@@ -483,9 +483,15 @@
           return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
         }
         const palRgb = palette.map(hexToRgb);
+        const grayRgb = { r: 142, g: 146, b: 158 };
+
+        function tileColorIndex(iu, iv){
+          const seed = iu * 73 + iv * 179;
+          return Math.abs(seed) % paletteLen;
+        }
 
         /** Facet grid in standard sphere UV (matches SphereGeometry mapping). */
-        function createDiscoBallTexture(){
+        function createDiscoBallTexture(kind = 'color'){
           const size = 1024;
           const canvas = document.createElement('canvas');
           canvas.width = size;
@@ -493,14 +499,6 @@
           const ctx = canvas.getContext('2d', { willReadFrequently: true });
           const im = ctx.createImageData(size, size);
           const d = im.data;
-
-          const perm = [0, 1, 2, 3, 4, 5, 6];
-          for (let i = perm.length - 1; i > 0; i--){
-            const j = Math.floor(Math.random() * (i + 1));
-            const t = perm[i];
-            perm[i] = perm[j];
-            perm[j] = t;
-          }
 
           const tilesU = DISCO_TILES_U;
           const tilesV = DISCO_TILES_V;
@@ -521,18 +519,22 @@
               const edge = Math.min(fu, 1 - fu, fv, 1 - fv);
               const i = (y * size + x) * 4;
 
+              const isTaggedTile = (iu === TAG_FACET_IU && iv === TAG_FACET_IV);
+
               if (edge < groutW){
                 const t = edge / groutW;
                 const w = 248 - Math.round(t * 38);
                 d[i] = w; d[i + 1] = w; d[i + 2] = w; d[i + 3] = 255;
+                if (kind === 'gray-overlay' && isTaggedTile) d[i + 3] = 0;
                 continue;
               }
 
-              const seed = iu * 73 + iv * 179;
-              const cIdx = perm[Math.abs(seed) % paletteLen];
-              const col = palRgb[cIdx];
+              const cIdx = tileColorIndex(iu, iv);
+              const col = (kind === 'gray-overlay') ? grayRgb : palRgb[cIdx];
               const lum = (col.r + col.g + col.b) / 3;
-              const vivid = lum < 95 ? 1.22 : 1.48;
+              const vivid = (kind === 'gray-overlay')
+                ? 1.05
+                : (lum < 95 ? 1.22 : 1.48);
 
               const du = fu - 0.5;
               const dv = fv - 0.5;
@@ -547,6 +549,7 @@
               d[i + 1] = g;
               d[i + 2] = b;
               d[i + 3] = 255;
+              if (kind === 'gray-overlay' && isTaggedTile) d[i + 3] = 0;
             }
           }
 
@@ -558,10 +561,20 @@
           return tex;
         }
 
-        const ballTexture = createDiscoBallTexture();
+        const ballTexture = createDiscoBallTexture('color');
+        const grayOverlayTexture = createDiscoBallTexture('gray-overlay');
         const ballMat = new THREE.MeshBasicMaterial({ map: ballTexture });
         const ballMesh = new THREE.Mesh(sphereGeom, ballMat);
         spinGroup.add(ballMesh);
+        const grayOverlayMat = new THREE.MeshBasicMaterial({
+          map: grayOverlayTexture,
+          transparent:true,
+          opacity:0,
+          depthWrite:false
+        });
+        const grayOverlayMesh = new THREE.Mesh(sphereGeom, grayOverlayMat);
+        grayOverlayMesh.scale.setScalar(1.002);
+        spinGroup.add(grayOverlayMesh);
 
         const spinRadPerSec = 0.065;
         let ballSpinZ = 0;
@@ -598,6 +611,7 @@
         const vToCam = new THREE.Vector3();
 
         let tagPreviewHover = false;
+        let grayOverlayTargetOpacity = 0;
 
         function selfIntroHref(){
           return `./game.html?lang=${lang}`;
@@ -615,6 +629,7 @@
 
         function setTagPreviewActive(on){
           tagPreviewHover = on;
+          grayOverlayTargetOpacity = on ? 1 : 0;
           if (on){
             renderer.setClearColor(0, 0);
             previewPanel.classList.add('is-active');
@@ -679,6 +694,7 @@
           const now = performance.now();
           const dt = Math.min(0.05, (now - lastSpinT) / 1000);
           lastSpinT = now;
+          grayOverlayMat.opacity += (grayOverlayTargetOpacity - grayOverlayMat.opacity) * Math.min(1, dt * 8.5);
           if (!tagPreviewHover) ballSpinZ += dt * spinRadPerSec;
           orientGroup.rotation.x = Math.PI / 2;
           orientGroup.rotation.y = Math.PI / 2;
