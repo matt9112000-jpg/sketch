@@ -538,6 +538,31 @@
                 d[i + 1] = gray;
                 d[i + 2] = gray;
                 d[i + 3] = isTaggedTile ? 0 : alpha;
+              } else if (kind === 'tag-fx'){
+                const cu = iu + fu;
+                const cv = iv + fv;
+                const cx = TAG_FACET_IU + 0.5;
+                const cy = TAG_FACET_IV + 0.5;
+                const dxRaw = Math.abs(cu - cx);
+                const dx = Math.min(dxRaw, tilesU - dxRaw);
+                const dy = Math.abs(cv - cy);
+                const r = Math.sqrt(dx * dx + dy * dy);
+                // Two-band effect: inner warm glow + outer soft shadow ring.
+                let alpha = 0;
+                let rr = 0, gg = 0, bb = 0;
+                if (r <= 0.58){
+                  const t = 1 - (r / 0.58);
+                  alpha = Math.round(118 * t);
+                  rr = 255; gg = 214; bb = 120;
+                } else if (r <= 0.95){
+                  const t = 1 - ((r - 0.58) / (0.95 - 0.58));
+                  alpha = Math.round(70 * t);
+                  rr = 18; gg = 18; bb = 22;
+                }
+                d[i] = rr;
+                d[i + 1] = gg;
+                d[i + 2] = bb;
+                d[i + 3] = alpha;
               } else {
                 const col = palRgb[cIdx];
                 // Keep pure flat color per tile (no lighting/reflection simulation in texture).
@@ -559,6 +584,7 @@
 
         const ballTexture = createDiscoBallTexture('color');
         const grayOverlayTexture = createDiscoBallTexture('gray-overlay');
+        const tagFxTexture = createDiscoBallTexture('tag-fx');
         const ballMat = new THREE.MeshBasicMaterial({ map: ballTexture });
         const ballMesh = new THREE.Mesh(sphereGeom, ballMat);
         spinGroup.add(ballMesh);
@@ -571,6 +597,16 @@
         const grayOverlayMesh = new THREE.Mesh(sphereGeom, grayOverlayMat);
         grayOverlayMesh.scale.setScalar(1.002);
         spinGroup.add(grayOverlayMesh);
+        const tagFxMat = new THREE.MeshBasicMaterial({
+          map: tagFxTexture,
+          transparent:true,
+          opacity:0,
+          blending:THREE.AdditiveBlending,
+          depthWrite:false
+        });
+        const tagFxMesh = new THREE.Mesh(sphereGeom, tagFxMat);
+        tagFxMesh.scale.setScalar(1.004);
+        spinGroup.add(tagFxMesh);
 
         const spinRadPerSec = 0.065;
         let ballSpinZ = 0;
@@ -608,6 +644,7 @@
 
         let tagPreviewHover = false;
         let grayOverlayTargetOpacity = 0;
+        let tagFxTargetOpacity = 0;
 
         function selfIntroHref(){
           return `./game.html?lang=${lang}`;
@@ -626,6 +663,7 @@
         function setTagPreviewActive(on){
           tagPreviewHover = on;
           grayOverlayTargetOpacity = on ? 1 : 0;
+          tagFxTargetOpacity = on ? 1 : 0;
           if (on){
             renderer.setClearColor(0, 0);
             previewPanel.classList.add('is-active');
@@ -691,6 +729,7 @@
           const dt = Math.min(0.05, (now - lastSpinT) / 1000);
           lastSpinT = now;
           grayOverlayMat.opacity += (grayOverlayTargetOpacity - grayOverlayMat.opacity) * Math.min(1, dt * 8.5);
+          tagFxMat.opacity += (tagFxTargetOpacity - tagFxMat.opacity) * Math.min(1, dt * 9.5);
           if (!tagPreviewHover) ballSpinZ += dt * spinRadPerSec;
           orientGroup.rotation.x = Math.PI / 2;
           orientGroup.rotation.y = Math.PI / 2;
