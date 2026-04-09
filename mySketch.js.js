@@ -18,8 +18,8 @@ let nameInput;
 
 let endBlocks = 0;
 let gameState = 'input'; // 'input','playing','endedWait','gameover','rewardPreview','leaderboard'
-let NAME_INPUT_W = 232;
-let NAME_INPUT_H = 36;
+let NAME_INPUT_W = 210;
+let NAME_INPUT_H = 34;
 
 /***** 本地備援排行榜 *****/
 const STORAGE_KEY = 'tetris_scores';
@@ -405,12 +405,12 @@ function setup(){
            .attribute('autocorrect','off').attribute('autocapitalize','off');
   nameInput.style('position','absolute').style('z-index','10010').style('pointer-events','auto')
            .style('font-weight','600')
-           .style('font-size', IS_MOBILE ? '17px' : '18px')
+           .style('font-size', IS_MOBILE ? '14px' : '15px')
            .style('color','#f4f6ff')
            .style('background','rgba(8,14,66,0.86)')
            .style('border','1px solid rgba(255,59,218,0.62)')
            .style('border-radius','10px')
-           .style('padding','0 10px')
+           .style('padding','0 8px')
            .style('outline','none')
            .style('box-shadow','0 0 0 1px rgba(255,255,255,0.08) inset, 0 0 16px rgba(255,59,218,0.22)')
            .style('font-family', "Montserrat, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', Arial, sans-serif")
@@ -426,17 +426,20 @@ function centerInput(){
   nameInput.size(NAME_INPUT_W, NAME_INPUT_H);
   const centerRatio = IS_MOBILE ? 0.78 : 0.74;
   const inputCenterY = canvasY + h * centerRatio;
-  const inputX = canvasX + (w - NAME_INPUT_W)/2;
+  const startBtn = select('#startBtn');
+  const gap = 8;
+  const btnW = IS_MOBILE ? 46 : 52;
+  const groupW = NAME_INPUT_W + (startBtn ? (gap + btnW) : 0);
+  const groupLeft = canvasX + (w - groupW) / 2;
+  const inputX = groupLeft;
   const inputY = inputCenterY - NAME_INPUT_H / 2;
   nameInput.position(inputX, inputY);
-  const startBtn = select('#startBtn');
   if (startBtn){
-    const btnW = IS_MOBILE ? 54 : 60;
     startBtn.style('width', `${btnW}px`);
-    startBtn.style('padding', IS_MOBILE ? '4px 6px' : '5px 7px');
-    startBtn.style('font-size', IS_MOBILE ? '9px' : '10px');
-    startBtn.style('border-radius', IS_MOBILE ? '9px' : '10px');
-    startBtn.position(inputX + NAME_INPUT_W + 8, inputY);
+    startBtn.style('padding', IS_MOBILE ? '3px 5px' : '4px 6px');
+    startBtn.style('font-size', IS_MOBILE ? '8px' : '9px');
+    startBtn.style('border-radius', IS_MOBILE ? '8px' : '9px');
+    startBtn.position(inputX + NAME_INPUT_W + gap, inputY);
   }
 }
 function applyResponsiveUI(){
@@ -453,8 +456,8 @@ function applyResponsiveUI(){
     BTN_PAD_LARGE = '8px 14px';
     BTN_FZ_SMALL  = '12px';
     BTN_FZ_LARGE  = '15px';
-    NAME_INPUT_W = 248;
-    NAME_INPUT_H = 40;
+    NAME_INPUT_W = 186;
+    NAME_INPUT_H = 32;
   } else {
     // 桌面版
     LB_THUMB_RATIO = 0.30;
@@ -464,8 +467,8 @@ function applyResponsiveUI(){
     BTN_PAD_LARGE = '10px 18px';
     BTN_FZ_SMALL  = '14px';
     BTN_FZ_LARGE  = '18px';
-    NAME_INPUT_W = 280;
-    NAME_INPUT_H = 42;
+    NAME_INPUT_W = 210;
+    NAME_INPUT_H = 34;
   }
 }
 
