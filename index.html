@@ -678,6 +678,10 @@
         const titleSub = document.getElementById('title-sub');
         if (navShop) navShop.textContent = t('Shop', '商店');
         if (navContact) navContact.textContent = t('ABOUT', '關於');
+        const navTracking = isZh ? '.06em' : '.03em';
+        if (navShop) navShop.style.letterSpacing = navTracking;
+        if (navContact) navContact.style.letterSpacing = navTracking;
+        if (langToggle) langToggle.style.letterSpacing = navTracking;
         if (headerType) headerType.textContent = t('Type', '類型');
         if (firstName) firstName.textContent = t('SELF-INTRODUCTION', '自我介紹');
         if (firstMeta) firstMeta.innerHTML = t('Game<br/>Live', '遊戲<br/>即時');

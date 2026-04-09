@@ -803,6 +803,10 @@
         if (shopNav) shopNav.textContent = isZh ? '商店' : 'SHOP';
         if (contactNav) contactNav.textContent = isZh ? '關於' : 'ABOUT';
         if (langBtn) langBtn.textContent = isZh ? 'EN' : '中文';
+        const navTracking = isZh ? '.06em' : '.03em';
+        if (shopNav) shopNav.style.letterSpacing = navTracking;
+        if (contactNav) contactNav.style.letterSpacing = navTracking;
+        if (langBtn) langBtn.style.letterSpacing = navTracking;
         if (hintEl) hintEl.textContent = t('Hover near the model', '將游標移到模型附近');
         if (addCartBtnEl) addCartBtnEl.textContent = t('Add Cart', '加入購物車');
         if (productPrice) productPrice.innerHTML = displayPrice;

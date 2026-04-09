@@ -413,20 +413,24 @@
           u.searchParams.set('lang', lang);
           navHome.setAttribute('href', u.pathname + u.search);
         }
+        const navTracking = isZh ? '.06em' : '.03em';
         if (shopLink){
           shopLink.textContent = isZh ? '商店' : 'SHOP';
+          shopLink.style.letterSpacing = navTracking;
           const u = new URL(shopLink.getAttribute('href'), window.location.href);
           u.searchParams.set('lang', lang);
           shopLink.setAttribute('href', u.pathname + u.search);
         }
         if (contactLink){
           contactLink.textContent = isZh ? '關於' : 'ABOUT';
+          contactLink.style.letterSpacing = navTracking;
           const u = new URL(contactLink.getAttribute('href'), window.location.href);
           u.searchParams.set('lang', lang);
           contactLink.setAttribute('href', u.pathname + u.search);
         }
         if (langBtn){
           langBtn.textContent = isZh ? 'EN' : '中文';
+          langBtn.style.letterSpacing = navTracking;
           langBtn.addEventListener('click', ()=>{
             const next = isZh ? 'en' : 'zh';
             localStorage.setItem('site_lang', next);

@@ -448,17 +448,20 @@
           const contactLabel = (lang === 'zh') ? '關於' : 'ABOUT';
           const selfIntroLabel = (lang === 'zh') ? '01 自我介紹' : '01 SELF-INTRODUCTION';
           const dragLabel = (lang === 'zh') ? '拖曳旋轉' : 'Drag to rotate';
+          const navTracking = (lang === 'zh') ? '.06em' : '.03em';
           if (shopBtn){
             shopBtn.textContent = shopLabel;
             shopBtn.setAttribute('aria-label', shopLabel);
+            shopBtn.style.letterSpacing = navTracking;
           }
           if (contactBtn){
             contactBtn.textContent = contactLabel;
             contactBtn.setAttribute('aria-label', contactLabel);
+            contactBtn.style.letterSpacing = navTracking;
           }
           if (facetTagLink) facetTagLink.textContent = selfIntroLabel;
           if (scrollHintText) scrollHintText.textContent = dragLabel;
-          if (langBtn) langBtn.textContent = (lang === 'zh') ? 'EN' : '中文';
+          if (langBtn){ langBtn.textContent = (lang === 'zh') ? 'EN' : '中文'; langBtn.style.letterSpacing = navTracking; }
           if (navHome){
             const u = new URL('./home.html', window.location.href);
             u.searchParams.set('lang', lang);
@@ -577,7 +580,7 @@
 
               const cIdx = tileColorIndex(iu, iv);
               if (kind === 'gray-overlay'){
-                const gray = 196; // pure gray hover mask
+                const gray = 152; // darker pure gray hover mask
                 const alpha = 255;
                 d[i] = gray;
                 d[i + 1] = gray;
@@ -746,6 +749,7 @@
           const text = (lang === 'zh')
             ? '為重要的事物騰出空間。'
             : 'MAKING SPACE FOR THINGS THAT MATTER.';
+          welcomeType.style.letterSpacing = (lang === 'zh') ? '.03em' : '.05em';
           if (welcomeTypeTimer){
             clearTimeout(welcomeTypeTimer);
             welcomeTypeTimer = null;

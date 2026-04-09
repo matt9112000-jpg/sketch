@@ -186,7 +186,7 @@
       }
       .card{
         width:min(680px, 100%);
-        border:2px solid var(--line);
+        border:none;
         border-radius:16px;
         padding:22px 22px 20px;
         background:#fff;
@@ -300,8 +300,12 @@
         });
         if (shopLink) shopLink.textContent = (lang === 'zh') ? '商店' : 'SHOP';
         if (contactLink) contactLink.textContent = (lang === 'zh') ? '關於' : 'ABOUT';
+        const navTracking = (lang === 'zh') ? '.06em' : '.03em';
+        if (shopLink) shopLink.style.letterSpacing = navTracking;
+        if (contactLink) contactLink.style.letterSpacing = navTracking;
         if (langBtn){
           langBtn.textContent = (lang === 'zh') ? 'EN' : '中文';
+          langBtn.style.letterSpacing = navTracking;
           langBtn.addEventListener('click', ()=>{
             const next = (lang === 'zh') ? 'en' : 'zh';
             localStorage.setItem('site_lang', next);
