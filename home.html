@@ -230,8 +230,8 @@
         transform:translate(-50%, -46%) scale(0.94);
         transform-origin:center center;
         transition:
-          opacity .42s cubic-bezier(0.22, 1, 0.36, 1),
-          transform .42s cubic-bezier(0.22, 1, 0.36, 1);
+          opacity .56s cubic-bezier(0.22, 1, 0.36, 1),
+          transform .56s cubic-bezier(0.22, 1, 0.36, 1);
         overflow:hidden;
         will-change:opacity, transform;
         border-radius:14px;
@@ -710,6 +710,7 @@
         let tagPreviewHover = false;
         let grayOverlayTargetOpacity = 0;
         let tagFxTargetOpacity = 0;
+        let previewHideTimer = null;
 
         function selfIntroHref(){
           return `./game.html?lang=${lang}`;
@@ -726,19 +727,28 @@
         updateFacetTagLink();
 
         function setTagPreviewActive(on){
+          if (previewHideTimer){
+            clearTimeout(previewHideTimer);
+            previewHideTimer = null;
+          }
           tagPreviewHover = on;
           grayOverlayTargetOpacity = on ? 1 : 0;
           tagFxTargetOpacity = on ? 1 : 0;
           if (on){
             renderer.setClearColor(0, 0);
-            previewPanel.classList.add('is-active');
+            // Use RAF to avoid jumpy first-frame activation.
+            requestAnimationFrame(()=> previewPanel.classList.add('is-active'));
             previewPanel.setAttribute('aria-hidden', 'false');
             const src = selfIntroPreviewSrc();
             if (previewFrame.getAttribute('src') !== src) previewFrame.src = src;
           } else {
             renderer.setClearColor(0, 0);
-            previewPanel.classList.remove('is-active');
-            previewPanel.setAttribute('aria-hidden', 'true');
+            // Small delay makes hover-out feel less abrupt.
+            previewHideTimer = setTimeout(()=>{
+              previewPanel.classList.remove('is-active');
+              previewPanel.setAttribute('aria-hidden', 'true');
+              previewHideTimer = null;
+            }, 90);
           }
         }
 
@@ -820,8 +830,8 @@
           const now = performance.now();
           const dt = Math.min(0.05, (now - lastSpinT) / 1000);
           lastSpinT = now;
-          grayOverlayMat.opacity += (grayOverlayTargetOpacity - grayOverlayMat.opacity) * Math.min(1, dt * 8.5);
-          tagFxMat.opacity += (tagFxTargetOpacity - tagFxMat.opacity) * Math.min(1, dt * 9.5);
+          grayOverlayMat.opacity += (grayOverlayTargetOpacity - grayOverlayMat.opacity) * Math.min(1, dt * 6.8);
+          tagFxMat.opacity += (tagFxTargetOpacity - tagFxMat.opacity) * Math.min(1, dt * 7.4);
           if (!tagPreviewHover) ballSpinZ += dt * spinRadPerSec;
           orientGroup.rotation.x = Math.PI / 2;
           orientGroup.rotation.y = Math.PI / 2;
