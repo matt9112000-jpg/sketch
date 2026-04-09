@@ -338,7 +338,7 @@
       </a>
       <div class="nav-cluster">
         <a class="hud-btn" href="./shop.html" data-soft-nav id="nav-shop">SHOP</a>
-        <a class="hud-btn" href="./contact-preview.html" data-soft-nav id="nav-contact">CONTACT</a>
+        <a class="hud-btn" href="./contact-preview.html" data-soft-nav id="nav-contact">ABOUT</a>
         <button class="hud-btn" type="button" id="nav-lang">中文</button>
       </div>
     </header>
@@ -420,7 +420,7 @@
           shopLink.setAttribute('href', u.pathname + u.search);
         }
         if (contactLink){
-          contactLink.textContent = isZh ? '聯絡' : 'CONTACT';
+          contactLink.textContent = isZh ? '關於' : 'ABOUT';
           const u = new URL(contactLink.getAttribute('href'), window.location.href);
           u.searchParams.set('lang', lang);
           contactLink.setAttribute('href', u.pathname + u.search);

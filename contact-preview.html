@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Contact</title>
+    <title>About</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet" />
@@ -206,6 +206,45 @@
         text-decoration:underline;
         font-weight:700;
       }
+      .about-lead{
+        color:#2c3346;
+        font-weight:600;
+      }
+      .about-links{
+        margin-top:8px;
+        display:flex;
+        align-items:center;
+        gap:12px;
+      }
+      .about-link{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        width:42px;
+        height:42px;
+        border:1.5px solid #cfd5e6;
+        border-radius:999px;
+        color:#1A26FF;
+        text-decoration:none;
+        transition:transform .18s ease, border-color .18s ease, color .18s ease;
+      }
+      .about-link:hover{
+        transform:translateY(-2px);
+        border-color:#FF3BDA;
+        color:#FF3BDA;
+      }
+      .about-link svg{
+        width:19px;
+        height:19px;
+        display:block;
+        stroke:currentColor;
+      }
+      .about-links-label{
+        font:600 11px/1 Montserrat, system-ui, sans-serif;
+        letter-spacing:.1em;
+        text-transform:uppercase;
+        color:#6a7288;
+      }
     </style>
   </head>
   <body>
@@ -220,16 +259,30 @@
       </a>
       <div class="nav-cluster">
         <a class="hud-btn" id="nav-shop" href="./shop.html">SHOP</a>
-        <a class="hud-btn" id="nav-contact" href="./contact-preview.html">CONTACT</a>
+        <a class="hud-btn" id="nav-contact" href="./contact-preview.html">ABOUT</a>
         <button class="hud-btn" id="nav-lang" type="button">中文</button>
       </div>
     </header>
     <div class="card">
-      <h1 id="title">CONTACT</h1>
-      <p id="desc">Email us for inquiries and collaborations.</p>
-      <p>
-        <a id="email" href="mailto:insufficientspace20@gmail.com">insufficientspace20@gmail.com</a>
-      </p>
+      <h1 id="title">ABOUT</h1>
+      <p id="desc" class="about-lead">INSUFFICIENT SPACE is a project about making room for objects, stories, and decisions that matter.</p>
+      <p id="desc-2">For collaborations, press, or general inquiries, reach out through Instagram or email.</p>
+      <div class="about-links" role="group" aria-label="Social links">
+        <a class="about-link" id="ig-link" href="https://www.instagram.com/insufficient__space/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="4" y="4" width="16" height="16" rx="5" stroke-width="1.8"></rect>
+            <circle cx="12" cy="12" r="3.6" stroke-width="1.8"></circle>
+            <circle cx="17.3" cy="6.8" r="1.1" fill="currentColor" stroke="none"></circle>
+          </svg>
+        </a>
+        <a class="about-link" id="email-link" href="mailto:insufficientspace20@gmail.com" aria-label="Email">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="3.5" y="6" width="17" height="12" rx="2.2" stroke-width="1.8"></rect>
+            <path d="M4.8 7.6 12 13l7.2-5.4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
+        </a>
+        <span id="about-links-label" class="about-links-label">Instagram / Email</span>
+      </div>
     </div>
     <script>
       (function(){
@@ -246,7 +299,7 @@
           el.setAttribute('href', u.pathname + u.search);
         });
         if (shopLink) shopLink.textContent = (lang === 'zh') ? '商店' : 'SHOP';
-        if (contactLink) contactLink.textContent = (lang === 'zh') ? '聯絡' : 'CONTACT';
+        if (contactLink) contactLink.textContent = (lang === 'zh') ? '關於' : 'ABOUT';
         if (langBtn){
           langBtn.textContent = (lang === 'zh') ? 'EN' : '中文';
           langBtn.addEventListener('click', ()=>{
@@ -258,8 +311,13 @@
           });
         }
         if (lang === 'zh'){
-          document.getElementById('title').textContent = '聯絡';
-          document.getElementById('desc').textContent = '有任何合作與詢問，歡迎寄信。';
+          document.getElementById('title').textContent = '關於';
+          document.getElementById('desc').textContent = 'INSUFFICIENT SPACE 是一個關於為重要物件、故事與選擇騰出空間的計畫。';
+          document.getElementById('desc-2').textContent = '合作、採訪或一般詢問，歡迎透過 Instagram 或 Email 與我們聯絡。';
+          document.getElementById('about-links-label').textContent = 'Instagram / 電子郵件';
+        } else {
+          document.getElementById('desc-2').textContent = 'For collaborations, press, or general inquiries, reach out through Instagram or email.';
+          document.getElementById('about-links-label').textContent = 'Instagram / Email';
         }
       })();
     </script>
