@@ -235,10 +235,22 @@
         left:50%;
         transform:translateX(-50%);
         z-index:4;
-        font:800 40pt/1 'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font:800 30pt/1 'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
         letter-spacing:.16em;
         color:#ff3bda;
         text-transform:uppercase;
+      }
+      .product-name-pin{
+        position:absolute;
+        top:calc(18vh + 52px);
+        left:50%;
+        transform:translateX(-50%);
+        z-index:4;
+        font:700 14px/1.2 Montserrat, system-ui, sans-serif;
+        letter-spacing:.08em;
+        color:#4C4C4C;
+        text-transform:uppercase;
+        white-space:nowrap;
       }
       h1{
         margin:0 0 8px;
@@ -650,7 +662,13 @@
           top:16vh;
           left:50%;
           transform:translateX(-50%);
-          font-size:40pt;
+          font-size:30pt;
+        }
+        .product-name-pin{
+          top:calc(16vh + 46px);
+          left:50%;
+          transform:translateX(-50%);
+          font-size:12px;
         }
       }
     </style>
@@ -675,6 +693,7 @@
       <div class="page-grid" id="page-grid" aria-hidden="true"></div>
       <section class="stage" aria-label="Product stage" id="product-stage">
         <div class="product-number-pin">001</div>
+        <div class="product-name-pin">Cartridge Carry Container</div>
         <div class="viewer-shell" id="viewer-shell">
           <div id="box-viewer" class="viewer"></div>
         </div>
