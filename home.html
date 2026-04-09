@@ -292,28 +292,30 @@
         opacity:0;
         transform:translateX(-50%) translateY(8px);
       }
-      .ball-scroll-hint__mouse{
-        width:13px;
-        height:20px;
-        border:1.6px solid #20263b;
-        border-radius:9px;
+      .ball-scroll-hint__drag{
+        width:16px;
+        height:16px;
         position:relative;
+        border:1.6px solid #20263b;
+        border-radius:4px;
       }
-      .ball-scroll-hint__mouse::before{
+      .ball-scroll-hint__drag::before,
+      .ball-scroll-hint__drag::after{
         content:"";
         position:absolute;
-        left:50%;
-        top:3px;
-        width:2px;
-        height:5px;
-        border-radius:1px;
-        background:#20263b;
-        transform:translateX(-50%);
-        animation:scrollNudge 1.1s ease-in-out infinite;
+        top:50%;
+        width:6px;
+        height:6px;
+        border-top:1.8px solid #20263b;
+        border-right:1.8px solid #20263b;
+        transform:translateY(-50%) rotate(45deg);
       }
-      @keyframes scrollNudge{
-        0%,100%{ transform:translateX(-50%) translateY(0); opacity:1; }
-        50%{ transform:translateX(-50%) translateY(3px); opacity:.5; }
+      .ball-scroll-hint__drag::before{
+        left:-6px;
+        transform:translateY(-50%) rotate(225deg);
+      }
+      .ball-scroll-hint__drag::after{
+        right:-6px;
       }
       @media (max-width:700px){
         .site-nav{
@@ -359,7 +361,7 @@
       <iframe id="preview-frame" title="Self-introduction preview" src="about:blank"></iframe>
     </div>
     <div id="ball-scroll-hint" class="ball-scroll-hint" aria-hidden="true">
-      <span class="ball-scroll-hint__mouse" aria-hidden="true"></span>
+      <span class="ball-scroll-hint__drag" aria-hidden="true"></span>
       <span>Drag to rotate</span>
     </div>
 
@@ -483,11 +485,13 @@
           return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
         }
         const palRgb = palette.map(hexToRgb);
-        const grayRgb = { r: 142, g: 146, b: 158 };
 
         function tileColorIndex(iu, iv){
           const seed = iu * 73 + iv * 179;
           return Math.abs(seed) % paletteLen;
+        }
+        function clamp01(v){
+          return Math.max(0, Math.min(1, v));
         }
 
         /** Facet grid in standard sphere UV (matches SphereGeometry mapping). */
@@ -530,26 +534,27 @@
               }
 
               const cIdx = tileColorIndex(iu, iv);
-              const col = (kind === 'gray-overlay') ? grayRgb : palRgb[cIdx];
-              const lum = (col.r + col.g + col.b) / 3;
-              const vivid = (kind === 'gray-overlay')
-                ? 1.05
-                : (lum < 95 ? 1.22 : 1.48);
-
-              const du = fu - 0.5;
-              const dv = fv - 0.5;
-              const dist = Math.sqrt(du * du + dv * dv);
-              const shade = 0.86 + (1 - Math.min(1, dist * 1.7)) * 0.14;
-
-              const r = Math.min(255, Math.round(col.r * vivid * shade));
-              const g = Math.min(255, Math.round(col.g * vivid * shade));
-              const b = Math.min(255, Math.round(col.b * vivid * shade));
-
-              d[i] = r;
-              d[i + 1] = g;
-              d[i + 2] = b;
-              d[i + 3] = 255;
-              if (kind === 'gray-overlay' && isTaggedTile) d[i + 3] = 0;
+              if (kind === 'gray-overlay'){
+                const duWrap = Math.min(Math.abs(iu - TAG_FACET_IU), tilesU - Math.abs(iu - TAG_FACET_IU));
+                const dvAbs = Math.abs(iv - TAG_FACET_IV);
+                const radial = Math.sqrt(duWrap * duWrap + dvAbs * dvAbs);
+                const maxRad = Math.sqrt((tilesU * 0.5) * (tilesU * 0.5) + (tilesV - 1) * (tilesV - 1));
+                const t = clamp01(radial / maxRad);
+                // Lighter near selected project, darker toward the far edge.
+                const gray = Math.round(212 - t * 72);
+                const alpha = Math.round(190 + t * 48);
+                d[i] = gray;
+                d[i + 1] = gray;
+                d[i + 2] = gray;
+                d[i + 3] = isTaggedTile ? 0 : alpha;
+              } else {
+                const col = palRgb[cIdx];
+                // Keep pure flat color per tile (no lighting/reflection simulation in texture).
+                d[i] = col.r;
+                d[i + 1] = col.g;
+                d[i + 2] = col.b;
+                d[i + 3] = 255;
+              }
             }
           }
 
