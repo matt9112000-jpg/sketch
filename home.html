@@ -305,13 +305,13 @@
       .welcome-type{
         position:fixed;
         left:50%;
-        top:50%;
+        top:46%;
         transform:translate(-50%, -50%);
         z-index:4;
         pointer-events:none;
         user-select:none;
         color:#0f1220;
-        font:700 14pt/1.2 Montserrat, system-ui, sans-serif;
+        font:700 10pt/1.2 Montserrat, system-ui, sans-serif;
         letter-spacing:.08em;
         text-transform:uppercase;
         text-align:center;
@@ -368,7 +368,7 @@
           padding:6px 10px;
         }
         .welcome-type{
-          font-size:12pt;
+          font-size:10pt;
           width:min(92vw, 620px);
           white-space:normal;
         }
@@ -735,20 +735,32 @@
         }
 
         const coarsePointer = window.matchMedia('(hover: none), (pointer: coarse)').matches;
-        if (welcomeType){
-          const text = 'MAKING SPACE FOR THINGS THAT MATTER.';
+        let welcomeTypeTimer = null;
+        function startWelcomeTypewriter(){
+          if (!welcomeType) return;
+          const text = (lang === 'zh')
+            ? '為重要的事物騰出空間。'
+            : 'MAKING SPACE FOR THINGS THAT MATTER.';
+          if (welcomeTypeTimer){
+            clearTimeout(welcomeTypeTimer);
+            welcomeTypeTimer = null;
+          }
+          welcomeType.classList.remove('is-complete');
+          welcomeType.textContent = '';
           let idx = 0;
           const tickType = ()=>{
             if (idx < text.length){
               idx += 1;
               welcomeType.textContent = text.slice(0, idx);
-              window.setTimeout(tickType, 55);
+              welcomeTypeTimer = window.setTimeout(tickType, 55);
             } else {
               welcomeType.classList.add('is-complete');
+              welcomeTypeTimer = null;
             }
           };
-          window.setTimeout(tickType, 260);
+          welcomeTypeTimer = window.setTimeout(tickType, 260);
         }
+        startWelcomeTypewriter();
 
         if (facetTagLink){
           if (!coarsePointer){
@@ -839,6 +851,7 @@
           lang = nextLang;
           localStorage.setItem('site_lang', lang);
           setLangLabel();
+          startWelcomeTypewriter();
           updateFacetTagLink();
           if (previewPanel.classList.contains('is-active')){
             const src = selfIntroPreviewSrc();
