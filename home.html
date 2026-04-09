@@ -494,7 +494,7 @@
 
           const tilesU = DISCO_TILES_U;
           const tilesV = DISCO_TILES_V;
-          const groutW = 0.028;
+          const groutW = 0.014;
 
           for (let y = 0; y < size; y++){
             const v = y / (size - 1);
@@ -514,17 +514,26 @@
               const isTaggedTile = (iu === TAG_FACET_IU && iv === TAG_FACET_IV);
 
               if (edge < groutW){
-                const t = edge / groutW;
-                const w = 248 - Math.round(t * 38);
-                d[i] = w; d[i + 1] = w; d[i + 2] = w; d[i + 3] = 255;
-                if (kind === 'gray-overlay' && isTaggedTile) d[i + 3] = 0;
+                if (kind === 'gray-overlay'){
+                  d[i] = 196;
+                  d[i + 1] = 196;
+                  d[i + 2] = 196;
+                  d[i + 3] = isTaggedTile ? 0 : 255;
+                } else {
+                  const t = edge / groutW;
+                  const w = 248 - Math.round(t * 38);
+                  d[i] = w;
+                  d[i + 1] = w;
+                  d[i + 2] = w;
+                  d[i + 3] = 255;
+                }
                 continue;
               }
 
               const cIdx = tileColorIndex(iu, iv);
               if (kind === 'gray-overlay'){
-                const gray = 196; // lighter gray while hovering
-                const alpha = 208;
+                const gray = 196; // pure gray hover mask
+                const alpha = 255;
                 d[i] = gray;
                 d[i + 1] = gray;
                 d[i + 2] = gray;
