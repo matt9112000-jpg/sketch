@@ -527,8 +527,11 @@
         const palRgb = palette.map(hexToRgb);
 
         function tileColorIndex(iu, iv){
-          const seed = iu * 73 + iv * 179;
-          return Math.abs(seed) % paletteLen;
+          // Stronger hash to avoid visible row/column color sequences.
+          let n = ((iu + 1) * 374761393) ^ ((iv + 1) * 668265263);
+          n = (n ^ (n >>> 13)) * 1274126177;
+          n = n ^ (n >>> 16);
+          return Math.abs(n) % paletteLen;
         }
         const shuffledPaletteOrder = [...Array(paletteLen).keys()];
         for (let i = shuffledPaletteOrder.length - 1; i > 0; i--){
