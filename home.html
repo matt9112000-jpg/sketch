@@ -390,7 +390,7 @@
           <circle cx="12.2" cy="3.1" r="2.3" stroke="#20263b" stroke-width="1.6"/>
         </svg>
       </span>
-      <span>Drag to rotate</span>
+      <span id="ball-scroll-hint-text">Drag to rotate</span>
     </div>
     <div id="welcome-type" class="welcome-type" aria-hidden="true"></div>
 
@@ -431,6 +431,7 @@
         const facetTag = document.getElementById('facet-tag');
         const facetTagLink = document.getElementById('facet-tag-link');
         const scrollHint = document.getElementById('ball-scroll-hint');
+        const scrollHintText = document.getElementById('ball-scroll-hint-text');
         const welcomeType = document.getElementById('welcome-type');
 
         const palette = ['#FCC730','#1A26FF','#FF4622','#FF3BDA','#6DFF69','#FF99B1','#4C4C4C'];
@@ -445,6 +446,8 @@
         function setLangLabel(){
           const shopLabel = (lang === 'zh') ? '商店' : 'SHOP';
           const contactLabel = (lang === 'zh') ? '聯絡' : 'CONTACT';
+          const selfIntroLabel = (lang === 'zh') ? '01 自我介紹' : '01 SELF-INTRODUCTION';
+          const dragLabel = (lang === 'zh') ? '拖曳旋轉' : 'Drag to rotate';
           if (shopBtn){
             shopBtn.textContent = shopLabel;
             shopBtn.setAttribute('aria-label', shopLabel);
@@ -453,6 +456,8 @@
             contactBtn.textContent = contactLabel;
             contactBtn.setAttribute('aria-label', contactLabel);
           }
+          if (facetTagLink) facetTagLink.textContent = selfIntroLabel;
+          if (scrollHintText) scrollHintText.textContent = dragLabel;
           if (langBtn) langBtn.textContent = (lang === 'zh') ? 'EN' : '中文';
           if (navHome){
             const u = new URL('./home.html', window.location.href);
