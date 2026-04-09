@@ -530,6 +530,13 @@
           const seed = iu * 73 + iv * 179;
           return Math.abs(seed) % paletteLen;
         }
+        const shuffledPaletteOrder = [...Array(paletteLen).keys()];
+        for (let i = shuffledPaletteOrder.length - 1; i > 0; i--){
+          const j = Math.floor(Math.random() * (i + 1));
+          const t = shuffledPaletteOrder[i];
+          shuffledPaletteOrder[i] = shuffledPaletteOrder[j];
+          shuffledPaletteOrder[j] = t;
+        }
         /** Facet grid in standard sphere UV (matches SphereGeometry mapping). */
         function createDiscoBallTexture(kind = 'color'){
           const size = 1024;
@@ -619,7 +626,7 @@
                 d[i + 2] = bb;
                 d[i + 3] = alpha;
               } else {
-                const col = palRgb[cIdx];
+                const col = palRgb[shuffledPaletteOrder[cIdx]];
                 // Keep pure flat color per tile (no lighting/reflection simulation in texture).
                 d[i] = col.r;
                 d[i + 1] = col.g;
