@@ -243,6 +243,21 @@
         -webkit-mask-size:100% 100%;
         mask-size:100% 100%;
       }
+      #theme-backdrop{
+        position:fixed;
+        inset:0;
+        z-index:4;
+        pointer-events:none;
+        opacity:0;
+        transition:opacity .34s ease;
+        background:
+          radial-gradient(56% 48% at 50% 58%, rgba(255,59,218,.18), rgba(255,59,218,0) 72%),
+          radial-gradient(72% 58% at 52% 62%, rgba(26,38,255,.12), rgba(26,38,255,0) 78%),
+          linear-gradient(180deg, rgba(8,14,40,.08), rgba(8,14,40,.18));
+      }
+      #theme-backdrop.is-active{
+        opacity:1;
+      }
       /* Stays z-index:5 — ball-wrap (10) paints on top so the sphere occludes the preview */
       #preview-panel.is-active{
         opacity:1;
@@ -345,6 +360,7 @@
     <div id="preview-panel" aria-hidden="true">
       <iframe id="preview-frame" title="Self-introduction preview" src="about:blank"></iframe>
     </div>
+    <div id="theme-backdrop" aria-hidden="true"></div>
     <div id="ball-scroll-hint" class="ball-scroll-hint" aria-hidden="true">
       <span class="ball-scroll-hint__drag" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -383,7 +399,8 @@
         const wrap = document.getElementById('ball');
         const previewPanel = document.getElementById('preview-panel');
         const previewFrame = document.getElementById('preview-frame');
-        if (!wrap || !previewPanel || !previewFrame) return;
+        const themeBackdrop = document.getElementById('theme-backdrop');
+        if (!wrap || !previewPanel || !previewFrame || !themeBackdrop) return;
 
         const navHome = document.getElementById('nav-home');
         const shopBtn = document.getElementById('shop-btn');
@@ -538,6 +555,25 @@
                 d[i + 1] = gray;
                 d[i + 2] = gray;
                 d[i + 3] = isTaggedTile ? 0 : alpha;
+              } else if (kind === 'far-dark'){
+                const cu = iu + fu;
+                const cv = iv + fv;
+                const cx = TAG_FACET_IU + 0.5;
+                const cy = TAG_FACET_IV + 0.5;
+                const dxRaw = Math.abs(cu - cx);
+                const dx = Math.min(dxRaw, tilesU - dxRaw);
+                const dy = Math.abs(cv - cy);
+                const r = Math.sqrt(dx * dx + dy * dy);
+                // Keep the selected area clear; gently darken distant areas.
+                const near = 0.64;
+                const far = 3.8;
+                let t = (r - near) / (far - near);
+                t = Math.max(0, Math.min(1, t));
+                const alpha = Math.round(86 * t);
+                d[i] = 0;
+                d[i + 1] = 0;
+                d[i + 2] = 0;
+                d[i + 3] = isTaggedTile ? 0 : alpha;
               } else if (kind === 'tag-fx'){
                 const cu = iu + fu;
                 const cv = iv + fv;
@@ -584,6 +620,7 @@
 
         const ballTexture = createDiscoBallTexture('color');
         const grayOverlayTexture = createDiscoBallTexture('gray-overlay');
+        const farDarkTexture = createDiscoBallTexture('far-dark');
         const tagFxTexture = createDiscoBallTexture('tag-fx');
         const ballMat = new THREE.MeshBasicMaterial({ map: ballTexture });
         const ballMesh = new THREE.Mesh(sphereGeom, ballMat);
@@ -597,6 +634,15 @@
         const grayOverlayMesh = new THREE.Mesh(sphereGeom, grayOverlayMat);
         grayOverlayMesh.scale.setScalar(1.002);
         spinGroup.add(grayOverlayMesh);
+        const farDarkMat = new THREE.MeshBasicMaterial({
+          map: farDarkTexture,
+          transparent:true,
+          opacity:0,
+          depthWrite:false
+        });
+        const farDarkMesh = new THREE.Mesh(sphereGeom, farDarkMat);
+        farDarkMesh.scale.setScalar(1.003);
+        spinGroup.add(farDarkMesh);
         const tagFxMat = new THREE.MeshBasicMaterial({
           map: tagFxTexture,
           transparent:true,
@@ -644,6 +690,7 @@
 
         let tagPreviewHover = false;
         let grayOverlayTargetOpacity = 0;
+        let farDarkTargetOpacity = 0;
         let tagFxTargetOpacity = 0;
 
         function selfIntroHref(){
@@ -663,7 +710,9 @@
         function setTagPreviewActive(on){
           tagPreviewHover = on;
           grayOverlayTargetOpacity = on ? 1 : 0;
+          farDarkTargetOpacity = on ? 1 : 0;
           tagFxTargetOpacity = on ? 1 : 0;
+          themeBackdrop.classList.toggle('is-active', on);
           if (on){
             renderer.setClearColor(0, 0);
             previewPanel.classList.add('is-active');
@@ -729,6 +778,7 @@
           const dt = Math.min(0.05, (now - lastSpinT) / 1000);
           lastSpinT = now;
           grayOverlayMat.opacity += (grayOverlayTargetOpacity - grayOverlayMat.opacity) * Math.min(1, dt * 8.5);
+          farDarkMat.opacity += (farDarkTargetOpacity - farDarkMat.opacity) * Math.min(1, dt * 7.4);
           tagFxMat.opacity += (tagFxTargetOpacity - tagFxMat.opacity) * Math.min(1, dt * 9.5);
           if (!tagPreviewHover) ballSpinZ += dt * spinRadPerSec;
           orientGroup.rotation.x = Math.PI / 2;
