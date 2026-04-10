@@ -212,9 +212,30 @@
         padding-bottom:2px;
         cursor:var(--cursor-cube), pointer;
       }
+      .facet-tag.is-visible .facet-tag__link{
+        animation:facetCtaFlash 1.15s ease-in-out infinite;
+      }
       .facet-tag__link:hover{
+        animation:none;
         color:var(--accent);
         border-bottom-color:var(--accent);
+      }
+      .facet-tag__link:focus-visible{
+        animation:none;
+      }
+      @keyframes facetCtaFlash{
+        0%, 100%{
+          color:#111;
+          border-bottom-color:rgba(0,0,0,.35);
+          text-shadow:none;
+          transform:translateY(0);
+        }
+        50%{
+          color:var(--accent);
+          border-bottom-color:var(--accent);
+          text-shadow:0 0 12px rgba(255,59,218,.45);
+          transform:translateY(-1px);
+        }
       }
 
       #preview-panel{
