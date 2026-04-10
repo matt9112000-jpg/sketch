@@ -302,6 +302,51 @@
         height:100%;
         display:block;
       }
+      .tap-enter-hint{
+        position:fixed;
+        left:50%;
+        bottom:max(74px, calc(74px + env(safe-area-inset-bottom, 0px)));
+        transform:translateX(-50%);
+        z-index:92;
+        display:flex;
+        align-items:center;
+        gap:8px;
+        padding:7px 11px;
+        border-radius:999px;
+        border:1px solid rgba(26,38,255,.24);
+        background:rgba(255,255,255,.9);
+        color:#121728;
+        font:700 10px/1 Montserrat, system-ui, sans-serif;
+        letter-spacing:.06em;
+        text-transform:uppercase;
+        pointer-events:none;
+        opacity:0;
+        visibility:hidden;
+        transition:opacity .22s ease, transform .22s ease, visibility .22s;
+      }
+      .tap-enter-hint.is-visible{
+        opacity:1;
+        visibility:visible;
+        transform:translateX(-50%) translateY(0);
+      }
+      .tap-enter-hint__icon{
+        width:14px;
+        height:14px;
+        border:1.5px solid #20263b;
+        border-radius:999px;
+        position:relative;
+      }
+      .tap-enter-hint__icon::before{
+        content:"";
+        position:absolute;
+        left:50%;
+        top:50%;
+        width:3px;
+        height:3px;
+        border-radius:999px;
+        background:#20263b;
+        transform:translate(-50%, -50%);
+      }
       .welcome-type{
         position:fixed;
         left:50%;
@@ -367,6 +412,12 @@
           letter-spacing:.05em;
           padding:6px 10px;
         }
+        .tap-enter-hint{
+          bottom:max(54px, calc(54px + env(safe-area-inset-bottom, 0px)));
+          font-size:9px;
+          letter-spacing:.05em;
+          padding:6px 10px;
+        }
         .welcome-type{
           font-size:10pt;
           width:min(92vw, 620px);
@@ -393,6 +444,10 @@
       <span id="ball-scroll-hint-text">Drag to rotate</span>
     </div>
     <div id="welcome-type" class="welcome-type" aria-hidden="true"></div>
+    <div id="tap-enter-hint" class="tap-enter-hint" aria-hidden="true">
+      <span class="tap-enter-hint__icon" aria-hidden="true"></span>
+      <span id="tap-enter-hint-text">Tap again to open</span>
+    </div>
 
     <div id="hud">
       <header class="site-nav" aria-label="Site navigation">
@@ -433,6 +488,8 @@
         const scrollHint = document.getElementById('ball-scroll-hint');
         const scrollHintText = document.getElementById('ball-scroll-hint-text');
         const welcomeType = document.getElementById('welcome-type');
+        const tapEnterHint = document.getElementById('tap-enter-hint');
+        const tapEnterHintText = document.getElementById('tap-enter-hint-text');
 
         const palette = ['#FCC730','#1A26FF','#FF4622','#FF3BDA','#6DFF69','#FF99B1','#4C4C4C'];
         const paletteLen = palette.length;
@@ -448,6 +505,7 @@
           const contactLabel = (lang === 'zh') ? '關於' : 'ABOUT';
           const selfIntroLabel = (lang === 'zh') ? '01 自我介紹' : '01 SELF-INTRODUCTION';
           const dragLabel = (lang === 'zh') ? '拖曳旋轉' : 'Drag to rotate';
+          const tapAgainLabel = (lang === 'zh') ? '再點一次進入' : 'Tap again to open';
           const navTracking = (lang === 'zh') ? '.06em' : '.03em';
           if (shopBtn){
             shopBtn.textContent = shopLabel;
@@ -461,6 +519,7 @@
           }
           if (facetTagLink) facetTagLink.textContent = selfIntroLabel;
           if (scrollHintText) scrollHintText.textContent = dragLabel;
+          if (tapEnterHintText) tapEnterHintText.textContent = tapAgainLabel;
           if (langBtn){ langBtn.textContent = (lang === 'zh') ? 'EN' : '中文'; langBtn.style.letterSpacing = navTracking; }
           if (navHome){
             const u = new URL('./home.html', window.location.href);
@@ -749,10 +808,12 @@
             // Use RAF to avoid jumpy first-frame activation.
             requestAnimationFrame(()=> previewPanel.classList.add('is-active'));
             previewPanel.setAttribute('aria-hidden', 'false');
+            if (coarsePointer && tapEnterHint) tapEnterHint.classList.add('is-visible');
             const src = selfIntroPreviewSrc();
             if (previewFrame.getAttribute('src') !== src) previewFrame.src = src;
           } else {
             renderer.setClearColor(0, 0);
+            if (tapEnterHint) tapEnterHint.classList.remove('is-visible');
             // Small delay makes hover-out feel less abrupt.
             previewHideTimer = setTimeout(()=>{
               previewPanel.classList.remove('is-active');

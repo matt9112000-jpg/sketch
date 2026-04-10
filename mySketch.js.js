@@ -405,7 +405,7 @@ function setup(){
            .attribute('autocorrect','off').attribute('autocapitalize','off');
   nameInput.style('position','absolute').style('z-index','10010').style('pointer-events','auto')
            .style('font-weight','600')
-           .style('font-size', IS_MOBILE ? '14px' : '15px')
+           .style('font-size', IS_MOBILE ? '16px' : '16px')
            .style('color','#f4f6ff')
            .style('background','rgba(8,14,66,0.86)')
            .style('border','1px solid rgba(255,59,218,0.62)')
@@ -424,6 +424,7 @@ function windowResized(){ calculateLayout(); if(!inputComplete) centerInput(); p
 function centerInput(){
   const w = innerW + BORDER_THICK, h = innerH + BORDER_THICK;
   nameInput.size(NAME_INPUT_W, NAME_INPUT_H);
+  nameInput.style('font-size', IS_MOBILE ? '16px' : '16px');
   const centerRatio = IS_MOBILE ? 0.78 : 0.74;
   const inputCenterY = canvasY + h * centerRatio;
   const startBtn = select('#startBtn');
